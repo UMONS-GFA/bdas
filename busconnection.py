@@ -4,8 +4,6 @@ import serial
 import socket
 import sys
 import os
-#import das
-
 
 
 class DasConnection(object):
@@ -134,6 +132,6 @@ class DasConnectionTCP(DasConnection):
         try:
             output=self.ser.inWaiting()
         except:
-            sys.stderr.write("inWaiting error on serial port %s\n" % (self.ser.portstr) )
+            sys.stderr.write("inWaiting error on serial port %s\n" % self.ser.portstr)
             sys.exit(1)
         return output

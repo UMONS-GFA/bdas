@@ -10,7 +10,8 @@ class Das(object):
     connection = bc.DasConnection()
 
     def __init__(self):
-        pass
+        self.netId='001'
+        connection=bc.DasConnectionSerial('/dev/ttyUSB0')
 
     def scan(self):
         output = ''

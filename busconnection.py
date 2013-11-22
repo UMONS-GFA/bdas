@@ -3,7 +3,7 @@ __author__ = 'Olivier Kaufmann'
 import serial
 import socket
 import sys
-import os
+#import os
 
 
 class DasConnection(object):
@@ -86,52 +86,54 @@ class DasConnectionSerial(DasConnection):
         return output
 
 class DasConnectionTCP(DasConnection):
+    Sock = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+    host = 'mg3d.umons.ac.be'  # Insert remote server ip or name here
+    port = 10001  # Insert TCP port open for communications here
 
     def __init__(self,address):
         super(DasConnectionTCP, self).__init__()
-        self.ser=create_connection(address)
+
         try:
-            self.ser.open()
+            self.Sock.connect((self.host, self.port))
         except:
-            sys.stderr.write("Error opening serial port %s\n" % (self.ser.portstr) )
+            sys.stderr.write("Error connecting to TCP port %s on host %s \n" % self.port % self.host)
             sys.exit(1)
 
 
     def __del__(self):
-        self.ser.close()
+        self.Sock.close()
 
     def read(self,n=[]):
         try:
             if n==[]:
-                output=self.ser.read()
+                output=self.Sock.recv() # TODO : verify this
             else:
-                output=self.ser.read(n)
+                output=self.Sock.recv(n) # TODO : verify if recvfrom_into() is more appropriate
 
         except:
-            sys.stderr.write("Error reading on serial port %s\n" % (self.ser.portstr) )
+            sys.stderr.write("Error reading on TCP port %s on host %s \n" % self.port % self.host)
             sys.exit(1)
         return output
 
     def readline(self):
         try:
-            output=self.ser.readline()
+            output=self.Sock.recv()
         except:
-            sys.stderr.write("Error reading on serial port %s\n" % (self.ser.portstr) )
+            sys.stderr.write("Error reading on TCP port %s on host %s \n" % self.port % self.host)
             sys.exit(1)
         return output
 
     def write(self,command):
         try:
-            self.ser.write(command)
-            self.ser.flush()
+            self.Sock.send(command)
         except:
-            sys.stderr.write("Error writing command on serial port %s\n" % (self.ser.portstr) )
+            sys.stderr.write("Error writing command on TCP port %s on host %s \n" % self.port % self.host)
             sys.exit(1)
 
     def inWaiting(self):
         try:
-            output=self.ser.inWaiting()
+            output=self.Sock.listen() # TODO : Verify this
         except:
-            sys.stderr.write("inWaiting error on serial port %s\n" % self.ser.portstr)
+            sys.stderr.write("inWaiting error on TCP port %s on host %s \n" % self.port % self.host)
             sys.exit(1)
         return output

@@ -30,7 +30,7 @@ class Das(object):
         while output == '':
             self.connection.write(command)
             time.sleep(1)
-            while self.connection.inWaiting() > 0:
+            while self.connection.inwaiting() > 0:
                 output += self.connection.read(1)
             print('.')
         return output
@@ -41,7 +41,7 @@ class Das(object):
         print('Listening port %s' % self.netId)
         while output == '':
             time.sleep(timelapse)
-            while self.connection.inWaiting() > 0:
+            while self.connection.inwaiting() > 0:
                 output += self.connection.read(1)
             print('.')
         return output

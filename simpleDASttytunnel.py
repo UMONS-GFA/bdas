@@ -13,9 +13,12 @@ ServerSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # socket for c
 
 comport = '/dev/ttyUSB0'
 netid = '255'
-connection=bc.DasConnectionSerial(comport)
+serconn = bc.DasConnectionSerial(comport)
+LocalSerialDas = das.Das()
+LocalSerialDas.connection = serconn
+LocalSerialDas.connect()
 print('DAS connected on %s' % comport)
-data='brol'
+data = ''
 
 try:
     ServerSocket.bind((LocalHost, LocalPort))
@@ -35,14 +38,12 @@ while 1:
         if not cmd:
                 break
         print('Received command', repr(cmd), 'from', address)
-        # ClientSocket.send(cmd)  # send command to remote host
-#        LocalSerialDas.send(cmd)  # send command to local Das
-#        data=LocalSerialDas.connection.read(1024) # receive data from local Das
-        # data = ClientSocket.recv(1024)  # receive data from remote host
-#        print('Received data from das ', netid, ' on device :', comport)
-#        print(repr(data))
-        ConnectedClient.send(data)  # send data to client
+        LocalSerialDas.connection.write(cmd)  # send command to local Das
+        data=LocalSerialDas.connection.read(1024) # receive data from local Das
+        print('Received data from das ', netid, ' on device :', comport)
+        print(repr(data))
+        ConnectedClient.send(bytearray(data.encode('utf-8')))  # send data to client
 ConnectedClient.close()
 
-#LocalSerialDas.connection.close()
+LocalSerialDas.connection.close()
 print('Received', repr(data))

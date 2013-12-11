@@ -43,5 +43,5 @@ while 1:
 #        print(repr(data))
         ConnectedClient.send(data)  # send data to client
 ConnectedClient.close()
-LocalSerialDas.connection.close()
+#LocalSerialDas.connection.close()
 print('Received', repr(data))

@@ -9,13 +9,13 @@ class Das(object):
     netId = ''
     connection = bc.DasConnection()
 
-    def __init__(self):
-        self.netId='001'
-        connection=bc.DasConnectionSerial('/dev/ttyUSB0')
+    def __init__(self, netid='255', conn=bc.DasConnectionSerial('/dev/ttyUSB0')):
+        self.netId = netid
+        self.connection = conn
 
     def scan(self):
         output = ''
-        command = '-999/r/l'
+        command = '-999\r\n'
         print('Scanning ports')
         while output == '':
             self.connection.write(command)
@@ -25,13 +25,13 @@ class Das(object):
 
     def connect(self):
         output = ''
-        command = '-%s/r/l' % self.netId
+        command = '-%s\r\n' % self.netId
         print('Connecting port %s' % self.netId)
         while output == '':
             self.connection.write(command)
             time.sleep(1)
             while self.connection.inwaiting() > 0:
-                output += self.connection.read(1)
+                output += str(self.connection.read(1))
             print('.')
         return output
 
@@ -53,7 +53,7 @@ class Das(object):
         info = 'interruption 2013 05 24 19 35 12'
         timestep = 1.0
         self.connect()
-        command = '#XB/r/l'
+        command = '#XB\r\n'
         print('Downloading')
         n = 0
         b = []

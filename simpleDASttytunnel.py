@@ -38,7 +38,7 @@ while 1:
         # ClientSocket.send(cmd)  # send command to remote host
 #        LocalSerialDas.send(cmd)  # send command to local Das
 #        data=LocalSerialDas.connection.read(1024) # receive data from local Das
-        #data = ClientSocket.recv(1024)  # receive data from remote host
+        # data = ClientSocket.recv(1024)  # receive data from remote host
 #        print('Received data from das ', netid, ' on device :', comport)
 #        print(repr(data))
         ConnectedClient.send(data)  # send data to client

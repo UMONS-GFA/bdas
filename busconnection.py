@@ -24,6 +24,9 @@ class DasConnection(object):
     def inwaiting(self):
         pass
 
+    def flushOutput(self):
+        pass
+
 
 class DasConnectionSerial(DasConnection):
     ser = serial.Serial()
@@ -85,6 +88,13 @@ class DasConnectionSerial(DasConnection):
             sys.exit(1)
         return output
 
+    def flushOutput(self):
+        try:
+            self.ser.flushOutput()
+        except:
+            sys.stderr.write("flushOutput error on serial port %s\n" % (self.ser.portstr) )
+            sys.exit(1)
+
 class DasConnectionTCP(DasConnection):
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     Host = RemoteHost
@@ -137,3 +147,10 @@ class DasConnectionTCP(DasConnection):
             sys.stderr.write("inWaiting error on TCP port %s on host %s \n" % (self.Port, self.Host))
             sys.exit(1)
         return output
+
+    def flushOutput(self):
+        try:
+            self.sock.recv(1024)  # TODO : Improve this
+        except:
+            sys.stderr.write("flushOutput error on TCP port %s on host %s \n" % (self.Port, self.Host))
+            sys.exit(1)

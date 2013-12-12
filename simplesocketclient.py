@@ -8,8 +8,6 @@ import sys
 import socket
 from settings import LocalHost, LocalPort
 
-#Host = '10.107.10.41'  # Insert remote server ip or name here
-#Port = 10001  # Insert TCP port open for communications here
 Sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 print('trying to connect...')
@@ -27,8 +25,9 @@ if len(sys.argv) == 2:
 else:
         cmd = '#E1'
 cmd += '\n\r'
-print('Command :', cmd.encode('utf-8'))
-Sock.send(bytearray(cmd,'ascii'))
+cmd = bytearray(cmd.encode('utf-8'))
+print('Command :', str(cmd))
+Sock.send(cmd)
 data = str(Sock.recv(255))
 Sock.close()
-print('Received', str(data.encode('utf-8')))
+print('Received', str(data))

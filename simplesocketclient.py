@@ -25,9 +25,11 @@ if len(sys.argv) == 2:
 else:
         cmd = '#E1'
 cmd += '\n\r'
-cmd = bytearray(cmd.encode('utf-8'))
-print('Command :', str(cmd))
+cmd = bytearray(cmd.encode('ascii'))
+print('Command :', cmd.decode())
 Sock.send(cmd)
-data = str(Sock.recv(255))
+while 1:
+    data = Sock.recv(80)
+    sdata = data.decode('ascii')
+    print('Received', sdata)
 Sock.close()
-print('Received', str(data))

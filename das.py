@@ -16,6 +16,7 @@ class Das(object):
     def scan(self):
         output = ''
         command = '-999\r\n'
+        command = bytearray(command.encode('utf-8'))
         print('Scanning ports')
         while output == '':
             self.connection.write(command)
@@ -26,6 +27,7 @@ class Das(object):
     def connect(self):
         output = ''
         command = '-%s\r\n' % self.netId
+        command = bytearray(command.encode('utf-8'))
         print('Connecting port %s' % self.netId)
         while output == '':
             self.connection.write(command)
@@ -54,6 +56,7 @@ class Das(object):
         timestep = 1.0
         self.connect()
         command = '#XB\r\n'
+        command = bytearray(command.encode('utf-8'))
         print('Downloading')
         n = 0
         b = []

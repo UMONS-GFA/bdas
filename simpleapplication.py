@@ -5,11 +5,12 @@ import das
 
 
 def main():
-    sercon = bc.DasConnectionSerial('/dev/ttyUSB0')
-    adas = das.Das()
+    tcpcon = bc.DasConnectionTCP()
+    adas = das.Das('255',tcpcon)
 
-    adas.connection = sercon
     adas.connect()
+    output=adas.listen(2)
+    print(output.decode('ascii'))
 
 if __name__ == "__main__":
     main()

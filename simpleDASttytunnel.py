@@ -18,7 +18,6 @@ LocalSerialDas = das.Das()
 LocalSerialDas.connection = serconn
 LocalSerialDas.connect()
 print('DAS connected on %s' % comport)
-data = ''
 
 try:
     ServerSocket.bind((LocalHost, LocalPort))
@@ -39,7 +38,7 @@ while 1:
                 break
         print('Received command', str(cmd), 'from', address)
         LocalSerialDas.connection.write(cmd)  # send command to local Das
-        data=LocalSerialDas.connection.read(255) # receive data from local Das
+        data = LocalSerialDas.connection.read(255)  # receive data from local Das
         print('Received data from das ', netid, ' on device :', comport)
         print(str(data))
         ConnectedClient.send(data)  # send data to client

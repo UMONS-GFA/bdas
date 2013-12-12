@@ -16,7 +16,7 @@ class Das(object):
     def scan(self):
         output = ''
         command = '-999\r\n'
-        command = bytearray(command.encode('utf-8'))
+        command = command.encode('ascii')
         print('Scanning ports')
         while output == '':
             self.connection.write(command)
@@ -27,7 +27,7 @@ class Das(object):
     def connect(self):
         output = ''
         command = '-%s\r\n' % self.netId
-        command = bytearray(command.encode('utf-8'))
+        command = command.encode('ascii')
         print('Connecting port %s' % self.netId)
         while output == '':
             self.connection.write(command)
@@ -38,10 +38,10 @@ class Das(object):
         return output
 
     def listen(self, timelapse):
-        output = ''
+        output = ''.encode('ascii')
 
         print('Listening port %s' % self.netId)
-        while output == '':
+        while output == ''.encode('ascii'):
             time.sleep(timelapse)
             while self.connection.inwaiting() > 0:
                 output += self.connection.read(1)
@@ -56,7 +56,7 @@ class Das(object):
         timestep = 1.0
         self.connect()
         command = '#XB\r\n'
-        command = bytearray(command.encode('utf-8'))
+        command = command.encode('ascii')
         print('Downloading')
         n = 0
         b = []

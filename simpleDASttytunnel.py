@@ -34,15 +34,15 @@ while 1:
         ConnectedClient, address = ServerSocket.accept()
         print('Connected by ', address)
 
-        cmd = str(ConnectedClient.recv(255))  # receive command from client
+        cmd = ConnectedClient.recv(255)  # receive command from client
         if not cmd:
                 break
-        print('Received command', cmd.encode('utf-8'), 'from', address)
+        print('Received command', str(cmd), 'from', address)
         LocalSerialDas.connection.write(cmd)  # send command to local Das
         data=LocalSerialDas.connection.read(255) # receive data from local Das
         print('Received data from das ', netid, ' on device :', comport)
-        print(repr(data))
-        ConnectedClient.send(data.encode('utf-8'))  # send data to client
+        print(str(data))
+        ConnectedClient.send(data)  # send data to client
 
 ConnectedClient.close()
 LocalSerialDas.connection.close()

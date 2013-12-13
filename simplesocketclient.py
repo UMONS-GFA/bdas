@@ -26,9 +26,9 @@ else:
         cmd = '#E1'
 cmd += '\n\r'
 cmd = bytearray(cmd.encode('ascii'))
-print('Command :', cmd.decode())
-Sock.send(cmd)
 while 1:
+    print('Command :', cmd.decode())
+    Sock.send(cmd)
     data = Sock.recv(80)
     sdata = data.decode('ascii')
     print('Received', sdata)

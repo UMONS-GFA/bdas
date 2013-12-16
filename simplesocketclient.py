@@ -32,4 +32,5 @@ while 1:
     data = Sock.recv(80)
     sdata = data.decode('ascii')
     print('Received', sdata)
+    input('Press any key to send command again')
 Sock.close()

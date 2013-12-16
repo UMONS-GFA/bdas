@@ -34,17 +34,17 @@ while 1:
     print('Server socket is listening...')
     ConnectedClient, address = ServerSocket.accept()
     print('Connected by ', address)
-
-    cmd = ConnectedClient.recv(5)  # receive command from client
-    if not cmd:
-        break
-    print('Received command', cmd.decode('ascii'), 'from', address)
-    LocalSerialDas.connection.flushOutput() # Empty Das connection output buffer TODO : check this, it looks like it doesn't do anything
-    LocalSerialDas.connection.write(cmd)  # send command to local Das
-    data = LocalSerialDas.connection.read(80)  # receive data from local Das
-    print('Received data from das ', netid, ' on device :', comport)
-    print(data.decode('ascii'))
-    ConnectedClient.send(data)  # send data to client
+    while 1:
+        cmd = ConnectedClient.recv(16)  # receive command from client
+        if not cmd:
+            break
+        print('Received command', cmd.decode('ascii'), 'from', address)
+        LocalSerialDas.connection.flushInput() # Empty Das connection output buffer
+        LocalSerialDas.connection.write(cmd)  # send command to local Das
+        data = LocalSerialDas.connection.read(80)  # receive data from local Das
+        print('Received data from das ', netid, ' on device :', comport)
+        print(data.decode('ascii'))
+        ConnectedClient.send(data)  # send data to client
     ConnectedClient.close()
 
 LocalSerialDas.connection.close()

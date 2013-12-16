@@ -88,9 +88,9 @@ class DasConnectionSerial(DasConnection):
             sys.exit(1)
         return output
 
-    def flushOutput(self):
+    def flushInput(self):
         try:
-            self.ser.flushOutput()
+            self.ser.flushInput()
         except:
             sys.stderr.write("flushOutput error on serial port %s\n" % (self.ser.portstr) )
             sys.exit(1)
@@ -148,7 +148,7 @@ class DasConnectionTCP(DasConnection):
             sys.exit(1)
         return output
 
-    def flushOutput(self):
+    def flushInput(self):
         try:
             self.sock.recv(1024)  # TODO : Improve this
         except:

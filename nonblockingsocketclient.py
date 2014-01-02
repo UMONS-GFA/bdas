@@ -10,10 +10,9 @@ import time
 from settings import LocalHost, LocalPort
 
 Sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-Sock.setblocking(1)
 
 data = bytearray()
-timeout = 0.8
+timeout = 2
 
 print('trying to connect...')
 
@@ -28,12 +27,13 @@ print('Socket connected')
 if len(sys.argv) == 2:
         cmd = str(sys.argv[1])
 else:
-        cmd = '#HE'
+        cmd = '#RI'
 cmd += '\n\r'
 cmd = bytearray(cmd.encode('ascii'))
 Sock.setblocking(0)
+newline = False
 while 1:
-    print('Command :', cmd.decode())
+    print('>', cmd.decode())
     Sock.send(cmd)
     #beginning time
     starttime = time.time()
@@ -42,26 +42,31 @@ while 1:
         if data and time.time()-starttime > timeout:
             break
 
-        #if you got no data at all, wait a little longer, twice the timeout
-        elif time.time()-starttime > timeout*5:
+        #if you got no data at all, wait a little longer
+        elif time.time()-starttime > timeout*3:
             break
         #recv something
         try:
-            recvdata = Sock.recv(64)
+            recvdata = Sock.recv(1)
             if recvdata:
                 data += recvdata
-                sdata = recvdata.decode('ascii')
-                #print('Received', sdata)
-                #change the beginning time for measurement
-                begin = time.time()
+                starttime = time.time()
+                if recvdata.decode('ascii') == '\n':
+                    datanewline = True
+                elif recvdata.decode('ascii') == '\r':
+                    if datanewline:
+                        print(data.decode('utf-8'))
+                        data = bytearray()
+                    datanewline = False
+                else:
+                    datanewline = False
             else:
                 #sleep for sometime to indicate a gap
                 time.sleep(0.1)
         except:
             pass
-    print('Message received', data.decode('ascii'))
     data = bytearray()
-    cmd = input('Type command (type #HE for help).\n\r')
+    cmd = input('Type command (type #HE for help).\n> ')
     if not cmd or cmd.lower() == 'exit':
         break
     else:

@@ -6,14 +6,14 @@ __author__ = 'Olivier Kaufmann'
 
 import sys
 import socket
-from settings import LocalHost, LocalPort
+from settings import RemoteHost, RemotePort
 
 Sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 print('trying to connect...')
 
 try:
-    Sock.connect((LocalHost, LocalPort))
+    Sock.connect((RemoteHost, RemotePort))
 except socket.error as err:
     print('connection failed : %s ' % err)
     sys.exit()

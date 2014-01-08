@@ -1,8 +1,19 @@
-bdas
-====
+# bdas
 
 Application to interact with a DAS.
 
-use on nonblockingsocketclient.py on client side and simplenbDASttytunnel.py on server side.
+## Requirements on server side
 
-Warning ! you need to configure a settings.py file to use the codes.
+* Python 3
+* python3-serial
+
+You also need to configure a settings.py file
+
+## Requirements on client side
+
+* Python 3
+
+## Procedure
+
+Launch simplenbDASttytunnel.py on server then nonblockingsocketclient.py on client.
+

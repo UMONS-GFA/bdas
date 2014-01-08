@@ -17,7 +17,7 @@ You also need to configure a **settings.py** file
 
 Launch **simplenbDASttytunnel.py** on server then **nonblockingsocketclient.py** on client.
 
-Settings configuration:
+### Settings configuration:
 ```
 LocalHost = 'IP_ADRESS'
 LocalPort = NUM_PORT

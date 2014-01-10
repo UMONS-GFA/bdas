@@ -39,6 +39,7 @@ while 1:
     starttime = time.time()
     while 1:
         #if you got some data, then break after timeout
+        # TODO :  (fix me) doesn't seem to break if DAS period is 1s
         if data and time.time()-starttime > timeout:
             break
 
@@ -66,7 +67,7 @@ while 1:
         except:
             pass
     data = bytearray()
-    cmd = input('Type command (type #HE for help).\n> ')
+    cmd = input('Type command (type #HE for help or exit to quit).\n> ')
     if not cmd or cmd.lower() == 'exit':
         break
     else:

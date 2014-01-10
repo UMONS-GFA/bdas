@@ -15,7 +15,7 @@ You also need to configure a **settings.py** file
 
 ### Procedure
 
-Launch **simplenbDASttytunnel.py** on server then **nonblockingsocketclient.py** on client.
+Launch **bridge.py** on server then **client.py** on client.
 
 ### Settings configuration:
 ```

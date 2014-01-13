@@ -31,6 +31,7 @@ However standard way in ASCII to end a file is \r\n (CRLF)*
   #RL : Read Last Data **(works)**  
   #RM : Read Memory Status => Memory used, Memory available **(works)**  
   #ZR ssss nnn iiii s 1111 2222 3333 4444 XX : Reconfig   
+  #ZF : erase memory and set default configuration  
   #XB : Full Download  
   #XP : yyyy mm dd hh ss yyyy mm dd hh nn ss : Partial Download  
   #XN : Next Download  

@@ -6,11 +6,11 @@ import datetime
 
 
 class Das(object):
-    netId = ''
+    netid = ''
     connection = bc.DasConnection()
 
     def __init__(self, netid='255', conn=bc.DasConnectionSerial('/dev/ttyUSB0')):
-        self.netId = netid
+        self.netid = netid
         self.connection = conn
 
     def scan(self):
@@ -29,9 +29,9 @@ class Das(object):
 
     def connect(self):
         output = ''
-        command = '-%s\r\n' % self.netId
+        command = '-%s\r\n' % self.netid
         command = command.encode('ascii')
-        print('Connecting port %s' % self.netId)
+        print('Connecting port %s' % self.netid)
         while output == '':
             self.connection.write(command)
             time.sleep(1)
@@ -42,7 +42,7 @@ class Das(object):
 
     def listen(self, timelapse):
         output = ''
-        print('Listening port %s' % self.netId)
+        print('Listening port %s' % self.netid)
         while output == '':
             time.sleep(timelapse)
             while self.connection.inwaiting() > 0:
@@ -119,7 +119,7 @@ class Das(object):
                 ## write header
                 s = '# SITE: ' + site
                 afile.writelines(s + '\n')
-                s = '# UDAS: ' + self.netId
+                s = '# UDAS: ' + self.netid
                 afile.writelines(s + '\n')
                 s = '# CHAN: YYYY MO DD HH MI SS'
                 for i in range(nchannels):

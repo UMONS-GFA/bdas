@@ -24,7 +24,7 @@ However standard way in ASCII to end a file is \r\n (CRLF)*
   #E1 : Only Data **(works)**  
   #E2 : Data + Time  
   #SD : yyyy mm dd hh nn ss : Set Date + Time  
-  #1SR iiii : Set Integration Period  
+  #SR iiii : Set Integration Period  
   #SI nnn : Set Das Number
   #SS ssss : Set Station Number  
   #RI : Read Info **(works)**  

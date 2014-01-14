@@ -64,6 +64,8 @@ class DasConnectionSerial(DasConnection):
             sys.exit(1)
         return output
 
+    #  readline eol doesn't work anymore  http://sourceforge.net/p/pyserial/support-requests/36/
+    # is readline still useful ?
     def readline(self):
         try:
             output = self.ser.readline()

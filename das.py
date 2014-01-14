@@ -15,13 +15,16 @@ class Das(object):
 
     def scan(self):
         output = ''
-        command = '-999\r\n'
+        command = '-999\n\r'
         command = command.encode('ascii')
         print('Scanning ports')
         while output == '':
             self.connection.write(command)
-            output = self.connection.readline()
+            #TODO: handle multiple das
+            output = self.connection.read(22)
+            #output = self.connection.readline()
             print('.')
+        output = output.decode('utf-8')
         return output
 
     def connect(self):

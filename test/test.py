@@ -11,6 +11,10 @@ class TestSerialConnection(unittest.TestCase):
 
     def test_scan(self):
         out = self.das.scan()
-        print(out)
-        self.assertEqual(out, '\n\rHey! I\'m NanoDAS 255')
+        sl = out[2:6]
+        self.assertEqual(sl, 'Hey!')
 
+    def test_connect(self):
+        out = self.das.connect()
+        sl = out[0:3]
+        self.assertEqual(sl,'!HI')

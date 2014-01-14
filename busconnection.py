@@ -24,7 +24,7 @@ class DasConnection(object):
     def inwaiting(self):
         pass
 
-    def flushOutput(self):
+    def flushoutput(self):
         pass
 
 
@@ -54,8 +54,8 @@ class DasConnectionSerial(DasConnection):
 
     def read(self, n=0):
         try:
-            if n==0:
-                output=self.ser.read()
+            if n == 0:
+                output = self.ser.read()
             else:
                 output = self.ser.read(n)
 
@@ -68,31 +68,31 @@ class DasConnectionSerial(DasConnection):
         try:
             output = self.ser.readline()
         except:
-            sys.stderr.write("Error reading on serial port %s\n" % (self.ser.portstr) )
+            sys.stderr.write("Error reading on serial port %s\n" % self.ser.portstr)
             sys.exit(1)
         return output
 
-    def write(self,command):
+    def write(self, command):
         try:
             self.ser.write(command)
             self.ser.flush()
         except:
-            sys.stderr.write("Error writing command on serial port %s\n" % (self.ser.portstr) )
+            sys.stderr.write("Error writing command on serial port %s\n" % self.ser.portstr)
             sys.exit(1)
 
     def inwaiting(self):
         try:
-            output=self.ser.inWaiting()
+            output = self.ser.inWaiting()
         except:
-            sys.stderr.write("inWaiting error on serial port %s\n" % (self.ser.portstr) )
+            sys.stderr.write("inWaiting error on serial port %s\n" % self.ser.portstr)
             sys.exit(1)
         return output
 
-    def flushInput(self):
+    def flushinput(self):
         try:
             self.ser.flushInput()
         except:
-            sys.stderr.write("flushOutput error on serial port %s\n" % (self.ser.portstr) )
+            sys.stderr.write("flushOutput error on serial port %s\n" % self.ser.portstr)
             sys.exit(1)
 
 class DasConnectionTCP(DasConnection):
@@ -100,7 +100,7 @@ class DasConnectionTCP(DasConnection):
     Host = RemoteHost
     Port = RemotePort
 
-    def __init__(self,address):
+    def __init__(self, address):
         super(DasConnectionTCP, self).__init__()
 
         try:
@@ -127,7 +127,7 @@ class DasConnectionTCP(DasConnection):
 
     def readline(self):
         try:
-            output=self.sock.recv()
+            output = self.sock.recv()
         except:
             sys.stderr.write("Error reading on TCP port %s on host %s \n" % (self.Port, self.Host))
             sys.exit(1)
@@ -148,7 +148,7 @@ class DasConnectionTCP(DasConnection):
             sys.exit(1)
         return output
 
-    def flushInput(self):
+    def flushinput(self):
         try:
             self.sock.recv(1024)  # TODO : Improve this
         except:

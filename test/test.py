@@ -19,3 +19,8 @@ class TestSerialConnection(unittest.TestCase):
         out = self.das.connect()
         sl = out[0:3]
         self.assertEqual(sl,'!HI')
+
+    def test_listen(self):
+        out = self.das.listen(2)
+        sl = out[0:1]
+        self.assertEqual(sl,'!')

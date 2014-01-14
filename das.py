@@ -41,13 +41,12 @@ class Das(object):
         return output
 
     def listen(self, timelapse):
-        output = ''.encode('ascii')
-
+        output = ''
         print('Listening port %s' % self.netId)
-        while output == ''.encode('ascii'):
+        while output == '':
             time.sleep(timelapse)
             while self.connection.inwaiting() > 0:
-                output += self.connection.read(1)
+                output += self.connection.read(1).decode('utf-8')
             print('.')
         return output
 

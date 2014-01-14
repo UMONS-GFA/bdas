@@ -36,7 +36,7 @@ class Das(object):
             self.connection.write(command)
             time.sleep(1)
             while self.connection.inwaiting() > 0:
-                output += str(self.connection.read(1))
+                output += self.connection.read(1).decode('utf-8')
             print('.')
         return output
 

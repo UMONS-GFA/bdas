@@ -28,7 +28,7 @@ class DasConnection(object):
         pass
 
 
-class DasConnectionSerial(object):
+class DasConnectionSerial(DasConnection):
     ser = serial.Serial()
 
     def __init__(self, comport):
@@ -74,9 +74,8 @@ class DasConnectionSerial(object):
 
     def write(self, command):
         try:
-            command += '\n\r'
-            self.ser.write(command.encode('ascii'))
-            #self.ser.flush()
+            self.ser.write(command)
+            self.ser.flush()
         except:
             sys.stderr.write("Error writing command on serial port %s\n" % self.ser.portstr)
             sys.exit(1)

@@ -4,6 +4,7 @@ __date__ = '13/01/14'
 import das
 import unittest
 
+
 class TestSerialConnection(unittest.TestCase):
 
     def setUp(self):

@@ -66,6 +66,9 @@ class Das(object):
             self.connection.write(command)
             print('.')
             b = self.connection.read(1)
+            print(b)
+            # Given a string representing one Unicode character, return an integer representing the
+            # Unicode code point of that character.
             b = ord(b)
             print(hex(b))
             n += 1
@@ -79,7 +82,7 @@ class Das(object):
             print(hex(b))
 
         if (i % 3 == 0) & (i > 0):
-            nchannels = i / 3
+            nchannels = int(i / 3)
             print('Number of channels :' + str(nchannels))
             eot = False
         else:
@@ -97,8 +100,10 @@ class Das(object):
 
         # reading D1 D2 D3 D4
         b = self.connection.read(4)
-
-        curtime = np.long(ord(b[3]) + 256 * ord(b[2]) + 256 * 256 * ord(b[1]) + 256 * 256 * 256 * ord(b[0]))
+        b = str(b)
+        curtime = np.int(ord(b[3]) + 256 * ord(b[2]) + 256 * 256 * ord(b[1]) + 256 * 256 * 256 * ord(b[0]))
+        print(type(curtime))
+        print(str(curtime))
         print(hex(curtime))
         curtime = datetime.datetime.strptime('%04i:%02i:%02i:%02i:%02i:%02i' % (1970, 1, 1, 1, 0, 0), '%Y:%d:%m:%H'
            ':%M:%S') + datetime.timedelta(seconds=curtime)
@@ -107,7 +112,8 @@ class Das(object):
         # reading optional 00 00 00
         for i in range(3, nchannels + 1):
             b = self.connection.read(3)
-            b = np.long(ord(b[2]) + 256 * ord(b[1]) + 256 * 256 * ord(b[0]))
+            b = str(b)
+            b = np.int(ord(b[2]) + 256 * ord(b[1]) + 256 * 256 * ord(b[0]))
             print(hex(b))
             if b != 0x000000:
                 print('format error : unexpected values for the bytes following the date section!')
@@ -137,6 +143,7 @@ class Das(object):
                     eot = True
                     for j in range(nchannels):
                         sb = self.connection.read(3)
+                        sb = str(sb)
                         channel.append(ord(sb[2]) + 256 * ord(sb[1]) + 256 * 256 * ord(sb[0]))
                         if channel[j] != 0xfefefe:
                             eot = False

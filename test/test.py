@@ -14,7 +14,7 @@ class TestSerialConnection(unittest.TestCase):
         out = self.das.scan()
         sl = out[2:6]
         self.assertEqual(sl, 'Hey!')
-
+    
     def test_connect(self):
         out = self.das.connect()
         sl = out[0:3]
@@ -24,3 +24,6 @@ class TestSerialConnection(unittest.TestCase):
         out = self.das.listen(2)
         sl = out[0:1]
         self.assertEqual(sl,'!')
+
+    def test_download(self):
+        self.das.download('/home/christophe/Documents/das-download')

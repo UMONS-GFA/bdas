@@ -68,7 +68,16 @@ class Das(object):
         return output
 
     def set_echo_data_and_time(self):
-        pass
+        self.connect()
+        output = ''
+        command = '#E2\n\r'
+        command = command.encode('ascii')
+        print('Set echo data and time')
+        while output == '':
+            self.connection.write(command)
+            output = self.connection.read(3)
+        output = output.decode('utf-8')
+        return output
 
     def set_date_and_time(self):
         pass

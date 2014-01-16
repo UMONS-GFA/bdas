@@ -30,5 +30,9 @@ class TestSerialConnection(unittest.TestCase):
         sl = out[2:5]
         self.assertEqual(sl, '!E0')
 
+    def test_set_echo_data(self):
+        out = self.das.set_echo_data()
+        self.assertEqual(out, '!E1')
+
     # def test_download(self):
     #     self.das.download('/home/christophe/Documents/das-download')

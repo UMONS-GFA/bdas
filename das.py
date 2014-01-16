@@ -40,6 +40,57 @@ class Das(object):
             print('.')
         return output
 
+    def get_help(self):
+        pass
+
+    def set_no_echo(self):
+        pass
+
+    def set_echo_data(self):
+        pass
+
+    def set_echo_data_and_time(self):
+        pass
+
+    def set_date_and_time(self):
+        pass
+
+    def get_date_and_time(self):
+        pass
+
+    def set_integration_period(self):
+        pass
+
+    def get_integration_period(self):
+        pass
+
+    def set_das_netid(self):
+        pass
+
+    def get_das_netid(self):
+        pass
+
+    def set_station_number(self):
+        pass
+
+    def get_station_number(self):
+        pass
+
+    def set_das_info(self):
+        pass
+
+    def get_das_info(self):
+        pass
+
+    def get_last_data(self):
+        pass
+
+    def get_memory_info(self):
+        pass
+
+    def flash_das(self):
+        pass
+
     def listen(self, timelapse):
         output = ''
         print('Listening port %s' % self.netid)

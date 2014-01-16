@@ -29,7 +29,7 @@ class Das(object):
 
     def connect(self):
         output = ''
-        command = '-%s\r\n' % self.netid
+        command = '-%s\n\r' % self.netid
         command = command.encode('ascii')
         print('Connecting port %s' % self.netid)
         while output == '':
@@ -44,7 +44,19 @@ class Das(object):
         pass
 
     def set_no_echo(self):
-        pass
+        self.connect()
+        output = ''
+        command = '#E0\n\r'
+        command = command.encode('ascii')
+        print('Set no echo')
+        while output == '':
+            self.connection.write(command)
+            output = self.connection.read(21)
+        output = output.decode('utf-8')
+        return output
+
+
+
 
     def set_echo_data(self):
         pass
@@ -108,7 +120,7 @@ class Das(object):
         info = 'interruption 2013 05 24 19 35 12'
         timestep = 1.0
         self.connect()
-        command = '#XB\r\n'
+        command = '#XB\n\r'
         command = command.encode('ascii')
         print('Downloading')
         n = 0

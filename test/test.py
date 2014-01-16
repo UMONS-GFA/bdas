@@ -38,5 +38,12 @@ class TestSerialConnection(unittest.TestCase):
         out = self.das.set_echo_data_and_time()
         self.assertEqual(out, '!E2')
 
+    def test_get_integration_period(self):
+        out = self.das.get_integration_period()
+        #x = int(out)
+        self.assertGreaterEqual(out, 0)
+        self.assertLessEqual(out, 60)
+
+
     # def test_download(self):
     #     self.das.download('/home/christophe/Documents/das-download')

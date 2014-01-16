@@ -31,7 +31,7 @@ class Das(object):
         output = ''
         command = '-%s\n\r' % self.netid
         command = command.encode('ascii')
-        print('Connecting port %s' % self.netid)
+        #print('Connecting port %s' % self.netid)
         while output == '':
             self.connection.write(command)
             time.sleep(1)
@@ -89,7 +89,25 @@ class Das(object):
         pass
 
     def get_integration_period(self):
-        pass
+        self.connect()
+        output = bytearray()
+        command = '#SR\n\r'
+        command = command.encode('ascii')
+        print('Get integration period')
+        while 1:
+            self.connection.write(command)
+            recvdata = self.connection.read(1)
+            if recvdata:
+                output += recvdata
+                if recvdata.decode('ascii') == '\r':
+                    break
+        output = output.decode('utf-8')
+        try:
+            integration_period = int(output[3:8])
+            return integration_period
+        except ValueError:
+            print("The integration period is not a number")
+
 
     def set_das_netid(self):
         pass

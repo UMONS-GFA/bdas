@@ -85,8 +85,21 @@ class Das(object):
     def get_date_and_time(self):
         pass
 
-    def set_integration_period(self):
-        pass
+    def set_integration_period(self, integration_period):
+        self.connect()
+        output = bytearray()
+        command = '#SR' + integration_period + '\r\n'
+        command = command.encode('ascii')
+        print('Set integration period')
+        while 1:
+            self.connection.write(command)
+            recvdata = self.connection.read(1)
+            if recvdata:
+                output += recvdata
+                if recvdata.decode('ascii') == '\r':
+                    break
+        output = output.decode('utf-8')
+        return output
 
     def get_integration_period(self):
         self.connect()

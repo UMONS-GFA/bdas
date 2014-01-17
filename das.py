@@ -1,9 +1,11 @@
 __author__ = 'Olivier Kaufmann'
 import busconnection as bc
-import numpy as np
 import time
 import datetime
 
+DEBUG = True
+
+endline = '\r'
 
 class Das(object):
     netid = ''
@@ -15,23 +17,24 @@ class Das(object):
 
     def scan(self):
         output = ''
-        command = '-999\n\r'
+        command = '-999' + endline
+        if DEBUG is True:
+            print(repr(command))
         command = command.encode('ascii')
         print('Scanning ports')
+        self.connection.write(command)
         while output == '':
-            self.connection.write(command)
             #TODO: handle multiple das
             output = self.connection.read(22)
-            #output = self.connection.readline()
-            print('.')
         output = output.decode('utf-8')
         return output
 
     def connect(self):
         output = ''
-        command = '-%s\n\r' % self.netid
+        command = '-%s' % self.netid + endline
+        if DEBUG is True:
+            print(repr(command))
         command = command.encode('ascii')
-        #print('Connecting port %s' % self.netid)
         while output == '':
             self.connection.write(command)
             time.sleep(1)
@@ -40,29 +43,40 @@ class Das(object):
             print('.')
         return output
 
-    def get_help(self):
-        pass
+    def listen(self, timelapse):
+        output = ''
+        print('Listening port %s' % self.netid)
+        while output == '':
+            time.sleep(timelapse)
+            while self.connection.inwaiting() > 0:
+                output += self.connection.read(1).decode('utf-8')
+            print('.')
+        return output
 
     def set_no_echo(self):
         self.connect()
         output = ''
-        command = '#E0\n\r'
+        command = '#E0' + endline
+        if DEBUG is True:
+            print(repr(command))
         command = command.encode('ascii')
         print('Set no echo')
+        self.connection.write(command)
         while output == '':
-            self.connection.write(command)
-            output = self.connection.read(21)
+            output = self.connection.read(6)
         output = output.decode('utf-8')
         return output
 
     def set_echo_data(self):
         self.connect()
         output = ''
-        command = '#E1\n\r'
+        command = '#E1' + endline
+        if DEBUG is True:
+            print(repr(command))
         command = command.encode('ascii')
         print('Set echo data')
+        self.connection.write(command)
         while output == '':
-            self.connection.write(command)
             output = self.connection.read(3)
         output = output.decode('utf-8')
         return output
@@ -70,29 +84,67 @@ class Das(object):
     def set_echo_data_and_time(self):
         self.connect()
         output = ''
-        command = '#E2\n\r'
+        command = '#E2' + endline
+        if DEBUG is True:
+            print(repr(command))
         command = command.encode('ascii')
         print('Set echo data and time')
+        self.connection.write(command)
         while output == '':
-            self.connection.write(command)
             output = self.connection.read(3)
         output = output.decode('utf-8')
         return output
 
     def set_date_and_time(self):
-        pass
+        self.connect()
+        output = bytearray()
+        y = datetime.datetime.now().year
+        m = datetime.datetime.now().month
+        d = datetime.datetime.now().day
+        h = datetime.datetime.now().hour
+        n = datetime.datetime.now().minute
+        s = datetime.datetime.now().second
+        command = '#SD %04i %02i %02i %02i %02i %02i' % (y, m, d, h, n, s) + endline
+        if DEBUG is True:
+            print(repr(command))
+        command = command.encode('ascii')
+        self.connection.write(command)
+        while 1:
+            recvdata = self.connection.read(1)
+            if recvdata:
+                output += recvdata
+                if recvdata.decode('ascii') == '\r':
+                    break
+        output = output.decode('utf-8')
+        return output
 
-    def get_date_and_time(self):
-        pass
+    # def get_date_and_time(self):
+    #     self.connect()
+    #     output = bytearray()
+    #     command = '#SD' + endline
+    #     if DEBUG is True:
+    #         print(repr(command))
+    #     command = command.encode('ascii')
+    #     while 1:
+    #         self.connection.write(command)
+    #         recvdata = self.connection.read(1)
+    #         if recvdata:
+    #             output += recvdata
+    #             if recvdata.decode('ascii') == '\r':
+    #                 break
+    #     output = output.decode('utf-8')
+    #     return output
 
     def set_integration_period(self, integration_period):
         self.connect()
         output = bytearray()
-        command = '#SR' + integration_period + '\r\n'
+        command = '#SR ' + integration_period + endline
+        if DEBUG is True:
+            print(repr(command))
         command = command.encode('ascii')
         print('Set integration period')
+        self.connection.write(command)
         while 1:
-            self.connection.write(command)
             recvdata = self.connection.read(1)
             if recvdata:
                 output += recvdata
@@ -104,11 +156,11 @@ class Das(object):
     def get_integration_period(self):
         self.connect()
         output = bytearray()
-        command = '#SR\n\r'
+        command = '#SR' + endline
         command = command.encode('ascii')
         print('Get integration period')
+        self.connection.write(command)
         while 1:
-            self.connection.write(command)
             recvdata = self.connection.read(1)
             if recvdata:
                 output += recvdata
@@ -149,16 +201,6 @@ class Das(object):
     def flash_das(self):
         pass
 
-    def listen(self, timelapse):
-        output = ''
-        print('Listening port %s' % self.netid)
-        while output == '':
-            time.sleep(timelapse)
-            while self.connection.inwaiting() > 0:
-                output += self.connection.read(1).decode('utf-8')
-            print('.')
-        return output
-
     def download(self, filename):
         site = 'site'
         data = ''
@@ -166,7 +208,7 @@ class Das(object):
         info = 'interruption 2013 05 24 19 35 12'
         timestep = 1.0
         self.connect()
-        command = '#XB\r\n'
+        command = '#XB' + endline
         command = command.encode('ascii')
         print('Downloading')
         n = 0

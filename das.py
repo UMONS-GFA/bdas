@@ -153,29 +153,26 @@ class Das(object):
         info = 'interruption 2013 05 24 19 35 12'
         timestep = 1.0
         self.connect()
-        command = '#XB\n\r'
+        command = '#XB\r\n'
         command = command.encode('ascii')
         print('Downloading')
         n = 0
-        b = []
-        while (b == []) & (n < 5):
+        b = bytes()
+        while (b.__len__() == 0) & (n < 5):
             self.connection.write(command)
             print('.')
             b = self.connection.read(1)
-            print(b)
             # Given a string representing one Unicode character, return an integer representing the
-            # Unicode code point of that character.
-            b = ord(b)
-            print(hex(b))
+            # Unicode code point of that character
             n += 1
 
-            # reading begin message
+
+        #reading begin message
         i = 0
-        while b == 0xFD:
+        while b == b'\xfd':
             i += 1
             b = self.connection.read(1)
-            b = ord(b)
-            print(hex(b))
+            print(b)
 
         if (i % 3 == 0) & (i > 0):
             nchannels = int(i / 3)
@@ -185,22 +182,19 @@ class Das(object):
             print('format error : unexpected number of leading 0xFD!:' + str(i))
             nchannels = 0
             eot = True
+            exit()
 
         b1 = self.connection.read(1)
-        b1 = ord(b1)
-        print(hex(b1))   # b=np.ubyte(self.ser.read(1))
 
         # reading FF FF
-        if (b != 0xFF) | (b1 != 0xFF):
+        if (b !=  b'\xff') | (b1 !=  b'\xff'):
             print('format error : unexpected values for the 2 bytes following 0xFD!')
 
         # reading D1 D2 D3 D4
         b = self.connection.read(4)
-        b = str(b)
-        curtime = np.int(ord(b[3]) + 256 * ord(b[2]) + 256 * 256 * ord(b[1]) + 256 * 256 * 256 * ord(b[0]))
-        print(type(curtime))
-        print(str(curtime))
-        print(hex(curtime))
+        print(b)
+        #curtime = np.int(ord(b[3]) + 256 * ord(b[2]) + 256 * 256 * ord(b[1]) + 256 * 256 * 256 * ord(b[0]))
+        curtime = b[3]+ 256 * b[2] + 256 * 256 * b[1] + 256 * 256 * 256 * b[0]
         curtime = datetime.datetime.strptime('%04i:%02i:%02i:%02i:%02i:%02i' % (1970, 1, 1, 1, 0, 0), '%Y:%d:%m:%H'
            ':%M:%S') + datetime.timedelta(seconds=curtime)
         print('starting date:' + curtime.strftime('%d/%m/%Y %H:%M:%S'))
@@ -208,9 +202,9 @@ class Das(object):
         # reading optional 00 00 00
         for i in range(3, nchannels + 1):
             b = self.connection.read(3)
-            b = str(b)
-            b = np.int(ord(b[2]) + 256 * ord(b[1]) + 256 * 256 * ord(b[0]))
-            print(hex(b))
+           # b = str(b)
+            b = b[2] + 256 *b[1] + 256 * 256 * b[0]
+            #print(hex(b))
             if b != 0x000000:
                 print('format error : unexpected values for the bytes following the date section!')
 
@@ -239,8 +233,8 @@ class Das(object):
                     eot = True
                     for j in range(nchannels):
                         sb = self.connection.read(3)
-                        sb = str(sb)
-                        channel.append(ord(sb[2]) + 256 * ord(sb[1]) + 256 * 256 * ord(sb[0]))
+                        #channel.append(ord(sb[2]) + 256 * ord(sb[1]) + 256 * 256 * ord(sb[0]))
+                        channel.append(sb[2] + 256 * sb[1] + 256 * 256 * sb[0])
                         if channel[j] != 0xfefefe:
                             eot = False
                     curtime = curtime + datetime.timedelta(seconds=timestep)

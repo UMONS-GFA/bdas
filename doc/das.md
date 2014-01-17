@@ -17,7 +17,7 @@ CMOS memory AMD AM29F032B
 #### DAS command list
 
 *Note : Every data sequence send by a DAS is followed by \n\r (LFCR in this case)  
-However standard way in ASCII to end a file is \r\n (CRLF)*  
+However each command end line sent to DAS must  be  \r\n (CRLF)*  
 
   #hE : Help **(works)**  
   #E0 : No Echo  **(works)**  

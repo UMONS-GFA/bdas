@@ -53,5 +53,10 @@ class TestSerialConnection(unittest.TestCase):
         self.assertGreaterEqual(out, 0)
         self.assertLessEqual(out, 60)
 
+    def test_set_das_netid(self):
+        out = self.das.set_das_netid(255)
+        sl = out[0:3]
+        self.assertEqual(sl, '!SI')
+
     # def test_download(self):
     #     self.das.download('/home/christophe/Documents/das-download')

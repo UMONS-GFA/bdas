@@ -118,23 +118,6 @@ class Das(object):
         output = output.decode('utf-8')
         return output
 
-    # def get_date_and_time(self):
-    #     self.connect()
-    #     output = bytearray()
-    #     command = '#SD' + endline
-    #     if DEBUG is True:
-    #         print(repr(command))
-    #     command = command.encode('ascii')
-    #     while 1:
-    #         self.connection.write(command)
-    #         recvdata = self.connection.read(1)
-    #         if recvdata:
-    #             output += recvdata
-    #             if recvdata.decode('ascii') == '\r':
-    #                 break
-    #     output = output.decode('utf-8')
-    #     return output
-
     def set_integration_period(self, integration_period):
         self.connect()
         output = bytearray()
@@ -174,8 +157,23 @@ class Das(object):
             print("The integration period is not a number")
 
 
-    def set_das_netid(self):
-        pass
+    def set_das_netid(self, nedid):
+        self.connect()
+        output = bytearray()
+        command = '#SI %03i ' % nedid + endline
+        if DEBUG is True:
+            print(repr(command))
+        command = command.encode('ascii')
+        print('Set integration period')
+        self.connection.write(command)
+        while 1:
+            recvdata = self.connection.read(1)
+            if recvdata:
+                output += recvdata
+                if recvdata.decode('ascii') == '\r':
+                    break
+        output = output.decode('utf-8')
+        return output
 
     def get_das_netid(self):
         pass

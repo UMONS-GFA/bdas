@@ -55,6 +55,7 @@ class TestSerialConnection(unittest.TestCase):
 
     def test_set_das_netid(self):
         out = self.das.set_das_netid(255)
+        print(out)
         sl = out[0:3]
         self.assertEqual(sl, '!SI')
 
@@ -63,8 +64,13 @@ class TestSerialConnection(unittest.TestCase):
         sl = out[0:3]
         self.assertEqual(sl, '!SI')
 
+    def test_set_station_id(self):
+        pass
 
-
+    def test_get_das_info(self):
+        out = self.das.get_das_info()
+        sl = out[0:3]
+        self.assertEqual(sl, '!RI')
 
     # def test_download(self):
     #     self.das.download('/home/christophe/Documents/das-download')

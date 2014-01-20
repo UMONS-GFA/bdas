@@ -157,10 +157,10 @@ class Das(object):
             print("The integration period is not a number")
 
 
-    def set_das_netid(self, nedid):
+    def set_das_netid(self, netid):
         self.connect()
         output = bytearray()
-        command = '#SI %03i ' % nedid + endline
+        command = '#SI %03i ' % netid + endline
         if DEBUG is True:
             print(repr(command))
         command = command.encode('ascii')
@@ -193,7 +193,7 @@ class Das(object):
         output = output.decode('utf-8')
         return output
 
-    def set_station_number(self):
+    def set_station_id(self, station_id):
         pass
 
     def get_station_number(self):
@@ -203,7 +203,22 @@ class Das(object):
         pass
 
     def get_das_info(self):
-        pass
+        self.connect()
+        output = bytearray()
+        command = '#RI ' + endline
+        if DEBUG is True:
+            print(repr(command))
+        command = command.encode('ascii')
+        print('Get das info')
+        self.connection.write(command)
+        while 1:
+            recvdata = self.connection.read(1)
+            if recvdata:
+                output += recvdata
+                if recvdata.decode('ascii') == '\r':
+                    break
+        output = output.decode('utf-8')
+        return output
 
     def get_last_data(self):
         pass

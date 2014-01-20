@@ -164,7 +164,7 @@ class Das(object):
         if DEBUG is True:
             print(repr(command))
         command = command.encode('ascii')
-        print('Set integration period')
+        print('Set das netid')
         self.connection.write(command)
         while 1:
             recvdata = self.connection.read(1)
@@ -176,7 +176,22 @@ class Das(object):
         return output
 
     def get_das_netid(self):
-        pass
+        self.connect()
+        output = bytearray()
+        command = '#SI ' + endline
+        if DEBUG is True:
+            print(repr(command))
+        command = command.encode('ascii')
+        print('Get das netid')
+        self.connection.write(command)
+        while 1:
+            recvdata = self.connection.read(1)
+            if recvdata:
+                output += recvdata
+                if recvdata.decode('ascii') == '\r':
+                    break
+        output = output.decode('utf-8')
+        return output
 
     def set_station_number(self):
         pass

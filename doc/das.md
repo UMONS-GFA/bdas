@@ -19,20 +19,20 @@ CMOS memory AMD AM29F032B
 *Note : Every data sequence send by a DAS is followed by \n\r (LFCR in this case)  
 However each command end line sent to DAS must  be  \r\n (CRLF)*  
 
-  #hE : Help **(works)**  
-  #E0 : No Echo  **(works)**  
-  #E1 : Only Data **(works)**  
-  #E2 : Data + Time  
-  #SD : yyyy mm dd hh nn ss : Set Date + Time  
-  #SR iiii : Set Integration Period  
-  #SI nnn : Set Das netID  
+  #hE : Help  
+  #E0 : No Echo  **Implemented**     
+  #E1 : Only Data **Implemented**    
+  #E2 : Data + Time  **Implemented**  
+  #SD : yyyy mm dd hh nn ss : Set Date + Time **Implemented**    
+  #SR iiii : Set Integration Period  **Implemented**    
+  #SI nnn : Set Das netID **Implemented**    
   #SS ssss : Set Station Number  
-  #RI : Read Info **(works)**  
-  #RL : Read Last Data **(works)**  
-  #RM : Read Memory Status => Memory used, Memory available **(works)**  
+  #RI : Read Info **Implemented**  
+  #RL : Read Last Data   
+  #RM : Read Memory Status => Memory used, Memory available **Implemented**  
   #ZR ssss nnn iiii s 1111 2222 3333 4444 XX : Reconfig   
-  #ZF : erase memory and set default configuration  
-  #XB : Full Download  
+  #ZF : erase memory and set default configuration **Implemented**   
+  #XB : Full Download **Implemented**    
   #XP : yyyy mm dd hh ss yyyy mm dd hh nn ss : Partial Download  
   #XN : Next Download  
   #WB : Write line in workbook  

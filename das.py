@@ -230,7 +230,7 @@ class Das(object):
         if DEBUG is True:
             print(repr(command))
         command = command.encode('ascii')
-        print('Get das info')
+        print('Get memory info')
         self.connection.write(command)
         while 1:
             recvdata = self.connection.read(1)
@@ -242,7 +242,24 @@ class Das(object):
         return output
 
     def flash_das(self):
-        pass
+        self.connect()
+        output = bytearray()
+        command = '#ZF ' + endline
+        if DEBUG is True:
+            print(repr(command))
+        command = command.encode('ascii')
+        print('Flash memory and configuration')
+        self.connection.write(command)
+        #TODO: implement 60 seconds counter
+        while 1:
+            recvdata = self.connection.read(1)
+            if recvdata:
+                output += recvdata
+                if recvdata.decode('ascii') == '\r':
+                    break
+        print("Please wait 60 seconds")
+        output = output.decode('utf-8')
+        return output
 
     def download(self, filename):
         site = 'site'

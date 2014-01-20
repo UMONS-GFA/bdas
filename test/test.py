@@ -77,6 +77,11 @@ class TestSerialConnection(unittest.TestCase):
         sl = out[0:3]
         self.assertEqual(sl, '!RM')
 
+    # def test_flash_das(self):
+    #     out = self.das.flash_das()
+    #     sl = out[0:3]
+    #     self.assertEqual(sl, '!ZF')
+
 
     # def test_download(self):
     #     self.das.download('/home/christophe/Documents/das-download')

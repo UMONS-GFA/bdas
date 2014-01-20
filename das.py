@@ -224,7 +224,22 @@ class Das(object):
         pass
 
     def get_memory_info(self):
-        pass
+        self.connect()
+        output = bytearray()
+        command = '#RM ' + endline
+        if DEBUG is True:
+            print(repr(command))
+        command = command.encode('ascii')
+        print('Get das info')
+        self.connection.write(command)
+        while 1:
+            recvdata = self.connection.read(1)
+            if recvdata:
+                output += recvdata
+                if recvdata.decode('ascii') == '\r':
+                    break
+        output = output.decode('utf-8')
+        return output
 
     def flash_das(self):
         pass

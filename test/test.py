@@ -72,5 +72,11 @@ class TestSerialConnection(unittest.TestCase):
         sl = out[0:3]
         self.assertEqual(sl, '!RI')
 
+    def test_get_memory_info(self):
+        out = self.das.get_memory_info()
+        sl = out[0:3]
+        self.assertEqual(sl, '!RM')
+
+
     # def test_download(self):
     #     self.das.download('/home/christophe/Documents/das-download')

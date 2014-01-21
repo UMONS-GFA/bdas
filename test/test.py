@@ -78,3 +78,6 @@ class TestSerialConnection(unittest.TestCase):
 
     # def test_download(self):
     #     self.das.download('/home/christophe/Documents/das-download')
+
+    # def test_next_download(self):
+    #     self.das.next_download('/home/christophe/Documents/das-next-download')

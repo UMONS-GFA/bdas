@@ -182,9 +182,6 @@ class Das(object):
         output = output.decode('utf-8')
         return output
 
-    def set_das_info(self):
-        pass
-
     def get_das_info(self):
         self.connect()
         output = bytearray()
@@ -203,8 +200,15 @@ class Das(object):
         output = output.decode('utf-8')
         return output
 
-    def get_last_data(self):
-        pass
+    def set_configuration(self, station_id, netid, integration_period, nbr_instr, cal1, cal2, cal3, cal4):
+        self.connect()
+        command = "#ZR %04i %03i %04i %01i %04i %04i %04i %04i" % (station_id, netid, integration_period, nbr_instr,
+                                                                   cal1, cal2, cal3, cal4) + endline
+        if DEBUG is True:
+            print(repr(command))
+        command = command.encode('ascii')
+        print("Set das configuration")
+        self.connection.write(command)
 
     def get_memory_info(self):
         self.connect()

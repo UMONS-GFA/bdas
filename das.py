@@ -55,15 +55,24 @@ class Das(object):
 
     def set_no_echo(self):
         self.connect()
-        output = ''
+        output = bytearray()
+        recvdata = bytearray()
         command = '#E0' + endline
         if DEBUG is True:
             print(repr(command))
         command = command.encode('ascii')
         print('Set no echo')
         self.connection.write(command)
-        while output == '':
-            output = self.connection.read(6)
+        k= 0
+        while 1:
+            recvdata = self.connection.read(1)
+            if recvdata:
+                output += recvdata
+                if recvdata.decode('ascii') == '\r':
+                    if k == 0:
+                        k += 1
+                    else:
+                        break
         output = output.decode('utf-8')
         return output
 
@@ -136,27 +145,6 @@ class Das(object):
         output = output.decode('utf-8')
         return output
 
-    def get_integration_period(self):
-        self.connect()
-        output = bytearray()
-        command = '#SR' + endline
-        command = command.encode('ascii')
-        print('Get integration period')
-        self.connection.write(command)
-        while 1:
-            recvdata = self.connection.read(1)
-            if recvdata:
-                output += recvdata
-                if recvdata.decode('ascii') == '\r':
-                    break
-        output = output.decode('utf-8')
-        try:
-            integration_period = int(output[3:8])
-            return integration_period
-        except ValueError:
-            print("The integration period is not a number")
-
-
     def set_das_netid(self, netid):
         self.connect()
         output = bytearray()
@@ -175,27 +163,10 @@ class Das(object):
         output = output.decode('utf-8')
         return output
 
-    def get_das_netid(self):
-        self.connect()
-        output = bytearray()
-        command = '#SI' + endline
-        if DEBUG is True:
-            print(repr(command))
-        command = command.encode('ascii')
-        print('Get das netid')
-        self.connection.write(command)
-        while 1:
-            recvdata = self.connection.read(1)
-            if recvdata:
-                output += recvdata
-                if recvdata.decode('ascii') == '\r':
-                    break
-        output = output.decode('utf-8')
-        return output
-
     def set_station_id(self, station_id):
         self.connect()
         output = bytearray()
+        recvdata = bytearray()
         command = '#SS %04i' % station_id + endline
         if DEBUG is True:
             print(repr(command))
@@ -382,3 +353,6 @@ class Das(object):
         else:
             output = 'Data not downloaded ! : transmission not valid'
         return output
+
+    def interrupt_download(self):
+        pass

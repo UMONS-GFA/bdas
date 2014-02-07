@@ -17,7 +17,7 @@ You also need to configure a **settings.py** file
 
 Launch **bridge.py** on server then **client.py** on client.
 
-### Settings configuration:
+### Settings configuration (in settings.py):
 ```
 LocalHost = 'IP_ADRESS'
 LocalPort = NUM_PORT

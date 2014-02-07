@@ -255,7 +255,7 @@ class Das(object):
         info = 'interruption 2013 05 24 19 35 12'
         timestep = 1.0
         self.connect()
-        command = '#XB' + endline
+        command = '#XB ' + endline
         command = command.encode('ascii')
         print('Downloading')
         n = 0
@@ -296,10 +296,13 @@ class Das(object):
         b = self.connection.read(4)
         print(b)
         #curtime = np.int(ord(b[3]) + 256 * ord(b[2]) + 256 * 256 * ord(b[1]) + 256 * 256 * 256 * ord(b[0]))
-        curtime = b[3]+ 256 * b[2] + 256 * 256 * b[1] + 256 * 256 * 256 * b[0]
-        curtime = datetime.datetime.strptime('%04i:%02i:%02i:%02i:%02i:%02i' % (1970, 1, 1, 1, 0, 0), '%Y:%d:%m:%H'
-           ':%M:%S') + datetime.timedelta(seconds=curtime)
+        cts = b[3]+ 256 * b[2] + 256 * 256 * b[1] + 256 * 256 * 256 * b[0]
+        curtime = datetime.datetime.strptime('%04i:%02i:%02i:%02i:%02i:%02i' % (1970, 1, 1, 0, 0, 0), '%Y:%d:%m:%H'
+           ':%M:%S') + datetime.timedelta(seconds=cts)
         print('starting date:' + curtime.strftime('%d/%m/%Y %H:%M:%S'))
+        print(curtime.tzname())
+        print(curtime.utcoffset())
+        print(cts)
 
         # reading optional 00 00 00
         for i in range(3, nchannels + 1):
@@ -336,7 +339,8 @@ class Das(object):
                     for j in range(nchannels):
                         sb = self.connection.read(3)
                         #channel.append(ord(sb[2]) + 256 * ord(sb[1]) + 256 * 256 * ord(sb[0]))
-                        channel.append(sb[2] + 256 * sb[1] + 256 * 256 * sb[0])
+                        #channel.append(sb[2] + 256 * sb[1] + 256 * 256 * sb[0])
+                        channel.append(int.from_bytes(sb, byteorder='big', signed = False))
                         if channel[j] != 0xfefefe:
                             eot = False
                     curtime = curtime + datetime.timedelta(seconds=timestep)

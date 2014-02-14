@@ -2,6 +2,7 @@ __author__ = 'Olivier Kaufmann'
 import busconnection as bc
 import time
 import datetime
+import settings
 
 DEBUG = True
 
@@ -10,10 +11,20 @@ endline = '\r'
 class Das(object):
     netid = ''
     connection = bc.DasConnection()
+    connectiontype = 'none'
 
-    def __init__(self, netid='255', conn=bc.DasConnectionSerial('/dev/ttyUSB0')):
+    def __init__(self, netid='', conn=bc.DasConnection()):
+
+        if netid == '':
+            netid = settings.DefaultNetid
+        if conn.__class__.__name__ == 'DasConnection':
+            if settings.DefaultConnectionType == 'Serial':
+                conn = bc.NanoDasConnectionSerial(settings.DefaultConnectionDev)
+            elif settings.DefaultConnectionType == 'TCP':
+                conn = bc.NanoDasConnectionTCP(settings.LocalHost)
         self.netid = netid
         self.connection = conn
+
 
     def scan(self):
         output = ''
@@ -36,7 +47,10 @@ class Das(object):
             print(repr(command))
         command = command.encode('ascii')
         while output == '':
+            output = self.connection.read(3)
+        while output == '':
             self.connection.write(command)
+
             time.sleep(1)
             while self.connection.inwaiting() > 0:
                 output += self.connection.read(1).decode('utf-8')
@@ -63,7 +77,7 @@ class Das(object):
         command = command.encode('ascii')
         print('Set no echo')
         self.connection.write(command)
-        k= 0
+        k = 0
         while 1:
             recvdata = self.connection.read(1)
             if recvdata:
@@ -185,7 +199,7 @@ class Das(object):
     def get_das_info(self):
         self.connect()
         output = bytearray()
-        command = '#RI ' + endline
+        command = '#RI' + endline
         if DEBUG is True:
             print(repr(command))
         command = command.encode('ascii')
@@ -213,7 +227,7 @@ class Das(object):
     def get_memory_info(self):
         self.connect()
         output = bytearray()
-        command = '#RM ' + endline
+        command = '#RM' + endline
         if DEBUG is True:
             print(repr(command))
         command = command.encode('ascii')
@@ -231,7 +245,7 @@ class Das(object):
     def flash_das(self):
         self.connect()
         output = bytearray()
-        command = '#ZF ' + endline
+        command = '#ZF' + endline
         if DEBUG is True:
             print(repr(command))
         command = command.encode('ascii')
@@ -248,19 +262,33 @@ class Das(object):
         output = output.decode('utf-8')
         return output
 
-    def download(self, filename):
+    def download(self, filename, epomin='', epomax=''): # TODO : add partial download + interruptions from WB
         site = 'site'
         data = ''
         bpos = '1'
         info = 'interruption 2013 05 24 19 35 12'
         timestep = 1.0
+
+
+
         self.connect()
-        command = '#XB ' + endline
+        # check for partial download arguments
+        if epomax != '':
+            epomax = ' ' + epomax
+        else :
+            epomax = datetime.datetime.now(datetime.timezone.utc)
+            epomax = epomax.strftime('%Y-%m-%d %H:%M:%S')
+        if epomin != '':
+            epomin = ' ' + epomin
+        else :
+            epomin = '1970-01-01 00:00:00 UTC'
+
+        command = '#XB' + epomin + epomax + endline
         command = command.encode('ascii')
         print('Downloading')
         n = 0
         b = bytes()
-        while (b.__len__() == 0) & (n < 5):
+        while (b.__len__() == 0) & (n < 5) :
             self.connection.write(command)
             print('.')
             b = self.connection.read(1)
@@ -289,7 +317,7 @@ class Das(object):
         b1 = self.connection.read(1)
 
         # reading FF FF
-        if (b !=  b'\xff') | (b1 !=  b'\xff'):
+        if (b != b'\xff') | (b1 != b'\xff'):
             print('format error : unexpected values for the 2 bytes following 0xFD!')
 
         # reading D1 D2 D3 D4
@@ -297,12 +325,12 @@ class Das(object):
         print(b)
         #curtime = np.int(ord(b[3]) + 256 * ord(b[2]) + 256 * 256 * ord(b[1]) + 256 * 256 * 256 * ord(b[0]))
         cts = b[3]+ 256 * b[2] + 256 * 256 * b[1] + 256 * 256 * 256 * b[0]
-        curtime = datetime.datetime.strptime('%04i:%02i:%02i:%02i:%02i:%02i' % (1970, 1, 1, 0, 0, 0), '%Y:%d:%m:%H'
+        curtime = datetime.datetime.strptime('%04i-%02i-%02i %02i:%02i:%02i' % (1970, 1, 1, 0, 0, 0), '%Y-%d-%m %H'
            ':%M:%S') + datetime.timedelta(seconds=cts)
         print('starting date:' + curtime.strftime('%d/%m/%Y %H:%M:%S'))
-        print(curtime.tzname())
-        print(curtime.utcoffset())
-        print(cts)
+        #print(curtime.tzname())
+        #print(curtime.utcoffset())
+        #print(cts)
 
         # reading optional 00 00 00
         for i in range(3, nchannels + 1):

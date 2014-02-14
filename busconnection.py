@@ -1,6 +1,6 @@
 __author__ = 'Olivier Kaufmann'
 
-from settings import RemoteHost, RemotePort
+import settings
 import serial
 import socket
 import sys
@@ -24,7 +24,7 @@ class DasConnection(object):
     def inwaiting(self):
         pass
 
-    def flushoutput(self):
+    def flushinput(self):
         pass
 
 
@@ -94,21 +94,22 @@ class DasConnectionSerial(DasConnection):
         try:
             self.ser.flushInput()
         except:
-            sys.stderr.write("flushOutput error on serial port %s\n" % self.ser.portstr)
+            sys.stderr.write("flushInput error on serial port %s\n" % self.ser.portstr)
             sys.exit(1)
 
 class DasConnectionTCP(DasConnection):
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    Host = RemoteHost
-    Port = RemotePort
+    Host = settings.LocalHost
+    Port = settings.LocalPort
 
-    def __init__(self, address):
+    def __init__(self, Host=settings.LocalHost, Port=settings.LocalPort):
         super(DasConnectionTCP, self).__init__()
 
         try:
             self.sock.connect((self.Host, self.Port))
-        except:
-            sys.stderr.write("Error connecting to TCP port %s on host %s \n" % (self.Port, self.Host))
+            #self.sock.setblocking(0)  # non blocking socket
+        except socket.error as err:
+            sys.stderr.write("Error %s when connecting to TCP port %s on host %s \n" % (err, self.Port, self.Host))
             sys.exit(1)
 
 
@@ -138,13 +139,14 @@ class DasConnectionTCP(DasConnection):
     def write(self,command):
         try:
             self.sock.send(command)
-        except:
-            sys.stderr.write("Error writing command on TCP port %s on host %s \n" % (self.Port, self.Host))
+        except socket.error as err:
+            sys.stderr.write("Error %s when writing command on TCP port %s on host %s \n" % (err, self.Port, self.Host))
             sys.exit(1)
 
     def inwaiting(self):
         try:
-            output=self.sock.listen()  # TODO : Verify this
+            #output=self.sock.listen()  # TODO : Verify this
+            output=0
         except:
             sys.stderr.write("inWaiting error on TCP port %s on host %s \n" % (self.Port, self.Host))
             sys.exit(1)

@@ -1,6 +1,6 @@
 ## Run test.py 
 
-If you are using and usb to serial device, don't forget to get rights on the device.
+If you are using an usb to serial device, don't forget to get rights on the device.
 
 ### On Linux
 ```

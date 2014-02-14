@@ -25,5 +25,4 @@ LocalPort = NUM_PORT
 DefaultNetid = '255'
 DefaultConnectionType = 'Serial'
 DefaultConnectionDev = '/dev/ttyUSB0'
-
 ```

@@ -21,4 +21,7 @@ Launch **bridge.py** on server then **client.py** on client.
 ```
 LocalHost = 'IP_ADRESS'
 LocalPort = NUM_PORT
+DefaultNetid = '255'
+DefaultConnectionType = 'Serial'
+DefaultConnectionDev = '/dev/ttyUSB0'
 ```

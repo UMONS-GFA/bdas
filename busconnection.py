@@ -28,11 +28,11 @@ class DasConnection(object):
         pass
 
 
-class DasConnectionSerial(DasConnection):
+class NanoDasConnectionSerial(DasConnection):
     ser = serial.Serial()
 
     def __init__(self, comport):
-        super(DasConnectionSerial, self).__init__()
+        super(NanoDasConnectionSerial, self).__init__()
         self.ser = serial.Serial(
             port=comport,  # '/dev/pts/3' ou '/dev/ttyUSB0'
             baudrate=9600,
@@ -97,13 +97,13 @@ class DasConnectionSerial(DasConnection):
             sys.stderr.write("flushInput error on serial port %s\n" % self.ser.portstr)
             sys.exit(1)
 
-class DasConnectionTCP(DasConnection):
+class NanoDasConnectionTCP(DasConnection):
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     Host = settings.LocalHost
     Port = settings.LocalPort
 
     def __init__(self, Host=settings.LocalHost, Port=settings.LocalPort):
-        super(DasConnectionTCP, self).__init__()
+        super(NanoDasConnectionTCP, self).__init__()
 
         try:
             self.sock.connect((self.Host, self.Port))

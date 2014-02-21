@@ -11,15 +11,17 @@ Requirements(on the server):
 Access from the client:
 10.107.10.41:8000
 
-PORT AND HOST must be completed !!!
-
+A Settings file must be created !!!
 */
 
 var http = require('http');
 var fs = require('fs');
 var net = require('net');
+var settings = require('./settings').settings;
 
-var client = net.connect({port: '', host:''},
+console.log(settings.remoteHost);
+
+var client = net.connect({port: settings.remotePort, host: settings.remoteHost},
     function() { //'connect' listener
         console.log('client connected');
     });
@@ -31,7 +33,7 @@ var webserver = http.createServer(function(request, response){
         response.write(data);
         response.end();
     });
-}).listen(8000, '10.107.10.41');
+}).listen(settings.localPort, settings.localHost);
 
 var io = require('socket.io').listen(webserver);
 

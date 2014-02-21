@@ -17,6 +17,9 @@ Access from the client:
 var http = require('http');
 var fs = require('fs');
 var serialport = require("serialport");
+var settings = require('./settings').settings;
+
+console.log(settings.localHost);
 
 
 //create new SerialPort object
@@ -35,7 +38,7 @@ var webserver = http.createServer(function(request, response){
         response.write(data);
         response.end();
     });
-}).listen(8000, '10.107.10.41');
+}).listen(settings.localPort, settings.localHost);
 
 
 var io = require('socket.io').listen(webserver);

@@ -1,5 +1,5 @@
 /*
-SCRIPT TO REMOTELY ACCESS TO DAS
+SCRIPT TO REMOTELY ACCESS TO MG3D DAS
 
 Must be launched on the server
 node server.js

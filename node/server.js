@@ -52,17 +52,14 @@ io.sockets.on('connection', function(socket){
     });
 
     sp.on("data", function(data){
-        readData += data.toString();
-         console.log(data);
-        if(readData.indexOf("\n") != -1 ){
-            //console.log(readData);
-
-        }
+        console.log(data);
         io.sockets.emit("message_to_client",{ response: data});
     });
 
     sp.on("open", function()
     {
+        // Flushes data received but not read.
+        sp.flush();
         console.log('port opened…');
     });
 

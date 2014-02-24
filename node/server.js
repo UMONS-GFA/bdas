@@ -48,6 +48,10 @@ io.sockets.on('connection', function(socket){
     socket.on('messaqe_to_server', function(command){
         // show command sent by the client
         sp.write(command+'\r');
+        if(command == 'exit') {
+            sp.close();
+            process.exit(code=0);
+        }
         console.log(command);
     });
 

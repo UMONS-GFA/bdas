@@ -12,7 +12,7 @@ from settings import LocalHost, LocalPort
 Sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 data = bytearray()
-timeout = 2
+timeout = 3
 
 print('trying to connect...')
 
@@ -27,7 +27,7 @@ print('Socket connected')
 if len(sys.argv) == 2:
         cmd = str(sys.argv[1])
 else:
-        cmd = '#RI'
+        cmd = '#E0'
 cmd += '\n\r'
 cmd = bytearray(cmd.encode('ascii'))
 Sock.setblocking(0)
@@ -71,6 +71,6 @@ while 1:
     if not cmd or cmd.lower() == 'exit':
         break
     else:
-        cmd += '\n\r'
+        cmd += '\r'
         cmd = bytearray(cmd.encode('ascii'))
 Sock.close()

@@ -14,7 +14,7 @@ ServerSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)  # for socket
 
 comport = '/dev/ttyUSB0'
 netid = '255'
-serconn = bc.DasConnectionSerial(comport)
+serconn = bc.NanoDasConnectionSerial(comport)
 LocalSerialDas = das.Das()
 LocalSerialDas.connection = serconn
 LocalSerialDas.connect()
@@ -41,7 +41,7 @@ while 1:
         print('Received command', cmd.decode('ascii'), 'from', address)
         LocalSerialDas.connection.flushInput() # Empty Das connection output buffer
         LocalSerialDas.connection.write(cmd)  # send command to local Das
-        data = LocalSerialDas.connection.read(80)  # receive data from local Das
+        data = LocalSerialDas.connection.read(255)  # receive data from local Das
         print('Received data from das ', netid, ' on device :', comport)
         print(data.decode('ascii'))
         ConnectedClient.send(data)  # send data to client

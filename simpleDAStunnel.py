@@ -17,13 +17,13 @@ while 1:
         cmd = ConnectedClient.recv(255)  # receive command from client
         if not cmd:
                 break
-        print 'Received command', repr(cmd), 'from', address
+        print('Received command', repr(cmd), 'from', address)
         ClientSocket.send(cmd)  # send command to remote host
-        print 'Sent command', cmd, 'to', RemoteHost, ':', RemotePort
+        print('Sent command', cmd, 'to', RemoteHost, ':', RemotePort)
         data = ClientSocket.recv(1024)  # receive data from remote host
-        print 'Received data from', RemoteHost, ':', RemotePort
-        print data
+        print('Received data from', RemoteHost, ':', RemotePort)
+        print(data)
         ConnectedClient.send(data)  # send data to client
 ConnectedClient.close()
 ClientSocket.close()
-print 'Received', repr(data)
+print('Received', repr(data))

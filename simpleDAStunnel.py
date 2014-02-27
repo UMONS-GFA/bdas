@@ -11,20 +11,21 @@ ServerSocket.bind((LocalHost, LocalPort))
 ServerSocket.listen(1)
 
 ClientSocket.connect((RemoteHost, RemotePort))
+print('Tunnel opened...')
 ConnectedClient, address = ServerSocket.accept()
-
 print('Connected by ', address)
+
 while 1:
-        cmd = ConnectedClient.recv(255)  # receive command from client
-        if not cmd:
+        cmd = ConnectedClient.recv(4)  # receive command from client
+        if not cmd :
                 break
-        print('Received command', repr(cmd), 'from', address)
-        ClientSocket.send(cmd)  # send command to remote host
-        print('Sent command', cmd, 'to', RemoteHost, ':', RemotePort)
+        if cmd.decode('ascii') != '\n\r':
+            print('Received command', repr(cmd), 'from', address)
+            ClientSocket.send(cmd)  # send command to remote host
+            print('Sent command', cmd, 'to', RemoteHost, ':', RemotePort)
         data = ClientSocket.recv(1024)  # receive data from remote host
         print('Received data from', RemoteHost, ':', RemotePort)
         print(data)
         ConnectedClient.send(data)  # send data to client
 ConnectedClient.close()
 ClientSocket.close()
-print('Received', repr(data))

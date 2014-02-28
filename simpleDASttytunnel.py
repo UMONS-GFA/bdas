@@ -3,7 +3,7 @@
 
 __author__ = 'Olivier Kaufmann'
 
-from settings import LocalHost, LocalPort
+from settings import LocalHost, LocalPort, EOL
 import socket
 import busconnection as bc
 import sys
@@ -35,13 +35,17 @@ while 1:
     ConnectedClient, address = ServerSocket.accept()
     print('Connected by ', address)
     while 1:
-        cmd = ConnectedClient.recv(16)  # receive command from client
+        cmd = ConnectedClient.recv(4)  # receive command from client
         if not cmd:
             break
-        print('Received command', cmd.decode('ascii'), 'from', address)
-        LocalSerialDas.connection.flushInput() # Empty Das connection output buffer
-        LocalSerialDas.connection.write(cmd)  # send command to local Das
-        data = LocalSerialDas.connection.read(255)  # receive data from local Das
+        check=cmd.decode('ascii').replace('\r','')
+        if check != '':
+            print('Received command', cmd.decode('ascii'), 'from', address)
+            #LocalSerialDas.connection.flushInput() # Empty Das connection output buffer
+            LocalSerialDas.connection.write(cmd)  # send command to local Das
+        data = LocalSerialDas.connection.read()  # receive data from local Das
+        while EOL not in data:
+            data += LocalSerialDas.connection.read()  # receive data from remote host
         print('Received data from das ', netid, ' on device :', comport)
         print(data.decode('ascii'))
         ConnectedClient.send(data)  # send data to client

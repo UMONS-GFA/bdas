@@ -26,6 +26,8 @@ var client = net.connect({port: settings.remotePort, host: settings.remoteHost},
         console.log('client connected');
     });
 
+client.setEncoding('utf-8');
+
 
 var webserver = http.createServer(function(request, response){
     fs.readFile("client.html", 'utf-8', function(error, data){
@@ -47,9 +49,16 @@ io.sockets.on('connection', function(socket){
     });
 
     client.on('data', function(data) {
-        console.log(data.toString());
-        readData = data.toString();
-        io.sockets.emit("message_to_client",{ response: data});
+        readData += data.toString();
+        console.log("Readdata :"+ readData);
+        if(readData.indexOf('*') >= 0 && readData.indexOf('\r') >= 0){
+            sendData = readData .substring(readData .indexOf('*'), readData.indexOf('\r'));
+            io.sockets.emit("message_to_client",{ response: sendData});
+            console.log(sendData);
+            readData = '';
+        }
+
+
         //client.end();
     });
 

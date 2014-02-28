@@ -29,14 +29,14 @@ recvcmd = bytearray(1)
 recvdata = bytearray(1)
 timeout = 1
 
-print('Tunnel connected on %s' % comport)
+print('Bridge connected on %s' % comport)
 
 try:
     ServerSocket.bind((LocalHost, LocalPort))
-    print('trying to connect on %s %s' % (LocalHost, LocalPort))
+    print('Trying to connect on %s %s' % (LocalHost, LocalPort))
 
 except socket.error as err:
-    print('connection failed : %s' % err)
+    print('Connection failed : %s' % err)
     sys.exit()
 
 ServerSocket.listen(2)

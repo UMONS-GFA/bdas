@@ -47,10 +47,7 @@ class Das(object):
             print(repr(command))
         command = command.encode('ascii')
         while output == '':
-            output = self.connection.read(3)
-        while output == '':
             self.connection.write(command)
-
             time.sleep(1)
             while self.connection.inwaiting() > 0:
                 output += self.connection.read(1).decode('utf-8')

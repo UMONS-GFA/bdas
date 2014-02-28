@@ -66,7 +66,8 @@ while 1:
             pass
     data = bytearray()
     cmd = sys.stdin.readline()
-    if cmd.lower() == 'exit\n':
+    cmd=cmd[:-1]
+    if cmd.lower() == 'exit':
         break
     else:
         cmd += '\r'

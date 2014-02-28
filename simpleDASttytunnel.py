@@ -17,16 +17,16 @@ netid = '255'
 serconn = bc.NanoDasConnectionSerial(comport)
 LocalSerialDas = das.Das()
 LocalSerialDas.connection = serconn
-LocalSerialDas.connect()
+#LocalSerialDas.connect()
 
 print('DAS connected on %s' % comport)
 
 try:
     ServerSocket.bind((LocalHost, LocalPort))
-    print('trying to connect on %s %s' % (LocalHost, LocalPort))
+    print('Trying to connect on %s %s' % (LocalHost, LocalPort))
 
 except socket.error as err:
-    print('connection failed : %s' % err)
+    print('Connection failed : %s' % err)
     sys.exit()
 
 while 1:
@@ -44,10 +44,14 @@ while 1:
             #LocalSerialDas.connection.flushInput() # Empty Das connection output buffer
             LocalSerialDas.connection.write(cmd)  # send command to local Das
         data = LocalSerialDas.connection.read()  # receive data from local Das
-        while EOL not in data:
-            data += LocalSerialDas.connection.read()  # receive data from remote host
+        if cmd != b'#XB\r':
+            while EOL not in data:
+                data += LocalSerialDas.connection.read()  # receive data from remote host
+        else:
+            while b'\xfe\xfe\xfe\xfe\xfe\xfe\xfe\xfe\xfe\xfe\xfe\xfe' not in data: # generalize for less than 4 channels
+                data += LocalSerialDas.connection.read()  # receive data from remote host
         print('Received data from das ', netid, ' on device :', comport)
-        print(data.decode('ascii'))
+        print(repr(data))
         ConnectedClient.send(data)  # send data to client
     ConnectedClient.close()
 

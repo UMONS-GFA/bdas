@@ -26,10 +26,14 @@ while 1:
             ClientSocket.send(cmd)  # send command to remote host
             print('Sent command', cmd, 'to', RemoteHost, ':', RemotePort)
         data = ClientSocket.recv(1024)  # receive data from remote host
-        while EOL not in data:
-            data += ClientSocket.recv(1024)  # receive data from remote host
+        if cmd != b'#XB\r':
+            while EOL not in data:
+                data += ClientSocket.recv(1024)  # receive data from remote host
+        else:
+            while b'\xfe\xfe\xfe\xfe\xfe\xfe\xfe\xfe\xfe\xfe\xfe\xfe' not in data: # generalize for less than 4 channels
+                data += LocalSerialDas.connection.read()  # receive data from remote host
         print('Received data from', RemoteHost, ':', RemotePort)
-        print(data)
+        print(repr(data))
         ConnectedClient.send(data)  # send data to client
 ConnectedClient.close()
 ClientSocket.close()

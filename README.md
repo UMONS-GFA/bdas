@@ -1,4 +1,4 @@
-# bdas (v0.3-alpha)
+# bdas (v0.3)
 
 Application to interact with a DAS.
 

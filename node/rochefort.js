@@ -45,6 +45,9 @@ io.sockets.on('connection', function(socket){
     socket.on('messaqe_to_server', function(command){
         // show command sent by the client
         client.write(command+'\r');
+        if(command == 'exit') {
+            process.exit(code=0);
+        }
         console.log(command);
     });
 

@@ -18,7 +18,7 @@ var settings = require('./settings').settings;
 
 var sp = new  serialport.SerialPort("/dev/ttyUSB0", {
     baudrate: 9600,
-    parser: serialport.parsers.readline("\r")
+    parser: serialport.parsers.readline(settings.EOL)
 });
 
 var webserver = http.createServer(function (request, response) {
@@ -34,7 +34,7 @@ var io = require('socket.io').listen(webserver);
 io.sockets.on('connection', function (socket) {
     console.log("Socket connected");
     socket.on('messaqe_to_server', function (command) {
-        sp.write(command + '\r');
+        sp.write(command + settings.EOL);
         if (command == 'exit') {
             sp.close();
             process.exit(code=0);

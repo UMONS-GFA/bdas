@@ -59,7 +59,7 @@ io.sockets.on('connection', function (socket) {
                     realtime_data[fields[i]] = result[i];
                 }
                 var sendData;
-                sendData = realtime_data.sensor1;
+                sendData = "sensor 1 value :" + realtime_data.sensor1;
             }
             io.sockets.emit("message_to_client",{ response: sendData});
             console.log(sendData);

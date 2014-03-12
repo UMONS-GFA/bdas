@@ -5,7 +5,7 @@
     <title>Test socket</title>
     <script src="/socket.io/socket.io.js"></script>
     <script type="text/javascript">
-        var socketio = io.connect("10.107.10.41:8000");
+        var socketio = io.connect("10.107.10.41:10001");
         socketio.on("message_to_client", function(data){
             document.getElementById("chatlog").innerHTML = (data['response']);
         });

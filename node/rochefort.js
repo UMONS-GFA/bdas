@@ -43,9 +43,24 @@ io.sockets.on('connection', function (socket) {
 
     client.on('data', function (data) {
         readData += data.toString();
-        console.log("Readdata :" + readData);
-        if (readData.indexOf('*') >= 0 && readData.indexOf('\r') >= 0) {
-            sendData = readData .substring(readData .indexOf('*'), readData.indexOf('\r'));
+
+        if (readData.indexOf('*') >= 0 && readData.indexOf('\n\r') >= 0) {
+            readData = readData .substring(readData .indexOf('*'), readData.indexOf('\n')-1);
+            console.log("log - readdata :" + readData);
+            var parse_data = /^([*])(\d{4})\s(\d{2})\s(\d{2})\s(\d{2})\s(\d{2})\s(\d{2})\s(\d{6}\.\d{4})\s(\d{6}\.\d{4})\s(\d{6}\.\d{4}\s)(\d{6}\.\d{4})$/;
+            var result = parse_data.exec(readData);
+            if(result) {
+                console.log("log - string has been parsed");
+                var fields = ['data', 'star', 'year', 'month', 'day', 'hour', 'minute', 'second', 'sensor1',
+                    'sensor2', 'sensor3', 'sensor4'];
+                var realtime_data = {};
+                var i;
+                for (i = 0; i < fields.length; i++){
+                    realtime_data[fields[i]] = result[i];
+                }
+                var sendData;
+                sendData = realtime_data.sensor1;
+            }
             io.sockets.emit("message_to_client",{ response: sendData});
             console.log(sendData);
             readData = '';

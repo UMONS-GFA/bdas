@@ -5,8 +5,8 @@
     <title>Test socket</title>
     <script src="/socket.io/socket.io.js"></script>
     <script type="text/javascript">
-        var socketio = io.connect("10.107.10.41:8000");
-        socketio.on("message_to_client", function(data){
+        var socketio = io.connect("10.107.10.81:8000");
+        socketio.on("message_to_client", function(data) {
             document.getElementById("log").innerHTML = (document.getElementById("log").innerHTML + "<p>" +
                     "</p>" + data['response']);
         });
@@ -25,6 +25,5 @@
         <button onclick="sendMessage()">Send command</button>
     </p>
     <p id="log"></p>
-
 </body>
 </html>

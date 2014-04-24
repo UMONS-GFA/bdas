@@ -30,7 +30,7 @@ However each command end line sent to DAS must  be  \r\n (CRLF)*
   #RI : Read Info **Implemented**  
   #RL : Read Last Data   
   #RM : Read Memory Status => Memory used, Memory available **Implemented**  
-  #ZR station netId integrationPeriod nbInst 1111 2222 3333 4444 XX : Reconfig   
+  #ZR station netId integrationPeriod nbInst ( Ex: #ZR 1111 222 3333 4): Reconfig   
   #ZF : erase memory and set default configuration **Implemented**   
   #XB : Full Download **Implemented**    
   #XP : yyyy mm dd hh ss yyyy mm dd hh nn ss : Partial Download  

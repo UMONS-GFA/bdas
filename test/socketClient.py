@@ -23,14 +23,19 @@ print('Socket connected')
 if len(sys.argv) == 2:
         cmd = str(sys.argv[1])
 else:
-        cmd = '#E1'
-cmd += '\n\r'
+        cmd = '#HE'
+cmd += '\r'
 cmd = bytearray(cmd.encode('ascii'))
 while 1:
     print('Command :', cmd.decode())
     Sock.send(cmd)
-    data = Sock.recv(80)
+    data = Sock.recv(255)
     sdata = data.decode('ascii')
     print('Received', sdata)
-    input('Press any key to send command again')
+    cmd = input('Type command (type #HE for help).\r\n')
+    if not cmd:
+        break
+    else:
+        cmd += '\r'
+        cmd = bytearray(cmd.encode('ascii'))
 Sock.close()

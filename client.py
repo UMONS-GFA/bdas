@@ -7,7 +7,7 @@ __author__ = 'Olivier Kaufmann'
 import sys
 import socket
 import time
-from settings import LocalHost, LocalPort
+from settings import LocalHost, LocalPort, EOL
 
 Sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -22,15 +22,15 @@ except socket.error as err:
     print('connection failed : %s ' % err)
     sys.exit()
 
-print('Socket connected')
+print('Socket connected')#HE
 
 if len(sys.argv) == 2:
     cmd = str(sys.argv[1])
 else:
     cmd = input('Type command (type #HE for help or exit to quit).\n> ')
-cmd += '\r'
 cmd = bytearray(cmd.encode('ascii'))
-Sock.setblocking(0)
+cmd += EOL
+Sock.setblocking(True)
 newline = False
 while 1:
     Sock.send(cmd)

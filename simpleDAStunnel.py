@@ -31,9 +31,10 @@ while 1:
                 data += ClientSocket.recv(1024)  # receive data from remote host
         else:
             while b'\xfe\xfe\xfe\xfe\xfe\xfe\xfe\xfe\xfe\xfe\xfe\xfe' not in data: # generalize for less than 4 channels
-                data += LocalSerialDas.connection.read()  # receive data from remote host
+                data += ClientSocket.recv(1024) # receive data from remote host
         print('Received data from', RemoteHost, ':', RemotePort)
         print(repr(data))
         ConnectedClient.send(data)  # send data to client
+        print('Data sent to ', address)
 ConnectedClient.close()
 ClientSocket.close()

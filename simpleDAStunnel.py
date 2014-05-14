@@ -20,13 +20,13 @@ while 1:
         cmd = ConnectedClient.recv(4)  # receive command from client
         if not cmd :
                 break
-        check=cmd.decode('ascii').replace('\r','')
+        check=cmd.decode('ascii').replace(EOL.decode('ascii'),'')
         if check != '':
             print('Received command', repr(cmd), 'from', address)
             ClientSocket.send(cmd)  # send command to remote host
             print('Sent command', cmd, 'to', RemoteHost, ':', RemotePort)
         data = ClientSocket.recv(1024)  # receive data from remote host
-        if cmd != b'#XB\r':
+        if cmd != b'#XB'+EOL:
             while EOL not in data:
                 data += ClientSocket.recv(1024)  # receive data from remote host
         else:

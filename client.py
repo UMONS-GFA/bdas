@@ -30,7 +30,7 @@ else:
     cmd = input('Type command (type #HE for help or exit to quit).\n> ')
 cmd = bytearray(cmd.encode('ascii'))
 cmd += EOL
-Sock.setblocking(True)
+Sock.setblocking(False)
 newline = False
 while 1:
     Sock.send(cmd)
@@ -50,7 +50,14 @@ while 1:
             if recvdata:
                 data += recvdata
                 starttime = time.time()
-                if recvdata.decode('ascii') == '\n':
+                if b'\xfe\xfe\xfe\xfe\xfe\xfe\xfe\xfe\xfe\xfe\xfe\xfe' in data:
+                    print ('*** Downloaded data ***')
+                    #print(data.decode('utf-8'))
+                    print(repr(data))
+                    print ('*** End of download ***')
+                    data = bytearray()
+                    datanewline = False
+                elif recvdata.decode('ascii') == '\n':
                     datanewline = True
                 elif recvdata.decode('ascii') == '\r':
                     if datanewline:
@@ -58,18 +65,22 @@ while 1:
                         data = bytearray()
                     datanewline = False
                 else:
+                    sys.stdout.write(data)
                     datanewline = False
             else:
                 #sleep for sometime to indicate a gap
                 time.sleep(0.1)
+                sys.stdout.write(".")
         except:
             pass
     data = bytearray()
-    cmd = sys.stdin.readline()
-    cmd=cmd[:-1]
+    cmd=input()
+    #print(">")
+    #cmd = sys.stdin.readline()
+    #cmd=cmd[:-1]
     if cmd.lower() == 'exit':
         break
     else:
-        cmd += '\r'
         cmd = bytearray(cmd.encode('ascii'))
+        cmd += EOL
 Sock.close()

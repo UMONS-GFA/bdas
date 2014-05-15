@@ -53,8 +53,12 @@ while 1:
                 if b'\xfe\xfe\xfe\xfe\xfe\xfe\xfe\xfe\xfe\xfe\xfe\xfe' in data:
                     print ('*** Downloaded data ***')
                     #print(data.decode('utf-8'))
+                    data=data[data.find(b'\xfd\xfd\xfd\xfd\xfd\xfd\xfd\xfd\xfd\xfd\xfd\xfd'):data.find(b'\xfe\xfe\xfe\xfe\xfe\xfe\xfe\xfe\xfe\xfe\xfe\xfe')+48]
                     print(repr(data))
                     print ('*** End of download ***')
+                    with open('out.bin','wb') as f:
+                        f.write(data)
+                    f.close()
                     data = bytearray()
                     datanewline = False
                 elif recvdata.decode('ascii') == '\n':

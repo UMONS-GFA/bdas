@@ -1,7 +1,7 @@
 __author__ = 'Olivier Kaufmann'
 
 from settings import LocalHost, LocalPort, RemoteHost, RemotePort, EOL
-import socket
+import socket, sys
 
 
 ServerSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # socket for communication with connecting clients
@@ -32,6 +32,7 @@ while 1:
         else:
             while b'\xfe\xfe\xfe\xfe\xfe\xfe\xfe\xfe\xfe\xfe\xfe\xfe' not in data: # generalize for less than 4 channels
                 data += ClientSocket.recv(1024) # receive data from remote host
+                sys.stdout.write(".")
         print('Received data from', RemoteHost, ':', RemotePort)
         print(repr(data))
         ConnectedClient.send(data)  # send data to client

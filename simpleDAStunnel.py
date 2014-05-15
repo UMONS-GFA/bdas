@@ -15,6 +15,7 @@ ClientSocket.connect((RemoteHost, RemotePort))
 print('Tunnel opened...')
 ConnectedClient, address = ServerSocket.accept()
 print('Connected by ', address)
+downloading=False
 
 while 1:
         cmd = ConnectedClient.recv(4)  # receive command from client
@@ -29,12 +30,19 @@ while 1:
         if cmd != b'#XB'+EOL:
             while EOL not in data:
                 data += ClientSocket.recv(1024)  # receive data from remote host
+            print('Received data from', RemoteHost, ':', RemotePort)
+            print(repr(data))
         else:
+            print("*** Waiting for download... ***")
+            while b'\xfd\xfd\xfd\xfd\xfd\xfd\xfd\xfd\xfd\xfd\xfd\xfd' not in data: # generalize for less than 4 channels
+                data += ClientSocket.recv(1024) # receive data from remote host
+                sys.stdout.write(".")
+            downloading=True
+            print("*** Now downloading... ***")
             while b'\xfe\xfe\xfe\xfe\xfe\xfe\xfe\xfe\xfe\xfe\xfe\xfe' not in data: # generalize for less than 4 channels
                 data += ClientSocket.recv(1024) # receive data from remote host
                 sys.stdout.write("-")
-        print('Received data from', RemoteHost, ':', RemotePort)
-        print(repr(data))
+            print("*** Download complete!***")
         ConnectedClient.send(data)  # send data to client
         print('Data sent to ', address)
 ConnectedClient.close()

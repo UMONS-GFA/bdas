@@ -74,7 +74,7 @@ while 1:
             else:
                 #sleep for sometime to indicate a gap
                 time.sleep(0.1)
-                sys.stdout.write(".")
+                sys.stdout.write("-")
         except:
             pass
     data = bytearray()

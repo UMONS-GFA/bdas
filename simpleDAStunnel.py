@@ -32,7 +32,7 @@ while 1:
         else:
             while b'\xfe\xfe\xfe\xfe\xfe\xfe\xfe\xfe\xfe\xfe\xfe\xfe' not in data: # generalize for less than 4 channels
                 data += ClientSocket.recv(1024) # receive data from remote host
-                sys.stdout.write(".")
+                sys.stdout.write("-")
         print('Received data from', RemoteHost, ':', RemotePort)
         print(repr(data))
         ConnectedClient.send(data)  # send data to client

@@ -48,18 +48,38 @@ while 1:
         try:
             recvdata = Sock.recv(1)
             if recvdata:
+                t=0
                 data += recvdata
                 starttime = time.time()
-                if b'\xfe\xfe\xfe\xfe\xfe\xfe\xfe\xfe\xfe\xfe\xfe\xfe' in data:
-                    print ('*** Downloaded data ***')
-                    #print(data.decode('utf-8'))
-                    data=data[data.find(b'\xfd\xfd\xfd\xfd\xfd\xfd\xfd\xfd\xfd\xfd\xfd\xfd'):data.find(b'\xfe\xfe\xfe\xfe\xfe\xfe\xfe\xfe\xfe\xfe\xfe\xfe')+48]
-                    print(repr(data))
-                    print ('*** End of download ***')
-                    with open('out.bin','wb') as f:
-                        f.write(data)
+                if b'\xfd' in data:
+                    data=data[data.find(b'\xfd'):-1]
+                    print ('*** Downloading data ... ***')
+                    f=open('out.bin','wb')
                     f.close()
-                    data = bytearray()
+                    f=open('out.bin','ab')
+                    k=0
+                    nxfe=0 # number of terminating \xfe
+                    eod=False # end of download
+                    while not eod:
+                        if k/256-round(k/256)==0 :
+                            print(repr(round(k/1024,1)) + ' Kb',end='\r')
+                        f.write(data)  # write data to file
+                        if data==b'\xfe':
+                            nxfe+=1
+                            if nxfe==12: # generalize for less than 4 channels
+                                eod=True
+                        else:
+                            nxfe=0
+                        if not eod:
+                            try :
+                                data = Sock.recv(1) # receive data from remote host
+                                k+=1
+                            except :
+                                data=b''
+                                #print('Waiting for data...',end="\r")
+                    print('*** Download complete! ***')
+                    f.close()
+                    data = b''
                     datanewline = False
                 elif recvdata.decode('ascii') == '\n':
                     datanewline = True
@@ -73,12 +93,13 @@ while 1:
                     datanewline = False
             else:
                 #sleep for sometime to indicate a gap
+                t+=1
                 time.sleep(0.1)
-                sys.stdout.write("-")
+                print("Waiting cycles..." + t,"\r")
         except:
             pass
     data = bytearray()
-    cmd=input()
+    cmd=input("> ")
     #print(">")
     #cmd = sys.stdin.readline()
     #cmd=cmd[:-1]

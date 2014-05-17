@@ -289,8 +289,6 @@ class Das(object):
             self.connection.write(command)
             print('.')
             b = self.connection.read(1)
-            # Given a string representing one Unicode character, return an integer representing the
-            # Unicode code point of that character
             n += 1
 
 

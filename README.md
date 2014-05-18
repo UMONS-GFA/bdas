@@ -16,7 +16,7 @@ You also need to configure a **settings.py** file
 ### Procedure
 
 Launch **simpleDASttytunnel.py** on server then **client.py** on client for access to a DAS connected by serial on the server(LocalHost).  
-Launch  **simpleDAStunnel.py** on server then **client.py** on client for access to a DAS on a remote network (RemoteHost) accessible by the server.
+Launch  **DAStunnel.py** (or **simpleDAStunnel.py** if you do not have access to netcat) on server then **client.py** on client for access to a DAS on a remote network (RemoteHost) accessible by the server.
 
 **Remark :** Communication between client and local host might be restricted to communications within a private network. In such a case make sure to connect your client through a VPN connection before running client.py.
 

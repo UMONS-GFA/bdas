@@ -14,6 +14,10 @@ Sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 data = bytearray()
 timeout = 0.2
+outfile = 'out.bin'
+cmdfile = ''
+basepath = os.path.dirname(__file__)
+cl = 0  # command line
 
 print(time.strftime('____________\nUTC time : %Y %m %d %H:%M', time.gmtime())+'\nTrying to connect...')
 
@@ -24,10 +28,7 @@ except socket.error as err:
     sys.exit()
 
 print('Socket connected')
-outfile = 'out.bin'
-cmdfile = ''
-basepath = os.path.dirname(__file__)
-cl = 0  # command line
+
 
 if len(sys.argv) == 2:
     cmdfile = str(sys.argv[1])
@@ -65,12 +66,12 @@ while 1:
                     print ('*** Downloading data ... ***')
                     if cmdfile!='':
                         cl+=1
-                        outfile=os.path.abspath(os.path.join(basepath, "..","DownloadRochefortDAS", cmdlines[cl].strip('\n')+time.strftime('_%Y%m%d_%H%M',time.gmtime())+'.bin'))
+                        outfile=os.path.abspath(os.path.join(basepath, '..', 'DownloadDAS', cmdlines[cl].strip('\n')+time.strftime('_%Y%m%d_%H%M',time.gmtime())+'.bin'))
                     print('Saving results in %s' % outfile)
                     try :
                         f=open(outfile,'wb')
-                        f.close()
-                        f=open(outfile,'ab')
+                        #f.close()
+                        #f=open(outfile,'ab')
                         k=0
                         nxfe=0 # number of terminating \xfe
                         eod=False # end of download
@@ -83,7 +84,7 @@ while 1:
                                 if nxfe==12: # generalize for less than 4 channels
                                     eod = True
                             else:
-                                if nxfe>=3:
+                                if data!=b'' and nxfe>=3:
                                     eod = True
                                     print('Error: incorrect ending of downloaded data...')
                                     cmdlines[cf+1]='#XS'
@@ -92,7 +93,8 @@ while 1:
                                     cmdlines[cf+4]='#XS'
                                     cmdlines[cf+5]='#XS'
                                     cmdlines[cf+6]='exit'
-                                nxfe=0
+                                elif data!=b'':
+                                    nxfe=0
                             if not eod:
                                 try :
                                     data = Sock.recv(1) # receive data from remote host

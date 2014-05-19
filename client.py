@@ -62,7 +62,7 @@ while 1:
                 data += recvdata
                 starttime = time.time()
                 if b'\xfd' in data:
-                    data=data[data.find(b'\xfd'):-1]
+                    data=data[data.find(b'\xfd'):]
                     print ('*** Downloading data ... ***')
                     if cmdfile!='':
                         cl+=1

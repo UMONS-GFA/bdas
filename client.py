@@ -67,52 +67,52 @@ while 1:
                 data += recvdata
                 starttime = time.time()
                 if b'\xfd' in data:
-                    data=data[data.find(b'\xfd'):]
-                    print ('*** Downloading data ... ***')
-                    if cmdfile!='':
-                        cl+=1
-                        outfile=os.path.abspath(os.path.join(basepath, '..', 'DownloadDAS', cmdlines[cl].strip('\n')+time.strftime('_%Y%m%d_%H%M',time.gmtime())+'.bin'))
+                    data = data[data.find(b'\xfd'):]
+                    print('*** Downloading data ... ***')
+                    if cmdfile != '':
+                        cl += 1
+                        outfile = os.path.abspath(os.path.join(basepath, '..', 'DownloadDAS', cmdlines[cl].strip('\n') + time.strftime('_%Y%m%d_%H%M', time.gmtime())+'.bin'))
                     print('Saving results in %s' % outfile)
-                    try :
+                    try:
                         f=open(outfile,'wb')
                         #f.close()
                         #f=open(outfile,'ab')
-                        k=0
-                        nxfe=0 # number of terminating \xfe
-                        eod=False # end of download
+                        k = 0
+                        nxfe = 0 # number of terminating \xfe
+                        eod = False # end of download
                         while not eod:
-                            if k/256-round(k/256)==0 and cmdfile=='':
+                            if k/256-round(k/256) == 0 and cmdfile == '':
                                 print(repr(round(k/1024,1)) + ' Kb',end='\r')
                             f.write(data)  # write data to file
-                            if data==b'\xfe':
-                                nxfe+=1
-                                if nxfe==12: # generalize for less than 4 channels
+                            if data == b'\xfe':
+                                nxfe += 1
+                                if nxfe == 12: # generalize for less than 4 channels
                                     eod = True
                             else:
-                                if data!=b'' and nxfe>=3:
+                                if data != b'' and nxfe >= 3:
                                     eod = True
                                     print('Error: incorrect ending of downloaded data...')
-                                    cmdlines[cf+1]='#XS'
-                                    cmdlines[cf+2]='#XS'
-                                    cmdlines[cf+3]='#XS'
-                                    cmdlines[cf+4]='#XS'
-                                    cmdlines[cf+5]='#XS'
-                                    cmdlines[cf+6]='exit'
-                                elif data!=b'':
-                                    nxfe=0
+                                    cmdlines[cf+1] = '#XS'
+                                    cmdlines[cf+2] = '#XS'
+                                    cmdlines[cf+3] = '#XS'
+                                    cmdlines[cf+4] = '#XS'
+                                    cmdlines[cf+5] = '#XS'
+                                    cmdlines[cf+6] = 'exit'
+                                elif data != b'':
+                                    nxfe = 0
                             if not eod:
-                                try :
+                                try:
                                     data = Sock.recv(1) # receive data from remote host
-                                    k+=1
-                                except :
-                                    data=b''
+                                    k += 1
+                                except:
+                                    data = b''
                                     #print('Waiting for data...',end="\r")
                         print('*** Download complete! ***')
                         f.close()
                         datanewline = False
                     except:
                         print('Error: unable to open file %s ! - Exiting command file %s ...' % (outfile,cmdfile))
-                        cmdlines[cf+1]='exit'
+                        cmdlines[cf+1] = 'exit'
                 elif recvdata.decode('ascii') == '\n':
                     datanewline = True
                 elif recvdata.decode('ascii') == '\r':
@@ -125,13 +125,13 @@ while 1:
                     datanewline = False
             else:
                 #sleep for sometime to indicate a gap
-                t+=1
+                t += 1
                 time.sleep(0.1)
                 print("Waiting cycles..." + t,"\r")
         except:
             pass
     data = bytearray()
-    if cmdfile=='':
+    if cmdfile == '':
         cmd=input("> ")
     else:
         cl+=1
@@ -148,5 +148,5 @@ while 1:
     else:
         cmd = bytearray(cmd.encode('ascii'))
         cmd += EOL
-if cmdfile!='':
+if cmdfile != '':
     print('Ending at ' + time.strftime('UTC time : %Y %m %d %H:%M', time.gmtime()) + '\n____________')

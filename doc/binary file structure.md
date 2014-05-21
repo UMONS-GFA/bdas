@@ -1,13 +1,20 @@
-4 channels
+## 4 channels binary file structure
 
-Header
------
-/xfd x12   (begin message)
-/xff x2    (date block check)
-/xD1 /xD2 /xD3 /xD4 (date block)
-/x00 x6
-/xC1 /xC1 /xC1 /xC2 /xC2 /xC2 /xC3 /xC3 /xC3 /xC4 /xC4 /xC4 (3 bytes by channel for each measurement)
-/xfe x12   (end message)
+#### Header
+
+/xfd x12   (begin message)  
+/xff x2    (date block check)  
+/xD1 /xD2 /xD3 /xD4 (date block)  
+/x00 x6  
+
+#### Measures
+
+/xC1 /xC1 /xC1 /xC2 /xC2 /xC2 /xC3 /xC3 /xC3 /xC4 /xC4 /xC4 (3 bytes by channel for each measurement)  
+
+#### Footer
+
+/xfe x12   (end message)  
+
 
 Example :
 ```

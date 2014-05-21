@@ -1,5 +1,7 @@
 ## 4 channels binary file structure
 
+### Structure
+
 #### Header
 
 /xfd x12   (begin message)  
@@ -24,6 +26,9 @@ FF FF 07 DE 05 15 00 00 00 00 00 00
 ..... MEASURE 2................................
 FE FE FE FE FE FE FE FE FE FE FE FE FE FE FE FE
 ```
+
+
+### File size 
 
 Size of a file : 36 bytes + n * 12 bytes
 download time ≃ 1kb/sec

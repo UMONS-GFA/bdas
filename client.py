@@ -19,6 +19,7 @@ cmdfile = ''
 basepath = os.path.dirname(__file__)
 cl = 0  # command line
 
+# strftime convert tuple retun by gmtime method to a string
 print(time.strftime('____________\nUTC time : %Y %m %d %H:%M', time.gmtime())+'\nTrying to connect...')
 
 try:
@@ -29,10 +30,14 @@ except socket.error as err:
 
 print('Socket connected')
 
-
+# check if python script has arguments
+# sys.argv[0] is python script name
 if len(sys.argv) == 2:
     cmdfile = str(sys.argv[1])
-    cf = open(cmdfile,'rt')
+    # os.open method create a new file
+    #TODO : check if rt is correct
+    cf = open(cmdfile, 'rt')
+    # readlines return a list of lines
     cmdlines = cf.readlines()
     cf.close()
     cmd = cmdlines[cl].strip('\n')

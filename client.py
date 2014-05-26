@@ -74,7 +74,7 @@ while 1:
                         outfile = os.path.abspath(os.path.join(basepath, '..', 'DownloadDAS', cmdlines[cl].strip('\n') + time.strftime('_%Y%m%d_%H%M', time.gmtime())+'.bin'))
                     print('Saving results in %s' % outfile)
                     try:
-                        f=open(outfile,'wb')
+                        f = open(outfile,'wb')
                         #f.close()
                         #f=open(outfile,'ab')
                         k = 0

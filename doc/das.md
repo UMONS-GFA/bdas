@@ -19,7 +19,7 @@ CMOS memory AMD AM29F032B
 *Note : Every data sequence send by a DAS is followed by \n\r (LFCR in this case)  
 However each command end line sent to DAS must  be  \r\n (CRLF)*  
 
-  #hE : Help  
+  #HE : Help  
   #E0 : No Echo  **Implemented**     
   #E1 : Only Data **Implemented**    
   #E2 : Data + Time  **Implemented**  

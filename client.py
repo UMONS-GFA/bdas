@@ -1,48 +1,44 @@
-# Warning : Don't forget to start the server before running this script
-#-*- coding: utf8 -*-
-
-__author__ = 'Olivier Kaufmann'
-
-
 import sys
 import os.path
 import socket
 import time
 from settings import LocalHost, LocalPort, EOL
 
-Sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
 data = bytearray()
 timeout = 0.2
 outfile = 'out.bin'
-cmdfile = ''
+cmdfile = ''  # script argument to specify command file
 basepath = os.path.dirname(__file__)
 cl = 0  # command line
+Sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
+
+# print UTC date and time
 # strftime convert tuple retun by gmtime method to a string
 print(time.strftime('____________\nUTC time : %Y %m %d %H:%M', time.gmtime())+'\nTrying to connect...')
-
+# Socket connection
 try:
     Sock.connect((LocalHost, LocalPort))
 except socket.error as err:
     print('connection failed : %s ' % err)
     sys.exit()
-
 print('Socket connected')
 
-# check if python script has arguments
+
+# check if python script has the name of a command file as argument
 # sys.argv[0] is python script name
 if len(sys.argv) == 2:
     cmdfile = str(sys.argv[1])
-    # os.open method create a new file
-    #TODO : check if rt is correct
+    # open method create a new file
     cf = open(cmdfile, 'rt')
     # readlines return a list of lines
     cmdlines = cf.readlines()
     cf.close()
     cmd = cmdlines[cl].strip('\n')
 else:
+    # show a prompt
     cmd = input('Type command (type #HE for help or exit to quit).\n> ')
+
 cmd = bytearray(cmd.encode('ascii'))
 cmd += EOL
 Sock.setblocking(False)
@@ -52,7 +48,7 @@ while 1:
     #beginning time
     starttime = time.time()
     while 1:
-        #if you got some data, then break after timeout
+        #if you got some data, then break after timeout -> show prompt
         if data and time.time()-starttime > timeout:
             break
 
@@ -69,20 +65,22 @@ while 1:
                 if b'\xfd' in data:
                     data = data[data.find(b'\xfd'):]
                     print('*** Downloading data ... ***')
+                    # check if there is a command file as parameter
                     if cmdfile != '':
                         cl += 1
+                        # create output file name
                         outfile = os.path.abspath(os.path.join(basepath, '..', 'DownloadDAS', cmdlines[cl].strip('\n') + time.strftime('_%Y%m%d_%H%M', time.gmtime())+'.bin'))
                     print('Saving results in %s' % outfile)
                     try:
-                        f = open(outfile,'wb')
-                        #f.close()
-                        #f=open(outfile,'ab')
-                        k = 0
-                        nxfe = 0 # number of terminating \xfe
-                        eod = False # end of download
-                        while not eod:
+                        f = open(outfile, 'wb')
+                        k = 0  # use to calculate file wheight
+                        nxfe = 0  # number of terminating \xfe
+                        eod = False  # end of download
+                        dl_timeout = starttime + 5400  # 1H30
+                        while not eod and time.time() < dl_timeout:
+                            # show the weight of the downloaded file in Kb
                             if k/256-round(k/256) == 0 and cmdfile == '':
-                                print(repr(round(k/1024,1)) + ' Kb',end='\r')
+                                print(repr(round(k/1024, 1)) + ' Kb', end='\r')
                             f.write(data)  # write data to file
                             if data == b'\xfe':
                                 nxfe += 1
@@ -107,11 +105,14 @@ while 1:
                                 except:
                                     data = b''
                                     #print('Waiting for data...',end="\r")
-                        print('*** Download complete! ***')
+                        if time.time() > dl_timeout:
+                            print("Download takes too much time, job canceled")
+                        else:
+                            print('*** Download complete! ***')
                         f.close()
                         datanewline = False
                     except:
-                        print('Error: unable to open file %s ! - Exiting command file %s ...' % (outfile,cmdfile))
+                        print('Error: unable to open file %s ! - Exiting command file %s ...' % (outfile, cmdfile))
                         cmdlines[cf+1] = 'exit'
                 elif recvdata.decode('ascii') == '\n':
                     datanewline = True
@@ -127,15 +128,15 @@ while 1:
                 #sleep for sometime to indicate a gap
                 t += 1
                 time.sleep(0.1)
-                print("Waiting cycles..." + t,"\r")
+                print("Waiting cycles..." + t, "\r")
         except:
             pass
     data = bytearray()
     if cmdfile == '':
         cmd=input("> ")
     else:
-        cl+=1
-        if cl<len(cmdlines):
+        cl += 1
+        if cl < len(cmdlines):
             cmd=cmdlines[cl].strip('\n')
         else:
             cmd='exit'

@@ -14,6 +14,16 @@ datanewline = False # new line of data
 dl_expectedduration = 5400  # full µDAS download
 Sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
+# Socket connection
+def connect():
+    try:
+        Sock.connect((LocalHost, LocalPort))
+    except socket.error as err:
+        print('connection failed : %s ' % err)
+        sys.exit(1)
+    print('Socket connected')
+
+
 def flush():
     print('flushing...')
     data=b'0'
@@ -48,25 +58,25 @@ if __name__=='__main__':
     # print UTC date and time
     # strftime convert tuple retun by gmtime method to a string
     print(time.strftime('____________\nUTC time : %Y %m %d %H:%M', time.gmtime())+'\nTrying to connect...')
-    # Socket connection
-    try:
-        Sock.connect((LocalHost, LocalPort))
-    except socket.error as err:
-        print('connection failed : %s ' % err)
-        sys.exit()
-    print('Socket connected')
 
+
+    connect()
 
     # check if python script has the name of a command file as argument
     # sys.argv[0] is python script name
     if len(sys.argv) == 2:
         cmdfile = str(sys.argv[1])
-        # open method create a new file
-        cf = open(cmdfile, 'rt')
-        # readlines return a list of lines
-        cmdlines = cf.readlines()
-        cf.close()
-        cmd = cmdlines[cl].strip('\n')
+        try:
+            cf = open(cmdfile, 'rt')
+
+            # readlines return a list of lines
+            cmdlines = cf.readlines()
+            cf.close()
+            cmd = cmdlines[cl].strip('\n')
+        except IOError:
+            print("Error : The command file cannot be found")
+            sys.exit(1)
+
     else:
         # show a prompt
         cmd = input('Type command (type #HE for help or exit to quit).\n> ')

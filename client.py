@@ -137,19 +137,15 @@ if __name__=='__main__':
                                     elif data != b'':
                                         nxfe = 0
                                 if not eod:
-                                    try:
-                                        data = Sock.recv(1) # receive data from remote host
-                                        k += 1
-                                    except:
-                                        data = b''
-                                        #print('Waiting for data...',end="\r")
+                                    data = Sock.recv(1) # receive data from remote host
+                                    k += 1
                             if time.time() > dl_timeout:
                                 failed_download("Download takes too much time, job canceled")
                             else:
                                 print('*** Download complete! ***')
                             f.close()
                             datanewline = False
-                        except:
+                        except OSError:
                             print('Error: unable to open file %s ! - Exiting command file %s ...' % (outfile, cmdfile))
                             cmdlines[cf+1] = 'exit'
                     elif recvdata.decode('ascii') == '\n':

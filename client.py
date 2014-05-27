@@ -11,6 +11,7 @@ cmdfile = ''  # script argument to specify command file
 basepath = os.path.dirname(__file__)
 cl = 0  # command line
 Sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+cmd = ''
 
 
 def connect():
@@ -30,17 +31,19 @@ if __name__ == '__main__':
     # strftime convert tuple retun by gmtime method to a string
     print(time.strftime('____________\nUTC time : %Y %m %d %H:%M', time.gmtime())+'\nTrying to connect...')
 
-
     # check if python script has the name of a command file as argument
     # sys.argv[0] is python script name
     if len(sys.argv) == 2:
         cmdfile = str(sys.argv[1])
         # open method create a new file
-        cf = open(cmdfile, 'rt')
-        # readlines return a list of lines
-        cmdlines = cf.readlines()
-        cf.close()
-        cmd = cmdlines[cl].strip('\n')
+        try:
+            cf = open(cmdfile, 'rt')
+            # readlines return a list of lines
+            cmdlines = cf.readlines()
+            cf.close()
+            cmd = cmdlines[cl].strip('\n')
+        except IOError:
+            print("Error : The file cannot be found")
     else:
         # show a prompt
         cmd = input('Type command (type #HE for help or exit to quit).\n> ')
@@ -90,7 +93,7 @@ if __name__ == '__main__':
                                 f.write(data)  # write data to file
                                 if data == b'\xfe':
                                     nxfe += 1
-                                    if nxfe == 12: # generalize for less than 4 channels
+                                    if nxfe == 12:  # generalize for less than 4 channels
                                         eod = True
                                 else:
                                     if data != b'' and nxfe >= 3:

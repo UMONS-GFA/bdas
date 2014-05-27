@@ -13,20 +13,23 @@ cl = 0  # command line
 Sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 
-
-
-if __name__ == '__main__':
-
-    # print UTC date and time
-    # strftime convert tuple retun by gmtime method to a string
-    print(time.strftime('____________\nUTC time : %Y %m %d %H:%M', time.gmtime())+'\nTrying to connect...')
-    # Socket connection
+def connect():
     try:
         Sock.connect((LocalHost, LocalPort))
     except socket.error as err:
         print('connection failed : %s ' % err)
         sys.exit()
     print('Socket connected')
+
+
+if __name__ == '__main__':
+
+    connect()
+
+    # print UTC date and time
+    # strftime convert tuple retun by gmtime method to a string
+    print(time.strftime('____________\nUTC time : %Y %m %d %H:%M', time.gmtime())+'\nTrying to connect...')
+
 
     # check if python script has the name of a command file as argument
     # sys.argv[0] is python script name

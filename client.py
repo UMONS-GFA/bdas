@@ -15,6 +15,7 @@ cmd = ''
 
 
 def connect():
+    """ Establish a connection socket with remote server """
     try:
         Sock.connect((LocalHost, LocalPort))
     except socket.error as err:
@@ -24,7 +25,6 @@ def connect():
 
 
 if __name__ == '__main__':
-
     connect()
 
     # print UTC date and time
@@ -35,7 +35,6 @@ if __name__ == '__main__':
     # sys.argv[0] is python script name
     if len(sys.argv) == 2:
         cmdfile = str(sys.argv[1])
-        # open method create a new file
         try:
             cf = open(cmdfile, 'rt')
             # readlines return a list of lines
@@ -54,92 +53,91 @@ if __name__ == '__main__':
     newline = False
     while 1:
         Sock.send(cmd)
-        #beginning time
-        starttime = time.time()
+        start_time = time.time()   # beginning time
         while 1:
-            #if you got some data, then break after timeout -> show prompt
-            if data and time.time()-starttime > timeout:
+            # if data break after timeout
+            if data and time.time()-start_time > timeout:
                 break
-
-            #if you got no data at all, wait a little longer
-            elif time.time()-starttime > timeout*3:
+            # if no data  wait a little longer
+            elif time.time()-start_time > timeout*3:
                 break
             #recv something
-            try:
-                recvdata = Sock.recv(1)
-                if recvdata:
-                    t = 0
-                    data += recvdata
-                    starttime = time.time()
-                    if b'\xfd' in data:
-                        data = data[data.find(b'\xfd'):]
-                        print('*** Downloading data ... ***')
-                        # check if there is a command file as parameter
-                        if cmdfile != '':
-                            cl += 1
-                            # create output file name
-                            outfile = os.path.abspath(os.path.join(basepath, '..', 'DownloadDAS', cmdlines[cl].strip('\n') + time.strftime('_%Y%m%d_%H%M', time.gmtime())+'.bin'))
-                        print('Saving results in %s' % outfile)
-                        try:
-                            f = open(outfile, 'wb')
-                            k = 0  # use to calculate file wheight
-                            nxfe = 0  # number of terminating \xfe
-                            eod = False  # end of download
-                            dl_timeout = starttime + 5400  # 1H30
-                            while not eod and time.time() < dl_timeout:
-                                # show the weight of the downloaded file in Kb
-                                if k/256-round(k/256) == 0 and cmdfile == '':
-                                    print(repr(round(k/1024, 1)) + ' Kb', end='\r')
-                                f.write(data)  # write data to file
-                                if data == b'\xfe':
-                                    nxfe += 1
-                                    if nxfe == 12:  # generalize for less than 4 channels
-                                        eod = True
-                                else:
-                                    if data != b'' and nxfe >= 3:
-                                        eod = True
-                                        print('Error: incorrect ending of downloaded data...')
-                                        cmdlines[cf+1] = '#XS'
-                                        cmdlines[cf+2] = '#XS'
-                                        cmdlines[cf+3] = '#XS'
-                                        cmdlines[cf+4] = '#XS'
-                                        cmdlines[cf+5] = '#XS'
-                                        cmdlines[cf+6] = 'exit'
-                                    elif data != b'':
-                                        nxfe = 0
-                                if not eod:
-                                    try:
-                                        data = Sock.recv(1) # receive data from remote host
-                                        k += 1
-                                    except:
-                                        data = b''
-                                        #print('Waiting for data...',end="\r")
-                            if time.time() > dl_timeout:
-                                print("Download takes too much time, job canceled")
+            recvdata = Sock.recv(1)
+            if recvdata:
+                t = 0
+                data += recvdata
+                start_time = time.time()
+                if b'\xfd' in data:
+                    data = data[data.find(b'\xfd'):]
+                    print('*** Downloading data ... ***')
+                    # check if there is a command file as parameter
+                    if cmdfile != '':
+                        cl += 1
+                        # create output file name
+                        outfile = os.path.abspath(os.path.join(basepath,
+                                                               '..', 'DownloadDAS', cmdlines[cl].strip('\n') +
+                                                                                    time.strftime('_%Y%m%d_%H%M',
+                                                                                                  time.gmtime()) +
+                                                                                    '.bin'))
+                    print('Saving results in %s' % outfile)
+                    try:
+                        f = open(outfile, 'wb')
+                        k = 0  # use to calculate file wheight
+                        nxfe = 0  # number of terminating \xfe
+                        eod = False  # end of download
+                        dl_timeout = start_time + 5400  # 1H30
+                        while not eod and time.time() < dl_timeout:
+                            # show the weight of the downloaded file in Kb
+                            if k/256-round(k/256) == 0 and cmdfile == '':
+                                print(repr(round(k/1024, 1)) + ' Kb', end='\r')
+                            f.write(data)  # write data to file
+                            if data == b'\xfe':
+                                nxfe += 1
+                                if nxfe == 12:  # generalize for less than 4 channels
+                                    eod = True
                             else:
-                                print('*** Download complete! ***')
-                            f.close()
-                            datanewline = False
-                        except:
-                            print('Error: unable to open file %s ! - Exiting command file %s ...' % (outfile, cmdfile))
-                            cmdlines[cf+1] = 'exit'
-                    elif recvdata.decode('ascii') == '\n':
-                        datanewline = True
-                    elif recvdata.decode('ascii') == '\r':
-                        if datanewline:
-                            print(data.decode('utf-8'))
-                            data = bytearray()
+                                if data != b'' and nxfe >= 3:
+                                    eod = True
+                                    print('Error: incorrect ending of downloaded data...')
+                                    cmdlines[cf+1] = '#XS'
+                                    cmdlines[cf+2] = '#XS'
+                                    cmdlines[cf+3] = '#XS'
+                                    cmdlines[cf+4] = '#XS'
+                                    cmdlines[cf+5] = '#XS'
+                                    cmdlines[cf+6] = 'exit'
+                                elif data != b'':
+                                    nxfe = 0
+                            if not eod:
+                                try:
+                                    data = Sock.recv(1) # receive data from remote host
+                                    k += 1
+                                except:
+                                    data = b''
+                                    #print('Waiting for data...',end="\r")
+                        if time.time() > dl_timeout:
+                            print("Download takes too much time, job canceled")
+                        else:
+                            print('*** Download complete! ***')
+                        f.close()
                         datanewline = False
-                    else:
-                        sys.stdout.write(data)
-                        datanewline = False
+                    except:
+                        print('Error: unable to open file %s ! - Exiting command file %s ...' % (outfile, cmdfile))
+                        cmdlines[cf+1] = 'exit'
+                elif recvdata.decode('ascii') == '\n':
+                    datanewline = True
+                elif recvdata.decode('ascii') == '\r':
+                    if datanewline:
+                        print(data.decode('utf-8'))
+                        data = bytearray()
+                    datanewline = False
                 else:
-                    #sleep for sometime to indicate a gap
-                    t += 1
-                    time.sleep(0.1)
-                    print("Waiting cycles..." + t, "\r")
-            except:
-                pass
+                    sys.stdout.write(data)
+                    datanewline = False
+            else:
+                #sleep for sometime to indicate a gap
+                t += 1
+                time.sleep(0.1)
+                print("Waiting cycles..." + t, "\r")
         data = bytearray()
         if cmdfile == '':
             cmd=input("> ")

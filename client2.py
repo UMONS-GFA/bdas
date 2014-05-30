@@ -44,7 +44,7 @@ def send_command(acmd):
             while k < kmax:
                 starttime = time.time()
                 while time.time() < starttime + 100 * timeout:
-                    readable, writable, exceptional = select.select([Sock], [], [],timeout)
+                    readable, writable, exceptional = select.select([Sock], [], [], timeout)
                     if Sock in readable:
                         recvdata = Sock.recv(1)
                         data += recvdata

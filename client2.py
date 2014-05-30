@@ -8,15 +8,15 @@ from settings import LocalHost, LocalPort, EOL
 cl = 0  # current command line index
 cmdlines = []  # command lines
 eod = False  # end of download
-datanewline = False # new line of data
+datanewline = False  # new line of data
 dl_expectedduration = 5400  # full µDAS download
 Sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 command_list = [b'#HE', b'#E0', b'#E1', b'#E2', b'#SD', b'#SR', b'#SI', b'#SS', b'#ZR', b'#ZF', b'#XB', b'#RI', b'#XS', b'#XP', b'#RM', b'#RL', b'#RV',
                 b'#XN', b'#WB', b'#RW']
 for i in range(0, 255):
-    command_list.append(bytearray(('-%03d' %i).encode('ascii')))
+    command_list.append(bytearray(('-%03d' % i).encode('ascii')))
 response_list = [b'!HE', b'!E0', b'!E1', b'!E2', b'!SD', b'!SR', b'!SI', b'!SS', b'!ZR', b'!ZF', b'\xfd', b'!RI', b'!XS',b'\xfd', b'!RM', b'!RL', b'!RV',
-                b'!XN', b'!WB', b'!RW']
+                 b'!XN', b'!WB', b'!RW']
 for i in range(0, 255):
     response_list.append(b'!HI')
 recvdata = b''
@@ -33,7 +33,7 @@ def send_command(acmd):
     data = b''
     #print UTC date and time
     # strftime convert tuple retun by gmtime method to a string
-    print(time.strftime('____________\nUTC time : %Y %m %d %H:%M', time.gmtime())+'\nSending command %s ...'%acmd.decode('utf-8'))
+    print(time.strftime('____________\nUTC time : %Y %m %d %H:%M', time.gmtime())+'\nSending command %s ...' % acmd.decode('utf-8'))
     if acmd in command_list:
         k = 0
         readable, writable, exceptional = select.select([], [Sock], [], 6)
@@ -68,10 +68,11 @@ def send_command(acmd):
             cmdlines.append('exit')
             cl = len(cmdlines)-1
     else:
-        print("Unknown command: %s", acmd.decode('utf-8'))
+        print('Unknown command: %s', acmd.decode('utf-8'))
 
 
 def flush():
+    global data, recvdata
     print('flushing...')
     command = '#XS\r'
     command = command.encode('ascii')
@@ -84,16 +85,6 @@ def flush():
             break
         time.sleep(1)
 
-    # while (data != b'') and (nl < nmaxloops):
-    #     #beginning time
-    #     starttime = time.time()
-    #     data = b''
-    #     while time.time() < starttime+loopduration:
-    #         recvdata = Sock.recv(10)
-    #         data += recvdata
-    #         time.sleep(1)
-    #     nl += 1
-
 
 def failed_download(msg):
     global eod, cl
@@ -103,7 +94,7 @@ def failed_download(msg):
     eod = True
     send_command(b'#XS')
 
-if __name__=='__main__':
+if __name__ == '__main__':
 
     # print UTC date and time
     # strftime convert tuple retun by gmtime method to a string
@@ -158,7 +149,7 @@ if __name__=='__main__':
                             print('*** Downloading data ... ***')
                             # check if there is a command file as parameter
                             if cmdfile != '':
-                                if cl<len(cmdlines)+2:
+                                if cl < len(cmdlines)+2:
                                     # create output file name
                                     cl += 1
                                     outfile = os.path.abspath(os.path.join(basepath, '..', 'DownloadDAS', cmdlines[cl].strip('\n') + time.strftime('_%Y%m%d_%H%M', time.gmtime())+'.bin'))
@@ -167,7 +158,7 @@ if __name__=='__main__':
                                     dl_expectedduration = int(cmdlines[cl])
                                 else:
                                     print('Incorrect arguments in command file !')
-                                    cl=len(cmdlines)
+                                    cl = len(cmdlines)
                                     cmdlines.append('exit')
                                     break
                             print('Saving results in %s' % outfile)
@@ -185,7 +176,7 @@ if __name__=='__main__':
                                     f.write(data)  # write data to file
                                     if data == b'\xfe':
                                         nxfe += 1
-                                        if nxfe == 12: # generalize for less than 4 channels
+                                        if nxfe == 12:  # generalize for less than 4 channels
                                             eod = True
                                     else:
                                         if data != b'' and nxfe >= 3:
@@ -194,13 +185,13 @@ if __name__=='__main__':
                                             nxfe = 0
                                     if not eod:
                                         try:
-                                            data = Sock.recv(1) # receive data from remote host
+                                            data = Sock.recv(1)  # receive data from remote host
                                             k += 1
                                         except:
                                             data = b''
-                                            print('Waiting for data...',end="\r")
+                                            print('Waiting for data...', end='\r')
                                 if time.time() >= dl_timeout:
-                                    failed_download("Download takes too much time, job canceled")
+                                    failed_download('Download takes too much time, job canceled')
                                 else:
                                     print('*** Download complete! ***')
                                 f.close()
@@ -227,14 +218,11 @@ if __name__=='__main__':
             cmd=input("> ")
         else:
             cl += 1
-            print("next command…")
+            print('Next command...')
             if cl < len(cmdlines):
-                cmd=cmdlines[cl].strip('\n')
+                cmd = cmdlines[cl].strip('\n')
             else:
-                cmd='exit'
-        #print(">")
-        #cmd = sys.stdin.readline()
-        #cmd=cmd[:-1]
+                cmd = 'exit'
 
     if cmdfile != '':
         print('Ending at ' + time.strftime('UTC time : %Y %m %d %H:%M', time.gmtime()) + '\n____________')

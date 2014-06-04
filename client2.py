@@ -190,7 +190,7 @@ if __name__ == '__main__':
                                             k += 1
                                         else:
                                             data = b''
-                                            print('Waiting for data...', end='\r')
+                                            #print('Waiting for data...', end='\n')
                                 if time.time() >= dl_timeout:
                                     failed_download('Download takes too much time, job canceled')
                                 else:

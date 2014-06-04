@@ -184,12 +184,13 @@ if __name__ == '__main__':
                                         elif data != b'':
                                             nxfe = 0
                                     if not eod:
-                                        try:
+                                        readable, writable, exceptional = select.select([Sock], [], [], timeout)
+                                        if Sock in readable:
                                             data = Sock.recv(1)  # receive data from remote host
                                             k += 1
-                                        except:
+                                        else:
                                             data = b''
-                                            print('Waiting for data...', end='\r')
+                                            #print('Waiting for data...', end='\n')
                                 if time.time() >= dl_timeout:
                                     failed_download('Download takes too much time, job canceled')
                                 else:

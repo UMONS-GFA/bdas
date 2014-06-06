@@ -1,9 +1,14 @@
 __author__ = 'su530201'
 
 import datetime
+from tkinter import filedialog
+def_dir = '/home/su530201/PycharmProjects/DownloadDAS/'
+def_file = 'R002Full_20140603_1827'
+#in_filename = '/home/su530201/PycharmProjects/DownloadDAS/R002Full_20140603_1827.bin'
+#out_filename = '/home/su530201/PycharmProjects/DownloadDAS/R002Full_20140603_1827.txt'
+in_filename = filedialog.askopenfilename(filetypes=(('Binary files', 'binary {*.bin}')), initialdir = def_dir, initialfile = def_file +'.bin')
+outfile = filedialog.asksaveasfile(filetypes=(("Text files", "text {*.txt}")), initialfile = def_file + '.txt')
 
-in_filename = '/home/su530201/PycharmProjects/DownloadDAS/R002Full_20140603_1827.bin'
-out_filename = '/home/su530201/PycharmProjects/DownloadDAS/R002Full_20140603_1827.txt'
 time_step = 60
 
 infile = open(in_filename, 'rb')
@@ -51,7 +56,7 @@ if b != 0x000000:
 
 # reading channels and writing dat file
 if not eot:
-    outfile = open(out_filename, 'w+')
+    #outfile = open(out_filename, 'wt+')
     try:
         ## write header
         #s = '# SITE: ' + site
@@ -91,5 +96,3 @@ if not eot:
 
     finally:
         outfile.close()
-
-print('Data downloaded to ' + out_filename)

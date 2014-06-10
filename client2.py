@@ -11,12 +11,12 @@ eod = False  # end of download
 datanewline = False  # new line of data
 dl_expectedduration = 5400  # full µDAS download
 Sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-command_list = [b'#HE', b'#E0', b'#E1', b'#E2', b'#SD', b'#SR', b'#SI', b'#SS', b'#ZR', b'#ZF', b'#XB', b'#RI', b'#XS', b'#XP', b'#RM', b'#RL', b'#RV',
-                b'#XN', b'#WB', b'#RW']
+command_list = [b'#HE', b'#E0', b'#E1', b'#E2', b'#SD', b'#SR', b'#SI', b'#SS', b'#ZR', b'#ZF', b'#XB', b'#RI', b'#XS',
+                b'#XP', b'#RM', b'#RL', b'#RV', b'#XN', b'#WB', b'#RW']
 for i in range(0, 255):
     command_list.append(bytearray(('-%03d' % i).encode('ascii')))
-response_list = [b'!HE', b'!E0', b'!E1', b'!E2', b'!SD', b'!SR', b'!SI', b'!SS', b'!ZR', b'!ZF', b'\xfd', b'!RI', b'!XS',b'\xfd', b'!RM', b'!RL', b'!RV',
-                 b'!XN', b'!WB', b'!RW']
+response_list = [b'!HE', b'!E0', b'!E1', b'!E2', b'!SD', b'!SR', b'!SI', b'!SS', b'!ZR', b'!ZF', b'\xfd', b'!RI',
+                 b'!XS', b'\xfd', b'!RM', b'!RL', b'!RV', b'!XN', b'!WB', b'!RW']
 for i in range(0, 255):
     response_list.append(b'!HI')
 recvdata = b''
@@ -29,13 +29,20 @@ basepath = os.path.dirname(__file__)
 
 
 def send_command(acmd):
+    """
+
+    :param acmd: binary
+    :return
+    """
     global data, recvdata, cl
     data = b''
+    k = 0
     #print UTC date and time
     # strftime convert tuple retun by gmtime method to a string
-    print(time.strftime('____________\nUTC time : %Y %m %d %H:%M', time.gmtime())+'\nSending command %s ...' % acmd.decode('utf-8'))
+    print(time.strftime('____________\nUTC time : %Y %m %d %H:%M', time.gmtime()) +
+          '\nSending command %s ...' % acmd.decode('utf-8'))
     if acmd in command_list:
-        k = 0
+
         readable, writable, exceptional = select.select([], [Sock], [], 6)
         if Sock in writable:
             Sock.send(acmd + EOL)
@@ -72,6 +79,7 @@ def send_command(acmd):
 
 
 def flush():
+    """ remove pending data in socket stream """
     global data, recvdata
     print('flushing...')
     command = '#XS\r'
@@ -87,6 +95,11 @@ def flush():
 
 
 def failed_download(msg):
+    """ interupt download if the ending sequence is wrong
+
+        :param msg: string
+
+    """
     global eod, cl
 
     print('Error: incorrect ending of downloaded data...')
@@ -108,7 +121,6 @@ if __name__ == '__main__':
     print('Socket connected')
     time.sleep(1)
 
-
     # check if python script has the name of a command file as argument
     # sys.argv[0] is python script name
     if len(sys.argv) == 2:
@@ -122,7 +134,6 @@ if __name__ == '__main__':
     else:
         # show a prompt
         cmd = input('Type command (type #HE for help or exit to quit).\n> ')
-
 
     Sock.setblocking(False)
     newline = False
@@ -152,7 +163,10 @@ if __name__ == '__main__':
                                 if cl < len(cmdlines)+2:
                                     # create output file name
                                     cl += 1
-                                    outfile = os.path.abspath(os.path.join(basepath, '..', 'DownloadDAS', cmdlines[cl].strip('\n') + time.strftime('_%Y%m%d_%H%M', time.gmtime())+'.bin'))
+                                    outfile = os.path.abspath(os.path.join(basepath, '..', 'DownloadDAS',
+                                                                           cmdlines[cl].strip('\n') +
+                                                                           time.strftime('_%Y%m%d_%H%M',
+                                                                                         time.gmtime())+'.bin'))
                                     # read expected download duration
                                     cl += 1
                                     dl_expectedduration = int(cmdlines[cl])
@@ -198,8 +212,9 @@ if __name__ == '__main__':
                                 f.close()
                                 datanewline = False
                             except IOError:
-                                print('Error: unable to open file %s ! - Exiting command file %s ...' % (outfile, cmdfile))
-                                cl=len(cmdlines)
+                                print('Error: unable to open file %s ! - Exiting command file %s ...' % (outfile,
+                                                                                                         cmdfile))
+                                cl = len(cmdlines)
                                 cmdlines.append('exit')
                         elif recvdata.decode('ascii') == '\n':
                             datanewline = True
@@ -216,7 +231,7 @@ if __name__ == '__main__':
                  pass
         data = bytearray()
         if cmdfile == '':
-            cmd=input("> ")
+            cmd = input("> ")
         else:
             cl += 1
             print('Next command...')

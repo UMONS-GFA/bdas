@@ -1,13 +1,18 @@
-__author__ = 'su530201'
+"""
+Binary to txt parser
+
+ """
 
 import datetime
 from tkinter import filedialog
+
 def_dir = '/home/su530201/PycharmProjects/DownloadDAS/'
 def_file = 'R002Full_20140603_1827'
 #in_filename = '/home/su530201/PycharmProjects/DownloadDAS/R002Full_20140603_1827.bin'
 #out_filename = '/home/su530201/PycharmProjects/DownloadDAS/R002Full_20140603_1827.txt'
-in_filename = filedialog.askopenfilename(filetypes=(('Binary files', 'binary {*.bin}')), initialdir = def_dir, initialfile = def_file +'.bin')
-outfile = filedialog.asksaveasfile(filetypes=(("Text files", "text {*.txt}")), initialfile = def_file + '.txt')
+in_filename = filedialog.askopenfilename(filetypes=('Binary files', 'binary {*.bin}'),
+                                         initialdir = def_dir, initialfile = def_file + '.bin')
+outfile = filedialog.asksaveasfile(filetypes=("Text files", "text {*.txt}"), initialfile = def_file + '.txt')
 
 time_step = 60
 
@@ -41,8 +46,8 @@ b = infile.read(4)
 print(b)
 #curtime = np.int(ord(b[3]) + 256 * ord(b[2]) + 256 * 256 * ord(b[1]) + 256 * 256 * 256 * ord(b[0]))
 cur_time = b[3] + 256 * b[2] + 256 * 256 * b[1] + 256 * 256 * 256 * b[0]
-cur_time = datetime.datetime.strptime('%04i:%02i:%02i:%02i:%02i:%02i' % (1970, 1, 1, 1, 0, 0), '%Y:%d:%m:%H:%M:%S') +\
-           datetime.timedelta(seconds=cur_time)
+cur_time = datetime.datetime.strptime('%04i:%02i:%02i:%02i:%02i:%02i' % (1970, 1, 1, 1, 0, 0),
+                                      '%Y:%d:%m:%H:%M:%S') + datetime.timedelta(seconds=cur_time)
 print('starting date:' + cur_time.strftime('%d/%m/%Y %H:%M:%S'))
 
 # reading optional 00 00 00

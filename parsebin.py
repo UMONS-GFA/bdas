@@ -1,18 +1,18 @@
 """
-Binary to txt parser
+A binary to txt parser
+This program let you choose a binary file and propose to parse and save it as a readable text file.
 
  """
-
+import os
 import datetime
 from tkinter import filedialog
 
-def_dir = '/home/su530201/PycharmProjects/DownloadDAS/'
-def_file = 'R002Full_20140603_1827'
-#in_filename = '/home/su530201/PycharmProjects/DownloadDAS/R002Full_20140603_1827.bin'
-#out_filename = '/home/su530201/PycharmProjects/DownloadDAS/R002Full_20140603_1827.txt'
-in_filename = filedialog.askopenfilename(filetypes=('Binary files', 'binary {*.bin}'),
-                                         initialdir = def_dir, initialfile = def_file + '.bin')
-outfile = filedialog.asksaveasfile(filetypes=("Text files", "text {*.txt}"), initialfile = def_file + '.txt')
+
+home = os.path.expanduser('~')
+in_filename = filedialog.askopenfilename(filetypes=('binary {*.bin}', 'Binary files'),
+                                         initialdir = home, initialfile = '')
+out_filename = os.path.splitext(os.path.basename(in_filename))[0]
+outfile = filedialog.asksaveasfile(filetypes=("Text files", "text {*.txt}"), initialfile = out_filename + '.txt')
 
 time_step = 60
 

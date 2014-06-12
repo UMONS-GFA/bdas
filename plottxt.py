@@ -1,10 +1,12 @@
 __author__ = 'su530201'
-
+""" plot a parsed downloaded DAS file
+"""
 import numpy as np
 import matplotlib.pyplot as plt
 import datetime
 from tkinter import filedialog
 from tkinter import *
+
 root = Tk()
 root.withdraw() #this will hide the main window
 

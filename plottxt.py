@@ -1,5 +1,5 @@
 __author__ = 'su530201'
-""" plot a parsed downloaded DAS file
+""" plot a parsed downloaded DAS file...
 """
 import numpy as np
 import matplotlib.pyplot as plt

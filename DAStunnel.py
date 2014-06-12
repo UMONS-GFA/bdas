@@ -1,8 +1,12 @@
-__author__ = 'Olivier Kaufmann'
+"""
+Act like a proxy between a client and a remote server.
+A port is opened on the locahost and every command sent to it is repeated to the remote host on the remote port.
 
-from settings import LocalPort, RemoteHost, RemotePort
+"""
+
 import sys
 import subprocess   # used to launch shell command
+from settings import LocalPort, RemoteHost, RemotePort
 
 
 print('Opening tunnel...')

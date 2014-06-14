@@ -38,11 +38,10 @@ def send_command(acmd):
     data = b''
     k = 0
     #print UTC date and time
-    # strftime convert tuple retun by gmtime method to a string
+    # strftime converts tuple returned by gmtime method to a string
     print(time.strftime('____________\nUTC time : %Y %m %d %H:%M', time.gmtime()) +
           '\nSending command %s ...' % acmd.decode('utf-8'))
     if acmd in command_list:
-
         readable, writable, exceptional = select.select([], [Sock], [], 6)
         if Sock in writable:
             Sock.send(acmd + EOL)
@@ -80,22 +79,13 @@ def send_command(acmd):
 
 def flush():
     """ remove pending data in socket stream """
-    global data, recvdata
     print('flushing...')
-    command = '#XS\r'
-    command = command.encode('ascii')
-    data = b''
-    while True:
-        Sock.send(command)
-        recvdata = Sock.recv(1)
-        data += recvdata
-        if data[data.find('!XS'.encode('ascii')):]:
-            break
-        time.sleep(1)
+    send_command(b'#XS')
+    send_command(b'#E0')
 
 
 def failed_download(msg):
-    """ interupt download if the ending sequence is wrong
+    """ interrupt download if the ending sequence is wrong
 
         :param msg: string
 
@@ -110,7 +100,7 @@ def failed_download(msg):
 if __name__ == '__main__':
 
     # print UTC date and time
-    # strftime convert tuple retun by gmtime method to a string
+    # strftime converts tuple returned by gmtime method to a string
     print(time.strftime('____________\nUTC time : %Y %m %d %H:%M', time.gmtime())+'\nTrying to connect...')
     # Socket connection
     try:
@@ -127,7 +117,7 @@ if __name__ == '__main__':
         cmdfile = str(sys.argv[1])
         # open method create a new file
         cf = open(cmdfile, 'rt')
-        # readlines return a list of lines
+        # readlines returns a list of lines
         cmdlines = cf.readlines()
         cf.close()
         cmd = cmdlines[cl].strip('\n')
@@ -228,7 +218,7 @@ if __name__ == '__main__':
                 else:
                     break
             except:
-                 pass
+                pass
         data = bytearray()
         if cmdfile == '':
             cmd = input("> ")

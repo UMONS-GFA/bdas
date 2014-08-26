@@ -7,6 +7,11 @@ import os
 import datetime
 from tkinter import filedialog
 
+# if epoch is true converts to epoch otherwise to string date
+epoch = True
+# separator in text file
+sep = ','
+
 
 home = os.path.expanduser('~')
 in_filename = filedialog.askopenfilename(filetypes=('binary {*.bin}', 'Binary files'),
@@ -44,10 +49,9 @@ if (b != b'\xff') | (b1 != b'\xff'):
 # reading D1 D2 D3 D4
 b = infile.read(4)
 print(b)
-#curtime = np.int(ord(b[3]) + 256 * ord(b[2]) + 256 * 256 * ord(b[1]) + 256 * 256 * 256 * ord(b[0]))
-cur_time = b[3] + 256 * b[2] + 256 * 256 * b[1] + 256 * 256 * 256 * b[0]
+cur_epoch = b[3] + 256 * b[2] + 256 * 256 * b[1] + 256 * 256 * 256 * b[0]
 cur_time = datetime.datetime.strptime('%04i:%02i:%02i:%02i:%02i:%02i' % (1970, 1, 1, 1, 0, 0),
-                                      '%Y:%d:%m:%H:%M:%S') + datetime.timedelta(seconds=cur_time)
+                                      '%Y:%d:%m:%H:%M:%S') + datetime.timedelta(seconds=cur_epoch)
 print('starting date:' + cur_time.strftime('%d/%m/%Y %H:%M:%S'))
 
 # reading optional 00 00 00
@@ -89,14 +93,18 @@ if not eot:
                 if channel[j] != 0xfefefe:
                     eot = False
             cur_time = cur_time + datetime.timedelta(seconds=time_step)
+            cur_epoch = cur_epoch + time_step
 
             print(cur_time.strftime('%d/%m/%Y %H:%M:%S'), map(hex, channel[0:nchannels]))
-            s = cur_time.strftime('%Y %m %d %H %M %S')
+            if epoch:
+                s = str(cur_epoch)
+            else:
+                s = cur_time.strftime('%Y %m %d %H %M %S')
             #s=s[2:len(s)] # if date format YY mm dd HH MM SS
             if not eot:
                 for j in range(nchannels):
                     t = format(channel[j], '05d')
-                    s += ' ' + t[len(t) - 5:len(t)]
+                    s += sep + t[len(t) - 5:len(t)]
                 outfile.writelines(s + '\n')
 
     finally:

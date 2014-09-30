@@ -49,3 +49,14 @@ Tasks should then be scheduled within the job scheduler. In case of cron, use **
 
 ```
 Note that a log may be kept in a log file (**/home/user/Download/cronlog** in our example). 
+
+A typical command file i.e. **FullDownloadDASR001.cmd** :
+```
+
+-002
+\#E0
+\#RI
+\#XB
+R001full
+5400
+```

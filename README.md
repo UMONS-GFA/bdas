@@ -54,9 +54,9 @@ A typical command file i.e. **FullDownloadDASR001.cmd** :
 ```
 
 -002
-\#E0
-\#RI
-\#XB
+#E0
+#RI
+#XB
 R001full
 5400
 ```

@@ -50,13 +50,67 @@ Tasks should then be scheduled within the job scheduler. In case of cron, use **
 ```
 Note that a log may be kept in a log file (**/home/user/Download/cronlog** in our example). 
 
-A typical command file i.e. **FullDownloadDASR001.cmd** :
+A typical command file i.e. **FullDownloadDASR001.cmd**:
 ```
 
--002
+-001
 #E0
 #RI
 #XB
 R001full
 5400
 ```
+
+line 1 : activate DAS number 001
+line 2 : quiet mode
+line 3 : read info from DAS 001
+line 4 : full download
+line 5 : filename part
+line 6 : max expected download time (to avoid blocking downloads)
+
+A typical extract of the log file **cronlog**:
+```
+
+____________
+UTC time : 2014 06 03 18:27
+Trying to connect...
+Socket connected
+____________
+UTC time : 2014 06 03 18:27
+Sending command -001 ...
+Expected response: b'!HI'
+Response to command -001 received
+!HI 0000 001 0060 4 0001 0002 0003 0004 007390 133256 
+
+*2014 06 03 18 26 00 041869.0508 000000.0000 000000.0000 002640.5667 
+
+Next command...
+____________
+UTC time : 2014 06 03 18:27
+Sending command #E0 ...
+Expected response: b'!E0'
+Response to command #E0 received
+!E0 [Echo Disabled]
+
+Next command...
+____________
+UTC time : 2014 06 03 18:27
+Sending command #RI ...
+Expected response: b'!RI'
+Response to command #RI received
+!RI Station:0000 DasNo:001 Integration:0060 I1:0001 I2:0002 I3:0003 I4:0004 221721 3997696 1401819300
+
+Next command...
+____________
+UTC time : 2014 06 03 18:27
+Sending command #XB ...
+Expected response: b'\xfd'
+Response to command #XB received
+*** Downloading data ... ***
+Saving results in /home/user/DownloadDAS/R001Full_20140603_1827.bin
+*** Download complete! ***
+Next command...
+Ending at UTC time : 2014 06 03 18:30
+____________
+```
+

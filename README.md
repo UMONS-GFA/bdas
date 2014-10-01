@@ -15,7 +15,6 @@ You also need to configure a **settings.py** file (see below)
 ### Requirements on client side
 
 * Python 3
-* 
 
 [Read the wiki](https://github.com/UMONS-GFA/bdas/wiki)
 

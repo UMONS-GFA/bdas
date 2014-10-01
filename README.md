@@ -1,4 +1,6 @@
-# bdas (v0.4.1) October 2014
+# bdas
+
+Current release : v0.4.1 (October 2014)
 
 Application to interact with a DAS.
 

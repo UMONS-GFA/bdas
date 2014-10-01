@@ -302,7 +302,8 @@ class Das(object):
         command = command.encode('ascii')
         print('Flash memory and configuration')
         self.connection.write(command)
-        #TODO: implement 60 seconds counter
+        print('Waiting for 60 secs...')
+        time.sleep(60) #TODO: implement 60 seconds counter
         while 1:
             recvdata = self.connection.read(1)
             if recvdata:

@@ -17,7 +17,7 @@ You also need to configure a **settings.py** file (see below)
 * Python 3
 * 
 
-[(https://github.com/UMONS-GFA/bdas/wiki)Read the wiki]
+[Read the wiki](https://github.com/UMONS-GFA/bdas/wiki)
 
 ### Procedure
 

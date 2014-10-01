@@ -1,7 +1,7 @@
-## DAS documentation
+## nanoDAS documentation
 
 
-#### DAS specification
+#### nanoDAS specification
 
 Zilog Z84 processor  
 3V battery  

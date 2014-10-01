@@ -134,18 +134,19 @@ class Das(object):
         output = output.decode('utf-8')
         return output
 
-    def set_date_and_time(self): #TODO : Use UTC instead of local time !
+    def set_date_and_time(self):  #FIXED : Use UTC instead of local time !
         """ set DAS date and time
         @return: !SD
         """
         self.connect()
         output = bytearray()
-        y = datetime.datetime.now().year
-        m = datetime.datetime.now().month
-        d = datetime.datetime.now().day
-        h = datetime.datetime.now().hour
-        n = datetime.datetime.now().minute
-        s = datetime.datetime.now().second
+        now = datetime.datetime.now(datetime.timezone.utc)
+        y = now.year
+        m = now.month
+        d = now.day
+        h = now.hour
+        n = now.minute
+        s = now.second
         command = '#SD %04i %02i %02i %02i %02i %02i' % (y, m, d, h, n, s) + endline
         if DEBUG is True:
             print(repr(command))

@@ -1,8 +1,9 @@
 # bdas
 
+Application to interact with a DAS.
+
 Current release :  [v0.4.1](https://github.com/UMONS-GFA/bdas/releases/tag/v0.4.1) (October 2014)
 
-Application to interact with a DAS.
 
 ### Requirements on server side
 
@@ -14,6 +15,9 @@ You also need to configure a **settings.py** file (see below)
 ### Requirements on client side
 
 * Python 3
+* 
+
+[(https://github.com/UMONS-GFA/bdas/wiki)Read the wiki]
 
 ### Procedure
 

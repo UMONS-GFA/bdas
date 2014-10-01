@@ -134,7 +134,7 @@ class Das(object):
         output = output.decode('utf-8')
         return output
 
-    def set_date_and_time(self):
+    def set_date_and_time(self): #TODO : Use UTC instead of local time !
         """ set DAS date and time
         @return: !SD
         """

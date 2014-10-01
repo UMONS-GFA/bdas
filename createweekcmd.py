@@ -15,6 +15,8 @@ if len(sys.argv) == 3:
         i = int(dasnr)
     except:
         print('Error argument should be a DAS number')
+        exit()
+
     now = time.gmtime()
     oneweekago = time.gmtime(time.time()-7*24*60*60)
 
@@ -28,6 +30,6 @@ if len(sys.argv) == 3:
     except:
         print('Error : unable to write file %s' % outfile)
 else:
-    print('Usage: createdaspartialdownloadcommandfiles dasnumber dasnameprefix\nExample : createdaspartialdownloadcommandfiles 2 "R"')
+    print('Usage: createweekcmd dasnumber dasnameprefix\nExample : createweekcmd 2 "R"')
 
 print('Ending at ' + time.strftime('UTC time : %Y %m %d %H:%M', time.gmtime()) + '\n____________')

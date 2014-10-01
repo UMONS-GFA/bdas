@@ -1,4 +1,4 @@
-## 4 channels binary file structure
+## nanoDAS 4 channels binary file structure
 
 ### Structure
 

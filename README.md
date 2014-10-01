@@ -1,4 +1,4 @@
-# bdas (v0.4)
+# bdas (v0.4.1) October 2014
 
 Application to interact with a DAS.
 

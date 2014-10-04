@@ -2,7 +2,8 @@
   "type": "Feature",
   "geometry": {
     "type": "Point",
-    "coordinates": [125.6, 10.1]
+    "crs": "EPSG:31370",
+    "coordinates": [120000.0, 88000.0]
   },
   "properties": {
     "name": "Dinagat Islands"

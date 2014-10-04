@@ -1,5 +1,13 @@
+{
+  "id": "1",
+  "properties": {
+    "station_name": "New Station",
+    "station_number": "0001",
+    "link": "http://example.org/features/1"
+  },
   "geometry": {
     "type": "Point",
     "crs": "EPSG:4326",
     "coordinates": [[0.0,0.0]]
   }
+}

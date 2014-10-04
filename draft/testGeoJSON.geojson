@@ -3,7 +3,7 @@
     "crs": {
         "type": "name",
         "properties": {
-            "name": "EPSG:31370"
+            "name": "urn:ogc:def:naming-system:EPSG::31370"
         }
     },
     "features": [
@@ -11,7 +11,7 @@
             "type": "Feature",
             "geometry": {
                 "type": "Point",
-                "coordinates": [100000, 88000]
+                "coordinates": [100000.00, 88000.00]
             },
             "properties": {
                 "Item ID": 1,

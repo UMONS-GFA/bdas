@@ -1,25 +1,5 @@
-{
-    "type": "FeatureCollection",
-    "crs": {
-        "type": "name",
-        "properties": {
-            "name": "EPSG:4326"
-        }
-    },
-    "features": [
-        {
-            "type": "Feature",
-            "geometry": {
-                "type": "Point",
-                "coordinates": [
-                            25.0974512743628,
-                            86.8965517241379
-                ]
-            },
-            "properties": {
-                "Description": "Polygon",
-                "Item ID": 1,
-            }
-        }
-    ]
-}
+  "geometry": {
+    "type": "Point",
+    "crs": "EPSG:4326",
+    "coordinates": [[0.0,0.0]]
+  }

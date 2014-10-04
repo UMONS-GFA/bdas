@@ -2,7 +2,7 @@
   "type": "Feature",
   "geometry": {
     "type": "Point",
-    "crs": "EPSG:31300",
+    "crs": "urn:ogc:def:crs:EPSG:31370",
     "coordinates": [120000.0, 88000.0]
   },
   "properties": {

@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 #-*- coding: utf8 -*-
+import das
 
 __author__ = 'Olivier Kaufmann'
 
@@ -7,7 +8,6 @@ from settings import LocalHost, LocalPort, EOL
 import socket
 import busconnection as bc
 import sys
-import das
 
 ServerSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # socket for communication with connecting clients
 ServerSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)  # for socket reuse if interrupted (avoid [Errno 98] Address already in use) TODO : check whether this works...

@@ -1,7 +1,8 @@
+import das
+
 __author__ = 'christophe'
 __date__ = '13/01/14'
 
-import das
 import unittest
 
 

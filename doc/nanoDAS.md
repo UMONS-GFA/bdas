@@ -9,7 +9,7 @@ Schmitt Trigger Philips HEF40106BP
 CMOS memory AMD AM29F032B  
 
 #### Hardware requirements
-1 nanoDas with 1 port DB-9 male and 1 port DB-19 male  
+1 nanoDas with 1 port DB-9 male and 1 port DB-15 male  
 1 12V power supply  
 1 DB-9 female-female cable  
 1 case with a DB-15 female port   

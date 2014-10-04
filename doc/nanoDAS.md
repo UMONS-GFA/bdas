@@ -16,8 +16,8 @@ CMOS memory AMD AM29F032B
 
 #### DAS command list
 
-*Note : Every data sequence send by a DAS is followed by \n\r (LFCR in this case)  
-However each command end line sent to DAS must  be  \r\n (CRLF)*  
+*Note : Every data sequence send by a nanoDAS is followed by \n\r (LFCR in this case)  
+However each command end line sent to nanoDAS must  be  \r\n (CRLF)*  
 
   #HE : Help  
   #E0 : No Echo  **Implemented**     

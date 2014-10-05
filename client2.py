@@ -13,11 +13,11 @@ dl_expectedduration = 5400  # full µDAS download
 Sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 command_list = [b'#HE', b'#E0', b'#E1', b'#E2', b'#SD', b'#SR', b'#SI', b'#SS', b'#ZR', b'#ZF', b'#XB', b'#RI', b'#XS',
                 b'#XP', b'#RM', b'#RL', b'#RV', b'#XN', b'#WB', b'#RW']
-for i in range(0, 255):
+for i in range(0, 256):
     command_list.append(bytearray(('-%03d' % i).encode('ascii')))
 response_list = [b'!HE', b'!E0', b'!E1', b'!E2', b'!SD', b'!SR', b'!SI', b'!SS', b'!ZR', b'!ZF', b'\xfd', b'!RI',
                  b'!XS', b'\xfd', b'!RM', b'!RL', b'!RV', b'!XN', b'!WB', b'!RW']
-for i in range(0, 255):
+for i in range(0, 256):
     response_list.append(b'!HI')
 recvdata = b''
 data = b''

@@ -43,12 +43,13 @@ However each command end line sent to nanoDAS must  be  \r\n (CRLF)*
 #### Workbook codes
 
   Event code    Event
-   1          : #SD  
-   2          : #SR 
+  ----------    -----
+   1          : #SD
+   2          : #SR
    3          : #XF    
    4          : #XP
-   5          : #XN 
-   6          : #ZF date
+   5          : #XN
+   6          : #ZF
    7          : #ZM 
    8          : #ZR new config 
    9          : start up

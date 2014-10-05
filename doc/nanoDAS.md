@@ -60,9 +60,9 @@ However each command end line sent to nanoDAS must  be  \r\n (CRLF)*
   15          : #SI oldvalue newvalue  
   16          : #SS oldvalue newvalue  
   
-*Note : the date (in seconds after 01/01/1970 01:00:00) leads the event code
+*Note : the date (in seconds after 01/01/1970 01:00:00) leads the event code*
 
-#### case specification
+#### Case specification
 
 yellow : sensor 1  
 green : sensor 2  

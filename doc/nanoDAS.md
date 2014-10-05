@@ -56,7 +56,7 @@ However each command end line sent to nanoDAS must  be  \r\n (CRLF)*
   11          : #XS  
   12          : ?  
   13          : ?  
-  14          : size of text  
+  14          : sizeoftext text  
   15          : #SI oldvalue newvalue  
   16          : #SS oldvalue newvalue  
   

@@ -40,28 +40,27 @@ However each command end line sent to nanoDAS must  be  \r\n (CRLF)*
   #RW : Read workbook  
 
 
-#### Workbook codes
+#### Workbook codes  
 
-  | Event code  | Event|
-  |-------------|------|
-  | 1           | #SD  |
-  | 2           | #SR  |
-  | 3           | #XF  |   
-  | 4           | #XP  |
-  | 5           | #XN  |
-  | 6           | #ZF  |
-   7          : #ZM 
-   8          : #ZR new config 
-   9          : start up
-  10          : ? 
-  11          : #XS 
-  12          : ? 
-  13          : ? 
-  14          : size of text 
-  15          : #SI oldvalue newvalue 
-  16          : #SS oldvalue newvalue 
+   Event code   Event  
+   1          : #SD  
+   2          : #SR  
+   3          : #XF  
+   4          : #XP  
+   5          : #XN  
+   6          : #ZF  
+   7          : #ZM  
+   8          : #ZR new config  
+   9          : start up  
+  10          : ?  
+  11          : #XS  
+  12          : ?  
+  13          : ?  
+  14          : size of text  
+  15          : #SI oldvalue newvalue  
+  16          : #SS oldvalue newvalue  
   
-Note : the date (in seconds after 01/01/1970 01:00:00) leads the event code
+*Note : the date (in seconds after 01/01/1970 01:00:00) leads the event code
 
 #### case specification
 

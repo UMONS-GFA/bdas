@@ -37,7 +37,8 @@ However each command end line sent to nanoDAS must  be  \r\n (CRLF)*
   #XP : yyyy mm dd hh ss yyyy mm dd hh nn ss : Partial Download  
   #XN : Next Download  
   #WB : Write line in workbook  
-  #RW : Read workbook  
+  #RW : Read workbook
+  #EW : Erase workbook
 
 
 #### Workbook codes  

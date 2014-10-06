@@ -1,28 +1,45 @@
 __author__ = 'su530201'
-from osgeo import ogr # requires ogr
+from osgeo import ogr  # requires ogr
 
-# DEBUG = True
-#
-# class Station(object):
-#     name = ''
-#     point = ogr.Geometry(ogr.wkbPoint)
-#     point.AddPoint(1198054.34, 648493.09)
-#
-#
-#     def __init__(self, a_name='unknown'):
-#         self.name = a_name
+DEBUG = True
 
-from osgeo import ogr # requires ogr
+_local_sr = ogr.osr.SpatialReference()
+_wgs84 = ogr.osr.SpatialReference()
+_wgs84.ImportFromEPSG(4326)
 
-LB72 = ogr.osr.SpatialReference()
-LB72.ImportFromEPSG(31370)
-WGS84 = ogr.osr.SpatialReference()
-WGS84.ImportFromEPSG(4326)
+class Station(object):
+    name = ''
+    point = ogr.Geometry(ogr.wkbPoint)
 
-point = ogr.Geometry(ogr.wkbPoint)
-point.AddPoint(119805.00, 84930.00)
-point.AssignSpatialReference(LB72)
-point.TransformTo(WGS84)
+    def __init__(self, a_name='unknown', sr_epsg_code=None):
+        """
+        @param a_name: station name (a string)
+        @param sr_epsg_code: local spatial reference EPSG code
+        """
+        self.name = a_name
+        _local_sr.ImportFromEPSG(sr_epsg_code)
+        self.point.AddPoint(0.0, 0.0, 0.0)
+        self.point.AssignSpatialReference(_local_sr)
+        self.point.TransformTo(_wgs84)
 
-geojson_point = point.ExportToJson()
-print(geojson_point)
+    def move_station(self, xl=None, yl=None, z=None):
+
+        """
+
+        @param xl: X in the local SR
+        @param yl: Y in the local SR
+        @param z: z in the local VR
+        """
+        self.point.SetPoint(xl, yl, z)
+        self.point.AssignSpatialReference(_local_sr)
+        self.point.TransformTo(_wgs84)
+
+    @property
+    def geojson(self):
+        """
+
+
+        @return:
+        """
+        geojson_point = self.point.ExportToJson()
+        return geojson_point

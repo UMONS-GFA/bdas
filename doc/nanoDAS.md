@@ -27,21 +27,43 @@ However each command end line sent to nanoDAS must  be  \r\n (CRLF)*
   #SR iiii : Set Integration Period  **Implemented**    
   #SI nnn : Set Das netID **Implemented**    
   #SS ssss : Set Station Number  
-  #RI : Read Info **Implemented**  
+  #RI : Read Info **Implemented**  
   #RL : Read Last Data   
   #RM : Read Memory Status => Memory used, Memory available **Implemented**  
   #RV : Read version   
-  #ZR station netId integrationPeriod nbInst ( Ex: #ZR 1111 222 3333 4): Reconfig   
+  #ZR station netId integrationPeriod nbInst ( Ex: #ZR 1111 222 3333 4): Reconfig   
   #ZF : erase memory and set default configuration **Implemented**   
-  #XB : Full Download **Implemented**    
+  #XB : Full Download **Implemented**    
   #XP : yyyy mm dd hh ss yyyy mm dd hh nn ss : Partial Download  
   #XN : Next Download  
   #WB : Write line in workbook  
-  #RW : Read workbook  
+  #RW : Read workbook
+  #EW : Erase workbook
 
 
+#### Workbook codes  
 
-#### case specification
+   Event code   Event  
+   1          : #SD oldvalue newvalue  
+   2          : #SR oldvalue newvalue  
+   3          : #XF  
+   4          : #XP  
+   5          : #XN start end  
+   6          : #ZF  
+   7          : #ZM  
+   8          : #ZR newconfig  
+   9          : start up  
+  10          : ?  
+  11          : #XS  
+  12          : ?  
+  13          : ?  
+  14          : sizeoftext text  
+  15          : #SI oldvalue newvalue  
+  16          : #SS oldvalue newvalue  
+  
+*Note : the date (in seconds after 01/01/1970 01:00:00) leads the event code*
+
+#### Case specification
 
 yellow : sensor 1  
 green : sensor 2  

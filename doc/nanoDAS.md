@@ -65,8 +65,8 @@ However each command end line sent to nanoDAS must  be  \r\n (CRLF)*
 
 #### Case specification
 
-yellow : sensor 1  
-green : sensor 2  
-blue : sensor 3   
-green : sensor 4  
+orange : sensor 1  
+yellow : sensor 2  
+green : sensor 3   
+blue : sensor 4  
 

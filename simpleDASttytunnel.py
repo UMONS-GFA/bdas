@@ -4,7 +4,7 @@ import das
 
 __author__ = 'Olivier Kaufmann'
 
-from settings import LocalHost, LocalPort, EOL
+from settings import LocalHost, LocalPort, EOL, DefaultConnectionDev as comport
 import socket
 import busconnection as bc
 import sys
@@ -12,7 +12,7 @@ import sys
 ServerSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # socket for communication with connecting clients
 ServerSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)  # for socket reuse if interrupted (avoid [Errno 98] Address already in use) TODO : check whether this works...
 
-comport = '/dev/ttyUSB0'
+#comport = '/dev/ttyUSB0'
 netid = '255'
 serconn = bc.NanoDasConnectionSerial(comport)
 LocalSerialDas = das.Das()
@@ -38,7 +38,7 @@ while 1:
         cmd = ConnectedClient.recv(4)  # receive command from client
         if not cmd:
             break
-        check=cmd.decode('ascii').replace('\r','')
+        check = cmd.decode('ascii').replace('\r','')
         if check != '':
             print('Received command', cmd.decode('ascii'), 'from', address)
             #LocalSerialDas.connection.flushInput() # Empty Das connection output buffer

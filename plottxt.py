@@ -1,44 +1,33 @@
 __author__ = 'su530201'
 """ plot a parsed downloaded DAS file...
 """
-#import numpy as np
-import matplotlib.pyplot as Plt
+import numpy as np
+import pandas as pd
+#import matplotlib.pyplot as Plt
 import datetime
 from tkinter import filedialog
 from tkinter import *
+#import csv
+
+date_as_string = False
+verbose_flag = False
 
 root = Tk()
 root.withdraw()  # this will hide the main window
 
 def_dir = '/home/su530201/PycharmProjects/DownloadDAS/'
-def_file = 'R002Full_20140603_1827'
-#in_filename = '/home/su530201/PycharmProjects/DownloadDAS/R002Full_20140603_1827.bin'
-#out_filename = '/home/su530201/PycharmProjects/DownloadDAS/R002Full_20140603_1827.txt'
-in_filename = filedialog.askopenfilename(filetypes=(('Text files', 'text {*.txt}')), initialdir = def_dir,
+def_file = 'R012Full_20141012_0400'
+
+in_filename = filedialog.askopenfilename(filetypes=('Text files', 'text {*.txt}'), initialdir = def_dir,
                                          initialfile = def_file + '.txt')
-infile = open(in_filename, 'rt')
-data = infile.readlines()
-d, C, CC, n_channels = [], [], [], 4
 
-for l in data:
-    d.append(datetime.datetime.strptime(l[:19], '%Y %m %d %H %M %S'))
-    C.append([int(l[20:25]), int(l[26:31]), int(l[33:37]), int(l[38:43])])
+if date_as_string:
+    data = pd.read_csv(in_filename, parse_dates=True, index_col=0, header=None)
+else:
+    data = pd.read_csv(in_filename, index_col=0, header=None)
+    #d.append(datetime.datetime.utcfromtimestamp(int(row[0])))
 
-for i in range(len(C[0])):
-    tmp = []
-    for j in range(len(C)):
-        tmp.append(C[j][i])
-    CC.append(tmp)
-
-fig = Plt.figure()
-ax1 = fig.add_subplot(4, 1, 1)
-ax1.plot(d, CC[0], '-k', linewidth=2)
-ax2 = fig.add_subplot(4, 1, 2, sharex=ax1)
-ax2.plot(d, CC[1], '-b', linewidth=2)
-ax3 = fig.add_subplot(4, 1, 3, sharex=ax1)
-ax3.plot(d, CC[2], '-r', linewidth=2)
-ax4 = fig.add_subplot(4, 1, 4, sharex=ax1)
-ax4.plot(d, CC[3], '-g', linewidth=2)
-ax1.set_xlim(left=d[0], right=d[-1])
-ax1.set_xlabel('Time')
-Plt.show()
+print(data)
+data.plot()
+#ts = pd.DataFrame(data)
+#ts.plot(subplots=True)

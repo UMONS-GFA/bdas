@@ -5,20 +5,29 @@ This program let you choose a binary file and propose to parse and save it as a 
  """
 import datetime
 import logging
+import math
 
 
-def parse_bin_to_ascii(in_stream, out_stream, time_step=60, k_max=330000, k_tot=0, date_as_secs_since_epoch=False,
-                       verbose_flag=False, sep=',', ext='.txt', site='0000', netid='255', data='', bpos='1',
-                       date_format='%Y/%m/%d %H:%M:%S'):
-    # in_filename : bin file to convert
-    # out_filename : ascii file to create
+def round_sig_digits(x, sig_digits=2):
+    if float(x) == 0.0:
+        return 0.0
+    else:
+        return round(x, sig_digits-int(math.floor(math.log10(abs(x))))-1)
+
+
+def parse_bin_to_text(in_stream, out_stream, time_step=60, k_max=330000, k_tot=0, date_as_secs_since_epoch=False,
+                      verbose_flag=False, sep=',', dtm_format=False, site='0000', netid='255', data='', bpos='1',
+                      date_format='%Y/%m/%d %H:%M:%S', jumper=2):
+    # in_stream : bin stream to convert
+    # out_stream : text stream to create
     # if date_as_secs_since_epoch is true, converts to epoch otherwise to string date
     # if verbose_flag is true, prints messages while processing
     # sep is the separator in the output text file
     # ext is the out_stream extension (choose .dtm for compatibility with edas44 format for mgr)
+    # jumper is the DAS multiplier jumper (x2 by default)
 
     status = 0
-    dtm_format = False
+    cur_time = 0
     #status values (binary notation :)
     # 0 : no errors, no warnings
     # first byte : warnings
@@ -65,7 +74,8 @@ def parse_bin_to_ascii(in_stream, out_stream, time_step=60, k_max=330000, k_tot=
 
     # looking for extra 00
     if b == b'\x00':
-        in_stream.seek(1, 1)
+        #in_stream.seek(1, 1)
+        b = in_stream.read(1)
         logging.warning('*** Extra 0x00 after leading 0xFD!')
         status += 2
 
@@ -79,19 +89,19 @@ def parse_bin_to_ascii(in_stream, out_stream, time_step=60, k_max=330000, k_tot=
         for i in range(n_channels):
             s = s + ' ' + format(i + 1, '04d')
         out_stream.writelines(s + '\n')
-        s = '# DATA: ' + data
+        s = '# DATA:' + data
         out_stream.writelines(s + '\n')
         s = '# BPOS: ' + bpos
         out_stream.writelines(s + '\n')
 
     # reading date block FF FF
-    in_stream.seek(-1, 1)
-    b = in_stream.read(2)
+    #in_stream.seek(-1, 1)
+    b += in_stream.read(1)
     if b == b'\xff\xff':
         date_block = True
     elif b == b'\x70\x61':
-        in_stream.seek(-2, 1)
-        b = in_stream.read(47)
+        #in_stream.seek(-2, 1)
+        b += in_stream.read(45)
         if b == b'pas de bloc date en debut de secteur numero [0]':
             logging.error('*** Date block missing in sector [0]!')
             status += 2048
@@ -147,13 +157,18 @@ def parse_bin_to_ascii(in_stream, out_stream, time_step=60, k_max=330000, k_tot=
     # reading channels form in_stream and writing to out_stream
     if not eot:
         try:
-            in_stream.seek(-2, 1)
+            #in_stream.seek(-2, 1)
+            start_reading_data = True
             while not eot:
                 channel = []
                 eot = True
                 logged_event = False
                 for j in range(n_channels):
-                    sb = in_stream.read(3)
+                    if start_reading_data:
+                        sb = b + in_stream.read(1)
+                        start_reading_data = False
+                    else:
+                        sb = in_stream.read(3)
                     if len(sb) < 3:
                         if verbose_flag:
                             logging.warning('*** Unexpected end of file!')
@@ -185,14 +200,16 @@ def parse_bin_to_ascii(in_stream, out_stream, time_step=60, k_max=330000, k_tot=
                     if (sb[0] == 0xff) and (sb[1] == 0xff):
                         logged_event = True
                         l = 0
-                        in_stream.seek(-1, 1)
+                        #in_stream.seek(-1, 1)
+                        b = sb[2].to_bytes(1, 'big')
                         sb = b''
                         while l < 10:
-                            b = in_stream.read(1)
                             if (b == b'\xff') and double_ff_flag:
                                 b = in_stream.read(1)
                             sb += b
                             l += 1
+                            if l < 10:
+                                b = in_stream.read(1)
                         event_time = datetime.datetime.utcfromtimestamp(int.from_bytes(sb[0:4], 'big'))
                         secs_since_epoch = int.from_bytes(sb[0:4], 'big')
                         if verbose_flag:
@@ -215,10 +232,9 @@ def parse_bin_to_ascii(in_stream, out_stream, time_step=60, k_max=330000, k_tot=
                             eot = False
 
                 if not logged_event:
-                    secs_since_epoch += time_step    # TODO : check workbook for stops and set date.
                     cur_time = datetime.datetime.utcfromtimestamp(secs_since_epoch)
 
-                    if verbose_flag and k_tot>0:
+                    if verbose_flag and k_tot > 0:
                         if k/1024-round(k/1024) == 0:
                             print(repr(round(100*k/k_tot, 1)) + ' % done', end='\r')
                         # print(cur_time.strftime('%Y/%m/%d %H:%M:%S'), map(hex, channel[0:n_channels]))
@@ -232,10 +248,10 @@ def parse_bin_to_ascii(in_stream, out_stream, time_step=60, k_max=330000, k_tot=
                     if not eot:
                         for j in range(n_channels):
                             if dtm_format:
-                                t = format(channel[j], '013.4f')
+                                t = format(round_sig_digits(float(channel[j])/time_step*jumper, 7), '013.4f')
                                 u = 13
                             else:
-                                t = format(channel[j], '05d')
+                                t = format(round_sig_digits(float(channel[j])/time_step*jumper, 7), '05d')
                                 u = 5
                             s += sep + t[len(t) - u:len(t)]
                         out_stream.writelines(s + '\n')
@@ -243,11 +259,16 @@ def parse_bin_to_ascii(in_stream, out_stream, time_step=60, k_max=330000, k_tot=
                         if verbose_flag:
                             logging.warning('Too much rows...')
                         eot = True
+                    secs_since_epoch += time_step
                     k += 1
             if dtm_format:
                 s = '# INFO: End Of File\n'
                 out_stream.writelines(s)
 
         finally:
+            if verbose_flag:
+                if cur_time != 0:
+                    logging.info('Ending date:' + cur_time.strftime('%d/%m/%Y %H:%M:%S'))
+                    logging.debug('k : ' + str(k))
             logging.info('Ending bin parsing.')
             return status

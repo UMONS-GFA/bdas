@@ -12,7 +12,7 @@
 * September
   * 2014-09-26 - Remote connection INTERRUPT
   * 2014-09-26 - Pluviometer instalation / add µDAS 13 / RS485 - RS232 installation (OK, AW, CB, AP)
-  * 
+  
 
   
 

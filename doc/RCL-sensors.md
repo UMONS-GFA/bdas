@@ -1,7 +1,7 @@
 | DAS   | Sensor 1 | Sensor 2 | Sensor 3 | Sensor 4 | Localization   | Sensor type                   | last update | EDAS Version  |
 | ------| -------  | -------- | -------- |  --------| ------------   | -----------                   | ----------- |-------------- |
 | 001   |    x    |    x     |     x    |     x    | Entrée Bagdad  | Pressure, light, temperature  | 2014-06-04            |               |
-| 002   |    v     |    0     |     0    |     v    | Bagdad         | Extenso                       |             | v3.05         |
+| 002   |    x     |    x     |     x    |     x    | Bagdad         | Extenso                       | 2014-11-12             | v3.05         |
 | 003   |    x     |    x     |     x    |     x    |                | Gravimeter MVR                |             |               |
 | 004   |    x     |    x     |     x    |     x    |                |                               |             |               |
 | 005   |    x     |    x     |     x    |     x    |                | Pluvio                        | 2014-05-21  |               |

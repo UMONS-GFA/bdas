@@ -15,7 +15,7 @@ command_list = [b'#HE', b'#E0', b'#E1', b'#E2', b'#SD', b'#SR', b'#SI', b'#SS', 
                 b'#XP', b'#RM', b'#RL', b'#RV', b'#XN', b'#WB', b'#RW']
 for i in range(0, 256):
     command_list.append(bytearray(('-%03d' % i).encode('ascii')))
-response_list = [b'!HE', b'!E0', b'!E1', b'!E2', b'!SD', b'!SR', b'!SI', b'!SS', b'!ZR', b'!ZF', b'\xfd', b'!RI',
+response_list = [b'HELP COMMAND :', b'!E0', b'!E1', b'!E2', b'!SD', b'!SR', b'!SI', b'!SS', b'!ZR', b'!ZF', b'\xfd', b'!RI',
                  b'!XS', b'\xfd', b'!RM', b'!RL', b'!RV', b'!XN', b'!WB', b'!RW']
 for i in range(0, 256):
     response_list.append(b'!HI')
@@ -26,6 +26,7 @@ timeout = 0.2
 outfile = 'out.bin'
 cmdfile = ''  # script argument to specify command file
 basepath = os.path.dirname(__file__)
+verbose = False
 
 
 def send_command(acmd):
@@ -41,12 +42,17 @@ def send_command(acmd):
     # strftime converts tuple returned by gmtime method to a string
     print(time.strftime('____________\nUTC time : %Y %m %d %H:%M', time.gmtime()) +
           '\nSending command %s ...' % acmd.decode('utf-8'))
-    if acmd in command_list:
+    if acmd[0:1] == b'-':
+        acmd_root = cmd[0:4]
+    else:
+        acmd_root = cmd[0:3]
+    if acmd_root in command_list:
         readable, writable, exceptional = select.select([], [Sock], [], 6)
         if Sock in writable:
             Sock.send(acmd + EOL)
-            response = response_list[command_list.index(acmd)]
-            print('Expected response: ' + repr(response))
+            response = response_list[command_list.index(acmd_root)]
+            if verbose:
+                print('Expected response: ' + repr(response))
             while k < kmax:
                 starttime = time.time()
                 while time.time() < starttime + 100 * timeout:
@@ -56,7 +62,8 @@ def send_command(acmd):
                         data += recvdata
                         if response in data:
                             data = data[data.find(response):]
-                            print('Response to command %s received' % acmd.decode('utf-8'))
+                            if verbose:
+                                print('Response to command %s received' % acmd_root.decode('utf-8'))
                             return
                         elif b'!ERROR : Unknown Command' in data:
                             print('Repeating command...')

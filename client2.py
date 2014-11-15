@@ -129,6 +129,7 @@ if __name__ == '__main__':
         cf.close()
         cmd = cmdlines[cl].strip('\n')
     else:
+        verbose = True
         # show a prompt
         cmd = input('Type command (type #HE for help or exit to quit).\n> ')
 
@@ -231,7 +232,8 @@ if __name__ == '__main__':
             cmd = input("> ")
         else:
             cl += 1
-            print('Next command...')
+            if verbose:
+                print('Next command...')
             if cl < len(cmdlines):
                 cmd = cmdlines[cl].strip('\n')
             else:

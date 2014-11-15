@@ -2,7 +2,7 @@
 
 ## 2014
 * November 
-  * 2014-11-15 - Reset nanoDAS R013, synchronized clock and set integration period to 15 seconds / improved client2.py / backup of cronlog to start with a empty log (OK) 
+  * 2014-11-15 - Reset nanoDAS R013, synchronized clock and set integration period to 5 seconds / improved client2.py / backup of cronlog to start with a empty log (OK) 
   * 2014-11-12 - Create network "edas 2" with 2 USC / Replace the Brainboxes converter (RS-485/ Ethernet converter) with a laptop / Reconditionning of nanoDAS R013 and connection to edas 2 network / Serial download of DAS R007 R009 R010 R013 / Test of download through the network (repeated FF problem) to compare with serial download (OK, AW, CB)
 
 * October

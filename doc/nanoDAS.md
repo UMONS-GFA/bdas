@@ -31,7 +31,7 @@ However each command end line sent to nanoDAS must  be  \r\n (CRLF)*
   #RL : Read Last Data   
   #RM : Read Memory Status => Memory used, Memory available **Implemented**  
   #RV : Read version   
-  #ZR station netId integrationPeriod nbInst sensor1 ... code ( Ex: #ZR 1111 222 3333 4 0001 0002 0003 0004 31): Reconfig   
+  #ZR station netId integrationPeriod nbInst sensor1 ... code  ( Ex: #ZR 1111 222 3333 4 0001 0002 0003 0004 31): Reconfig   
   #ZF : erase memory and set default configuration **Implemented**   
   #XB : Full Download **Implemented**    
   #XP : yyyy mm dd hh ss yyyy mm dd hh nn ss : Partial Download  

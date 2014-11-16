@@ -27,6 +27,7 @@ outfile = 'out.bin'
 cmdfile = ''  # script argument to specify command file
 basepath = os.path.dirname(__file__)
 verbose = False
+version = '2.1'
 
 
 def send_command(acmd):
@@ -108,7 +109,8 @@ if __name__ == '__main__':
 
     # print UTC date and time
     # strftime converts tuple returned by gmtime method to a string
-    print(time.strftime('____________\nUTC time : %Y %m %d %H:%M', time.gmtime())+'\nTrying to connect...')
+    print(time.strftime('____________\nUTC time : %Y %m %d %H:%M', time.gmtime()) + '\n client2.py version ' + version
+          + '\nTrying to connect...')
     # Socket connection
     try:
         Sock.connect((LocalHost, LocalPort))

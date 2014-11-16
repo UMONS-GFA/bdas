@@ -44,9 +44,9 @@ def send_command(acmd):
     print(time.strftime('____________\nUTC time : %Y %m %d %H:%M', time.gmtime()) +
           '\nSending command %s ...' % acmd.decode('utf-8'))
     if acmd[0:1] == b'-':
-        acmd_root = cmd[0:4]
+        acmd_root = acmd[0:4]
     else:
-        acmd_root = cmd[0:3]
+        acmd_root = acmd[0:3]
     if acmd_root in command_list:
         readable, writable, exceptional = select.select([], [Sock], [], 6)
         if Sock in writable:
@@ -109,7 +109,7 @@ if __name__ == '__main__':
 
     # print UTC date and time
     # strftime converts tuple returned by gmtime method to a string
-    print(time.strftime('____________\nUTC time : %Y %m %d %H:%M', time.gmtime()) + '\n client2.py version ' + version
+    print(time.strftime('____________\nUTC time : %Y %m %d %H:%M', time.gmtime()) + '\nclient2.py version ' + version
           + '\nTrying to connect...')
     # Socket connection
     try:

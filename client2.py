@@ -27,7 +27,7 @@ outfile = 'out.bin'
 cmdfile = ''  # script argument to specify command file
 basepath = os.path.dirname(__file__)
 verbose = False
-version = '2.1'
+version = '2.11'
 
 
 def send_command(acmd):
@@ -145,6 +145,10 @@ if __name__ == '__main__':
             flush()
             cmd = bytearray(cmd.encode('ascii'))
             cmd += EOL
+        elif cmd.lower() == 'sync':
+            cmd = '#SD ' + time.strftime('%Y %m %d %H %M %S', time.gmtime())
+            cmd = bytearray(cmd.encode('ascii'))
+            send_command(cmd)
         else:
             cmd = bytearray(cmd.encode('ascii'))
             send_command(cmd)

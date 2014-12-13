@@ -47,10 +47,11 @@ def parse_bin_files_to_text_files(in_filename='', out_filename='', time_step=60,
 
     k_tot = round((os.stat(in_filename).st_size - 40)/12, 0)
     infile = open(in_filename,'rb')
-    parsedasbin.parse_bin_to_text(infile, outfile, time_step, 0, k_tot, date_as_secs_since_epoch,
+    status = parsedasbin.parse_bin_to_text(infile, outfile, time_step, 0, k_tot, date_as_secs_since_epoch,
                                   verbose_flag, sep, dtm_format, site, netid, data, bpos, date_format, jumper)
     infile.close()
     outfile.close()
+    return status
 
 if __name__ == '__main__':
     parse_bin_files_to_text_files()

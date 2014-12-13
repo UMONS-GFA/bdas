@@ -3,7 +3,7 @@ __author__ = 'su530201'
 """
 import numpy as np
 import pandas as pd
-#import matplotlib.pyplot as Plt
+import matplotlib.pyplot as Plt
 import datetime
 from tkinter import filedialog
 from tkinter import *
@@ -13,7 +13,7 @@ date_as_string = False
 verbose_flag = False
 
 root = Tk()
-root.withdraw()  # this will hide the main window
+#root.withdraw()  # this will hide the main window
 
 def_dir = '/home/su530201/PycharmProjects/DownloadDAS/'
 def_file = 'R012Full_20141012_0400'
@@ -27,7 +27,5 @@ else:
     data = pd.read_csv(in_filename, index_col=0, header=None)
     #d.append(datetime.datetime.utcfromtimestamp(int(row[0])))
 
-print(data)
-data.plot()
-#ts = pd.DataFrame(data)
-#ts.plot(subplots=True)
+ts = pd.DataFrame(data)
+ts.plot(subplots=True)

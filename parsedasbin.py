@@ -87,7 +87,7 @@ def parse_bin_to_text(in_stream, out_stream, time_step=60, k_max=330000, k_tot=0
         out_stream.writelines(s + '\n')
         s = '# CHAN: YYYY MO DD HH MI SS'
         for i in range(n_channels):
-            s = s + ' ' + format(i + 1, '04d')
+            s = s + ' ' + format(i + 1, '04d')  #TODO : get sensors id from DAS before calling this method...
         out_stream.writelines(s + '\n')
         s = '# DATA:' + data
         out_stream.writelines(s + '\n')

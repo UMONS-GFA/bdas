@@ -34,7 +34,6 @@ def schmitt_trigger(ts, low, high, threshold):
         fd.append(d)
     return filtered, fd
 
-
 def moving_w_rate(ts, ws):
     rate = []
     hw = ws//2  # hw : half window
@@ -76,7 +75,7 @@ print('Filtering data...')
 CC[1], CC[2] = schmitt_trigger(CC[0], 30000, 45000, 37500)
 #CC[1], CC[2] = schmitt_trigger(CC[3], 4500, 5500, 5000)
 CC[3] = moving_w_rate(CC[2], 1440)
-CC[2] = np.cumsum(CC[1])
+CC[1] = np.cumsum(CC[2])
 fig = plt.figure()
 ax1 = fig.add_subplot(4, 1, 1)
 ax1.plot(d, CC[0], '-k', linewidth=2)

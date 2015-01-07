@@ -287,7 +287,7 @@ if __name__ == '__main__':
         if status == -1:
             status = 0
         Sock.close()
-        if db_logging :
+        if db_logging:
             if not iss.insert_stream_status(conn, timestamp, data_stream, status):
                 status = 2
             iss.close_connection_to_logDB(conn)

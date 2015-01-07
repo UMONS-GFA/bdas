@@ -23,7 +23,7 @@ def db_create(database_name='new.db'):
     c.close()
 
 
-def db_update(database_name='new.db', in_filename=r'../DownloadDAS/R002Full_20140603_1827.txt'):
+def db_update(database_name='new.db', in_filename=r'../DownloadDAS/R012Full_20140607_0400.txt'):
     conn = sqlite3.connect(database_name)
 
     c = conn.cursor()

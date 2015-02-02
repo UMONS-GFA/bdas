@@ -1,5 +1,7 @@
 ## nanoDAS documentation
 
+The jumper reset the DAS !!
+
 
 #### nanoDAS specification
 

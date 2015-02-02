@@ -6,7 +6,7 @@
 
 ## 2014
 * December
- * 2014-12-09 - Val d'Enfer Pluviometer update : install new cone, air and water temperature sensors.  09:10 UTC - intervention begins / 10:50 UTC - new cone installed / 11:30 UTC - connexions of temperature sensor 0001 (air) and sensor 0002 (water) / 15:50 UTC - air temp measured with Testo probe at probe 0001 level above ground : 7.0°c / 16:00 UTC - serial download of nanoDAS R001    
+  * 2014-12-09 - Val d'Enfer Pluviometer update : install new cone, air and water temperature sensors.  09:10 UTC - intervention begins / 10:50 UTC - new cone installed / 11:30 UTC - connexions of temperature sensor 0001 (air) and sensor 0002 (water) / 15:50 UTC - air temp measured with Testo probe at probe 0001 level above ground : 7.0°c / 16:00 UTC - serial download of nanoDAS R001    
 * November
   * 2014-11-25 - Serial download of nanoDAS R002
   * 2014-11-16 - Update of client2.py to allow for 'sync' command / updated R013Fulldownload.cmd to synchronise DAS clock on server clock after download (OK)

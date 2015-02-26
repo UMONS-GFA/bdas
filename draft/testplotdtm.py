@@ -50,6 +50,7 @@ root = Tk()
 root.withdraw()  # this will hide the main window
 def_dir = '/home/su530201/PycharmProjects/DownloadDAS/'
 def_file = 'R013Full_20150103_0700'
+filtering = False
 #in_filename = '/home/su530201/PycharmProjects/DownloadDAS/R002Full_20140603_1827.bin'
 #out_filename = '/home/su530201/PycharmProjects/DownloadDAS/R002Full_20140603_1827.txt'
 in_filename = filedialog.askopenfilename(filetypes=(('Dtm files', 'dtm {*.dtm}')), initialdir = def_dir,
@@ -71,11 +72,13 @@ for i in range(len(C[0])):
         tmp.append(C[j][i])
     CC.append(tmp)
 
-print('Filtering data...')
-CC[1], CC[2] = schmitt_trigger(CC[0], 30000, 45000, 37500)
-#CC[1], CC[2] = schmitt_trigger(CC[3], 4500, 5500, 5000)
-CC[3] = moving_w_rate(CC[2], 1440)
-CC[1] = np.cumsum(CC[2])
+if filtering:
+    print('Filtering data...')
+    CC[1], CC[2] = schmitt_trigger(CC[0], 30000, 45000, 37500)
+    #CC[1], CC[2] = schmitt_trigger(CC[3], 4500, 5500, 5000)
+    CC[3] = moving_w_rate(CC[2], 1440)
+    CC[1] = np.cumsum(CC[2])
+
 fig = plt.figure()
 ax1 = fig.add_subplot(4, 1, 1)
 ax1.plot(d, CC[0], '-k', linewidth=2)

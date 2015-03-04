@@ -4,6 +4,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
+draw_graphs = False  # True  #
+load_calibration =  True # True
+save_calibration = False
+calibration_file = 'calibration.txt'
+fixed_flow = True
+
 def schmitt_trigger(ts, low, high, threshold):
     filtered = []
     fd = []
@@ -33,6 +39,7 @@ def schmitt_trigger(ts, low, high, threshold):
 
 def comb_to_linapprox(comb):
     sawtooth = np.zeros_like(comb, 'float64')
+    slope = np.zeros_like(comb, 'float64')
     i = 0
     start_tooth = i
     while i < len(comb):
@@ -41,69 +48,88 @@ def comb_to_linapprox(comb):
             i += 1
         else:
             sawtooth[start_tooth:stop_tooth+1] = sawtooth[start_tooth:start_tooth+1]*np.ones(stop_tooth - start_tooth + 1) + np.linspace(0.0, 1.0, stop_tooth - start_tooth + 1)
+            slope[start_tooth:stop_tooth+1] = 1.0/(stop_tooth - start_tooth + 1)
             start_tooth = i
             i += 1
 
-    return sawtooth
+    return sawtooth, slope
+
+def get_inflow(t, inflow_mean, inflow_variation, inflow_var_period, inflow_var_phase, inflow_random, random=False):
+    if random:
+        inflow = inflow_mean + inflow_variation*np.sin(2*np.pi*t/inflow_var_period+inflow_var_phase) + np.random.normal(0.0, inflow_random, 1)
+    else:
+        inflow = inflow_mean + inflow_variation*np.sin(2*np.pi*t/inflow_var_period+inflow_var_phase)
+    return inflow
+
 
 if __name__ == '__main__':
-    draw_graphs = False
     inflow = []
     estimated_inflow = []
-    for tk_inflow_mean in np.arange(0.5, 15.5, 0.5):
+    for tk_inflow_mean in np.arange(2.5, 3.0, 0.5):
         # General constants
         g = 9810  # [mm/s²]
-        eps0 = 8.84E-12  # void electric permittivity
+        eps0 = 8.85E-12  # void electric permittivity
         epsr_teflon = 2.1
 
         # Tank parameters
-        tk_tank_height = 5.0  # height above hole in tank [mm]
-        tk_hole_diameter = 4  # hole diameter [mm]
+        tk_overflow_height = 3.1  # height above tube in tank [mm]
+        tk_tube_height = 4.05  # height of the tube above the bottom of the tank [mm]
+        tk_tube_diameter = 3.5  # hole diameter [mm]
         tk_tank_diameter = 80  # tank diameter [mm]
-        # Derived tank parameters
-        tk_tank_area = np.pi/4*tk_tank_diameter**2  # tank area [mm²]
-        tk_hole_area = np.pi/4*tk_hole_diameter**2  # tank area [mm²]
 
          # Siphon gauge parameters
-        sg_siphon_height = 40.0  # height between bottom and top of siphon [mm]
+        sg_siphon_height = 70.4  # height between bottom and top of siphon [mm]
         sg_tube_diameter = 80.0  # siphon gauge tank diameter [mm]
         sg_siphon_diameter = 6.0  # siphon tube diameter [mm]
         sg_siphon_length = 300.0  # siphon tube length for outflow [mm]
         sg_desiphoning_level = 1.5  # water level at which siphon stops to be active when level drops in the gauge [mm]
-        # Derived siphon gauge parameters
-        sg_tube_area = np.pi/4*sg_tube_diameter**2  # tank area [mm²]
+        sg_residual_water_height = 39.5  # height of residual water after siphoning [mm]
 
         # Sensor parameters
         ss_length = 150  # length of cylindrical capacitor [mm]
-        ss_always_wet_length = 28  # length of cylindrical capacitor that is always wet (at the base of the upper tank and the gauge below the siphon) [mm]
-        ss_inner_radius = 12.7/2  # inner radius of the cylinder [mm]
-        ss_outer_radius = 13/2  # outer radius of the cylinder [mm]
+        ss_always_wet_length = tk_tube_height + sg_residual_water_height  # length of cylindrical capacitor that is always wet (at the base of the upper tank and the gauge below the siphon) [mm]
+        ss_inner_radius = 10  # inner radius of the cylinder [mm]
+        ss_outer_radius = 10.4  # outer radius of the cylinder [mm]
         ss_resistance = 500000  # R2 [ohm]
 
         # Data acquisition parameters
         das_period = 2  # sampling period [s]
 
+        # Derived tank parameters
+        tk_tank_area = np.pi/4*tk_tank_diameter**2 - np.pi*ss_outer_radius**2  # tank area [mm²]
+        tk_hole_area = np.pi/4*tk_tube_diameter**2  # tank area [mm²]
+        # Derived siphon gauge parameters
+        sg_tube_area = np.pi/4*sg_tube_diameter**2 - np.pi*ss_outer_radius**2  # tank area [mm²]
+
         # Tank starting state
-        tk_water_level = 1.02  # level of water in tank above the hole [mm]
-        #tk_inflow_mean = 10.0  # mean volumetric inflow [l/h]
-        tk_inflow_variation = 0  # amplitude of the inflow variation [l/h]
-        tk_inflow_var_period = 720.0  # period of the inflow variation [s]
-        tk_inflow_var_phase = 0.0  # phase of the inflow variation [rad]
+        tk_water_level = 4.05  # level of water in tank above the hole [mm]
+        if fixed_flow:
+            tk_inflow_mean = 4.0  # mean volumetric inflow [l/h]
+            tk_inflow_variation = 2.0  # amplitude of the inflow variation [l/h]
+            tk_inflow_var_period = 1800.0  # period of the inflow variation [s]
+            tk_inflow_random = 0.010  # amplitude of random component on inflow [l/h]
+            tk_inflow_var_phase = 0.0  # phase of the inflow variation [rad]
+        else:
+            tk_inflow_variation = 0.0  # amplitude of the inflow variation [l/h]
+            tk_inflow_var_period = 1.0  # period of the inflow variation [s]
+            tk_inflow_random = 0.0  # amplitude of random component on inflow [l/h]
+            tk_inflow_var_phase = 0.0  # phase of the inflow variation [rad]
+
         tk_outflow = 0.0  # volumetric outflow [l/h]
 
         # Siphon gauge starting state
-        sg_water_level = 40.0  # level of water in the siphon gauge tank above the base of the siphon [mm]
+        sg_water_level = 1.5  # level of water in the siphon gauge tank above the base of the siphon [mm]
         sg_outflow = 0.0  # volumetric outflow [l/h]
         sg_active = 0  # 1 when siphon is active 0 otherwise
 
         # Simulation time
         time_start = 0.0  # simulation starting time
-        time_end = 3600.0  # simulation ending time
+        time_end = 36000.0  # simulation ending time
         time_step = .2  # [s]
 
         # Initialisation
         time = time_start
-        tk_inflow = tk_inflow_mean + tk_inflow_variation*np.sin(2*np.pi*time/tk_inflow_var_period+tk_inflow_var_phase)
+        tk_inflow = get_inflow(time, tk_inflow_mean, tk_inflow_variation, tk_inflow_var_period, tk_inflow_var_phase, tk_inflow_random, fixed_flow)
         t = [time]
         tk_h = [tk_water_level]
         tk_o = [tk_outflow]
@@ -128,7 +154,7 @@ if __name__ == '__main__':
         # sensor low and high frequencies
         ss_min_capacity = ss_always_wet_length * epsr_teflon / 500 * np.pi * eps0 / np.log(ss_outer_radius / ss_inner_radius)
         ss_max_freq = 1/(0.693*2*ss_resistance*ss_min_capacity)
-        ss_max_capacity = (ss_always_wet_length + sg_siphon_height + tk_tank_height) * epsr_teflon / 500 * np.pi * eps0 / np.log(ss_outer_radius / ss_inner_radius)
+        ss_max_capacity = (ss_always_wet_length + sg_siphon_height + tk_overflow_height) * epsr_teflon / 500 * np.pi * eps0 / np.log(ss_outer_radius / ss_inner_radius)
         ss_min_freq = 1/(0.693*2*ss_resistance*ss_max_capacity)
         print('sensor frequency range [%5.0f Hz - %5.0f Hz]' % (ss_min_freq, ss_max_freq))
 
@@ -139,12 +165,12 @@ if __name__ == '__main__':
             # tk update
             tk_net_input = time_step*(tk_inflow-tk_outflow)*1000/3.6  # net water input during time_step [mm³]
             tk_water_level += tk_net_input/tk_tank_area
-            if tk_water_level > tk_tank_height:
-                tk_water_level = tk_tank_height
+            if tk_water_level > tk_overflow_height:
+                tk_water_level = tk_overflow_height
             elif tk_water_level < 0.0:
                 tk_water_level = 0.0
             tk_outflow = (2*g*tk_water_level)**(1/2)*tk_hole_area*3.6/1000  # [l/h]
-            tk_inflow = tk_inflow_mean + tk_inflow_variation*np.sin(2*np.pi*time/tk_inflow_var_period+tk_inflow_var_phase)
+            tk_inflow = get_inflow(time, tk_inflow_mean, tk_inflow_variation, tk_inflow_var_period, tk_inflow_var_phase, tk_inflow_random, fixed_flow)
             tk_h.append(tk_water_level)
             tk_o.append(tk_outflow)
             tk_i.append(tk_inflow)
@@ -171,7 +197,7 @@ if __name__ == '__main__':
 
 
         # # Simulation outputs
-        print('Total outflow of gauge over %4.1f s : %4.3f l' % (time_end-time_start, sg_total_outflow_volume))
+        #print('Total outflow of gauge over %4.1f s : %4.3f l' % (time_end-time_start, sg_total_outflow_volume))
         if draw_graphs:
             sim_fig = plt.figure('Tank and siphon gauge')
             # Tank
@@ -196,7 +222,7 @@ if __name__ == '__main__':
 
             # Data acquisition system output
             das_fig = plt.figure('DAS acquisition')
-            das_ax1 = das_fig.add_subplot(4, 1, 1, sharex=tk_ax1)
+            das_ax1 = das_fig.add_subplot(5, 1, 1, sharex=tk_ax1)
             das_ax1.plot(t, ss_counter, '-k')
             das_ax1.set_ylabel('Sensor oscillations [-]')
 
@@ -210,28 +236,33 @@ if __name__ == '__main__':
             das_t.append(time_start+(i+j)*time_step)
             das_frequencies.append(freq/das_period)
         x, das_siphoning = schmitt_trigger(das_frequencies, 5000, 7000, 9000)
-        das_sawtooth = comb_to_linapprox(das_siphoning)
-        das_outflow = das_sawtooth*sg_siphon_height*sg_tube_area/1000000
+        das_sawtooth, das_slope = comb_to_linapprox(das_siphoning)
+        das_volume = das_sawtooth*sg_siphon_height*sg_tube_area/1000000
+        das_flow = das_slope *sg_siphon_height*sg_tube_area/1000000 / (das_period/3600)
 
         if draw_graphs:
-            das_ax2 = das_fig.add_subplot(4, 1, 2, sharex=tk_ax1)
+            das_ax2 = das_fig.add_subplot(5, 1, 2, sharex=tk_ax1)
             das_ax2.plot(das_t, das_frequencies, '-r')
             das_ax2.set_ylabel('DAS Frequencies [Hz]')
-            das_ax3 = das_fig.add_subplot(4, 1, 3, sharex=tk_ax1)
+            das_ax3 = das_fig.add_subplot(5, 1, 3, sharex=tk_ax1)
             das_ax3.plot(das_t, das_siphoning, '-k')
             das_ax3.set_ylabel('Siphoning [0/1]')
-            das_ax4 = das_fig.add_subplot(4, 1, 4, sharex=tk_ax1)
-            das_ax4.plot(das_t, das_outflow, '-r')
+            das_ax4 = das_fig.add_subplot(5, 1, 4, sharex=tk_ax1)
+            das_ax4.plot(das_t, das_volume, '-r')
             das_ax4.set_xlabel('time [s]')
-            das_ax4.set_ylabel('Flow [l]')
+            das_ax4.set_ylabel('Volume [l]')
             das_ax4.hold('on')
             das_ax4.plot(t, np.cumsum(tk_o)/3600*time_step, '-g')
+            das_ax5 = das_fig.add_subplot(5, 1, 5, sharex=tk_ax1)
+            das_ax5.plot(das_t, das_flow, '-g')
+            das_ax5.set_xlabel('time [s]')
+            das_ax5.set_ylabel('Flow [l/h]')
             plt.show()
 
         print('Estimated total Volume : %d x %4.3f l = %4.3f l' %(np.sum(das_siphoning), sg_tube_area*sg_siphon_height/1000000, np.sum(das_siphoning)*sg_tube_area*sg_siphon_height/1000000))
         print('________________________________________________')
         inflow.append(tk_inflow_mean)
-        estimated_inflow.append(2*(das_outflow[1349]-das_outflow[449]))
+        estimated_inflow.append(2*(das_volume[1349]-das_volume[449]))
 
     err_fig = plt.figure('errors')
     flow_error = []
@@ -252,3 +283,44 @@ if __name__ == '__main__':
     plt.ylim(0.0, 50.0)
     plt.grid(b=True, which='major', color='k', linestyle='-')
     plt.show()
+
+    calibration = []
+    for i in range(len(flow_error)):
+        calibration.append(str('\t'.join(list(map(str,[estimated_inflow[i],flow_error[i],'\n'])))))
+    if save_calibration:
+        with open(calibration_file,'w+') as cal_file:
+            cal_file.writelines(calibration)
+
+    if load_calibration:
+        with open(calibration_file,'r') as cal_file:
+            rows=[list(map(float,L.strip().split('\t'))) for L in cal_file]
+
+        cal_estimated_inflow, cal_flow_error = [], []
+        for i in range(len(rows)):
+            cal_estimated_inflow.append(rows[i][0])
+            cal_flow_error.append(rows[i][1])
+
+        cal_inflow, cal_error = [], []
+        for i in range(len(cal_estimated_inflow)-1):
+            tmp_inflow=np.linspace(cal_estimated_inflow[i],cal_estimated_inflow[i+1],10)
+            tmp_error=np.linspace(cal_flow_error[i],cal_flow_error[i+1],10)
+            for j in range(len(tmp_error)):
+                cal_inflow.append(tmp_inflow[j])
+                cal_error.append(tmp_error[j])
+        corr_flow = []
+        for i in range(len(das_flow)):
+            stop = 0
+            for j in range(len(cal_error)):
+                if round(das_flow[i],1) == round(cal_inflow[j],1) and stop == 0:
+                    corr = cal_error[j]
+                    stop ==1
+            corr_flow.append(das_flow[i]*(1.0 + corr/100))
+        corr_fig = plt.figure('Corrections')
+        das_ax1 = corr_fig.add_subplot(1, 1, 1)
+        das_ax1.plot(t, tk_i, '-g', label='simulated inflow')
+        das_ax1.plot(das_t, das_flow, '-b',label='retrieved inflow')
+        das_ax1.plot(das_t, corr_flow, '-r',label='corrected retrieved inflow')
+        das_ax1.set_xlabel('time [s]')
+        das_ax1.set_ylabel('Flow [l/h]')
+        plt.legend()
+        plt.show()

@@ -2,6 +2,7 @@
 
 ## 2015
 * April
+  * 2015-04-24 - Installation of US converter joining R010 and network DAS2. Ground cable disconnected from RS232 adaptor.
   * 2015-04-09 - Installed BB in the cave at the end of edas 2 RS-485 network (OK/AW); replaced ORB serial to RS-422 interfaces on DAS R012 and at the end of edas 1 with USCs connected to PC running remserial (not connected to the local network yet) and reconditioned DAS R012 (OK)
 * January
   * 2015-01-29 - Brainboxes(BB) firmware update tested with USC using raw TCP in BB settings, seems OK, doesn't repeat FF anymore

@@ -24,8 +24,3 @@
 * September
   * 2014-09-26 - Remote connection interrupted
   * 2014-09-26 - Installed Val d'Enfer Pluviometer / installed nanoDAS R013 + ORB RS232-RS422 interface (OK, AW, CB, AP)
-  
-
-  
-
-*

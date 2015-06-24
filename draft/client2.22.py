@@ -4,8 +4,10 @@ import socket
 import select
 import time
 import logging
-#import insertstreamstatus as iss
-from draft import insertstreamstatus as iss
+try:
+    import insertstreamstatus as iss
+except:
+    from draft import insertstreamstatus as iss
 
 try:
     from settings import LocalHost, LocalPort, EOL
@@ -14,7 +16,7 @@ except:
     LocalPort = None
     EOL = b'\r'
 
-version = '2.21'
+version = '2.22'
 cl = 0  # current command line index
 cmdlines = []  # command lines
 eod = False  # end of download
@@ -37,16 +39,18 @@ outfile = 'out.bin'
 cmdfile = ''  # script argument to specify command file
 basepath = os.path.dirname(__file__)
 verbose = False
-status = -1  # -1 : unknown; 0 : OK; 1 : Warning(s); 2 : Errors 3: no connection
 db_logging = True  # if True logs status in the download_database automatically set to false in interactive sessions
 conn = None
+job_id = None
 timestamp = ''
 data_stream = 'Unknown'
 logging_level = logging.DEBUG
 logging.Formatter.converter = time.gmtime
 log_format = '%(asctime)-15s %(levelname)s:%(message)s'
 logging.basicConfig(format=log_format, datefmt='%Y/%m/%d %H:%M:%S UTC', level=logging_level,
-                    handlers=[logging.FileHandler('logs/client2.log'), logging.StreamHandler()])
+                    handlers=[logging.FileHandler(os.path.join(basepath, 'logs/client2.log')), logging.StreamHandler()])
+status = -1  # -1 : unknown; 0 : OK; 1 : Warning(s); 2 : Errors 3: no connection
+status_dict = {-1: 'Unknown', 0: 'OK', 1: 'Warning', 2: 'Error', 3: 'No connection'}
 
 
 def send_command(acmd):
@@ -143,10 +147,6 @@ if __name__ == '__main__':
     logging.info('_____ Started _____')
     logging.info('client2.py version ' + version)
 
-    if db_logging and (conn is None):
-        logging.error('Unable to connect to database for status logging !')
-        status = 2
-        db_logging = False
     logging.info('Parsing arguments...')
     # check if python script has the name of a command file as argument
     # sys.argv[0] is python script name
@@ -186,6 +186,14 @@ if __name__ == '__main__':
         # show a prompt
         cmd = input('Type command (type #HE for help or exit to quit).\n> ')
 
+    # create a job in logging database
+    if db_logging and (conn is None):
+        logging.error('Unable to connect to database for status logging !')
+        status = 2
+        db_logging = False
+    else:
+        status, job_id = iss.insert_job(conn, timestamp, data_stream)
+
     # Socket connection
     if isinstance(LocalHost, str) & isinstance(LocalPort, int):
         logging.info('Trying to connect...')
@@ -196,8 +204,9 @@ if __name__ == '__main__':
             logging.error('Connection failed : %s ' % err)
             status = 3
             if db_logging:
-                if not iss.insert_stream_status(conn, timestamp, data_stream, status):
-                    status = 2
+                timestamp = "'"+time.strftime('%Y/%m/%d %H:%M:%S', time.gmtime())+"'"
+                if not iss.update_job_status(conn, job_id, timestamp, status_dict[status]):
+                    logging.warning('unable to log status to database')
                 iss.close_connection_to_logDB(conn)
             sys.exit(status)
         logging.info('Socket connected')
@@ -330,8 +339,10 @@ if __name__ == '__main__':
             status = 0
         Sock.close()
         if db_logging:
-            if not iss.insert_stream_status(conn, timestamp, data_stream, status):
+            timestamp = "'"+time.strftime('%Y/%m/%d %H:%M:%S', time.gmtime())+"'"
+            if not iss.update_job_status(conn, job_id, timestamp, status_dict[status]):
                 status = 2
+                logging.warning('unable to log status to database')
             iss.close_connection_to_logDB(conn)
         sys.exit(status)
     else:

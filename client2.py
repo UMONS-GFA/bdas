@@ -3,7 +3,12 @@ import os.path
 import socket
 import select
 import time
-from settings import LocalHost, LocalPort, EOL
+try:
+    from settings import LocalHost, LocalPort, EOL
+except:
+    LocalHost = None
+    LocalPort = None
+    EOL = b'\r'
 
 cl = 0  # current command line index
 cmdlines = []  # command lines
@@ -15,8 +20,8 @@ command_list = [b'#HE', b'#E0', b'#E1', b'#E2', b'#SD', b'#SR', b'#SI', b'#SS', 
                 b'#XP', b'#RM', b'#RL', b'#RV', b'#XN', b'#WB', b'#RW']
 for i in range(0, 256):
     command_list.append(bytearray(('-%03d' % i).encode('ascii')))
-response_list = [b'HELP COMMAND :', b'!E0', b'!E1', b'!E2', b'!SD', b'!SR', b'!SI', b'!SS', b'!ZR', b'!ZF', b'\xfd', b'!RI',
-                 b'!XS', b'\xfd', b'!RM', b'!RL', b'!RV', b'!XN', b'!WB', b'!RW']
+response_list = [b'HELP COMMAND :', b'!E0', b'!E1', b'!E2', b'!SD', b'!SR', b'!SI', b'!SS', b'!ZR', b'!ZF', b'\xfd',
+                 b'!RI', b'!XS', b'\xfd', b'!RM', b'!RL', b'!RV', b'!XN', b'!WB', b'!RW']
 for i in range(0, 256):
     response_list.append(b'!HI')
 recvdata = b''
@@ -27,7 +32,7 @@ outfile = 'out.bin'
 cmdfile = ''  # script argument to specify command file
 basepath = os.path.dirname(__file__)
 verbose = False
-version = '2.12'
+version = '2.13'
 
 
 def send_command(acmd):
@@ -149,14 +154,21 @@ if __name__ == '__main__':
     # print UTC date and time
     # strftime converts tuple returned by gmtime method to a string
     print(time.strftime('____________\nUTC time : %Y %m %d %H:%M', time.gmtime()) + '\nTrying to connect...')
+
     # Socket connection
-    try:
-        Sock.connect((LocalHost, LocalPort))
-    except socket.error as err:
-        print('connection failed : %s ' % err)
-        sys.exit()
-    print('Socket connected')
-    time.sleep(1)
+    if isinstance(LocalHost, str) & isinstance(LocalPort, int):
+        try:
+            Sock.connect((LocalHost, LocalPort))
+        except socket.error as err:
+            print('connection failed : %s ' % err)
+            sys.exit(3)
+        print('Socket connected')
+        time.sleep(1)
+    else:
+        print(time.strftime('____________\nUTC time : %Y %m %d %H:%M', time.gmtime())
+              + '\nInvalid connection parameters...')
+        print('Ending at ' + time.strftime('UTC time : %Y %m %d %H:%M', time.gmtime()) + '\n____________')
+        sys.exit(3)
 
     if interactive:
         print(time.strftime('____________\nUTC time : %Y %m %d %H:%M', time.gmtime())

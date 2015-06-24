@@ -1,3 +1,5 @@
+__author__ = 'kaufmanno'
+
 import sys
 import os.path
 import socket

@@ -4,7 +4,9 @@ import socket
 import select
 import time
 import logging
-import insertstreamstatus as iss
+#import insertstreamstatus as iss
+from draft import insertstreamstatus as iss
+
 try:
     from settings import LocalHost, LocalPort, EOL
 except:
@@ -44,7 +46,7 @@ logging_level = logging.DEBUG
 logging.Formatter.converter = time.gmtime
 log_format = '%(asctime)-15s %(levelname)s:%(message)s'
 logging.basicConfig(format=log_format, datefmt='%Y/%m/%d %H:%M:%S UTC', level=logging_level,
-                    handlers=[logging.FileHandler('R013processing.log'), logging.StreamHandler()])
+                    handlers=[logging.FileHandler('logs/client2.log'), logging.StreamHandler()])
 
 
 def send_command(acmd):
@@ -141,14 +143,14 @@ if __name__ == '__main__':
     logging.info('_____ Started _____')
     logging.info('client2.py version ' + version)
 
-    if (db_logging) and (conn is None):
+    if db_logging and (conn is None):
         logging.error('Unable to connect to database for status logging !')
         status = 2
         db_logging = False
     logging.info('Parsing arguments...')
     # check if python script has the name of a command file as argument
     # sys.argv[0] is python script name
-    interactive = True # interactive session by default (unless a command file is passed as argument
+    interactive = True  # interactive session by default (unless a command file is passed as argument
     i = 1
     if len(sys.argv) > 1:
         if len(sys.argv) % 2 == 1:
@@ -193,7 +195,7 @@ if __name__ == '__main__':
         except socket.error as err:
             logging.error('Connection failed : %s ' % err)
             status = 3
-            if db_logging :
+            if db_logging:
                 if not iss.insert_stream_status(conn, timestamp, data_stream, status):
                     status = 2
                 iss.close_connection_to_logDB(conn)

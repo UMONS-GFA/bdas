@@ -6,9 +6,12 @@ import logging
 import os
 import sys
 from time import gmtime
+
 from dateutil import tz
-from bin2dtm import bin_to_dtm
-from dtm2png import read_dtm, plot_dtm
+
+from parsing.bin2dtm import bin_to_dtm
+from parsing.dtm2png import read_dtm, plot_dtm
+
 
 status = 0
 bin_path = './'
@@ -28,7 +31,7 @@ logging_level = logging.DEBUG
 logging.Formatter.converter = gmtime
 log_format = '%(asctime)-15s %(levelname)s:%(message)s'
 logging.basicConfig(format=log_format, datefmt='%Y/%m/%d %H:%M:%S UTC', level=logging_level,
-                    handlers=[logging.FileHandler('allbin2png.log'), logging.StreamHandler()])
+                    handlers=[logging.FileHandler('./logs/allbin2png.log'), logging.StreamHandler()])
 logging.info('_____ Started _____')
 
 i = 1

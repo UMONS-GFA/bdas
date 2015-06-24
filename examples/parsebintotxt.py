@@ -4,8 +4,9 @@ This program let you choose one or more binary file(s) and propose to parse and 
 
  """
 import os
-import parsedasbin
 from tkinter import filedialog
+
+from parsing import parsedasbin
 
 
 def parse_bin_files_to_text_files(in_filename='', out_filename='', time_step=60, k_max=330000,

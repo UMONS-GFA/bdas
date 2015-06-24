@@ -3,7 +3,8 @@ Parsing a bin file to dtm
 """
 import time
 import logging
-import parsebintotxt as pdb
+
+from examples import parsebintotxt as pdb
 
 
 def bin_to_dtm(bin_file, dtm_file, t_step=60):

@@ -16,7 +16,9 @@ class Sensor(object):
 
 
     def install(self, astation, adate):
-        # Use this method to install a sensor somewhere (on a known station) sometime
+    # Use this method to install a sensor somewhere (on a known station) sometime
+        pass
 
     def connect(self, adas, achannel, adate):
-        # Use this method to connect a sensor on a channel of a das at a given date
+    # Use this method to connect a sensor on a channel of a das at a given date
+        pass

@@ -2,7 +2,7 @@
 
 Application to interact with a DAS.
 
-Current release :  [v0.4.1](https://github.com/UMONS-GFA/bdas/releases/tag/v0.4.1) (October 2014)
+Current release :  [v0.4.2](https://github.com/UMONS-GFA/bdas/releases/tag/v0.4.2) (June 2015)
 
 
 ### Requirements on server side

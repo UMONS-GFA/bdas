@@ -10,6 +10,7 @@ save_calibration = False
 calibration_file = 'calibration.txt'
 fixed_flow = True
 
+
 def schmitt_trigger(ts, low, high, threshold):
     filtered = []
     fd = []

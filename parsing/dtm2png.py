@@ -21,7 +21,7 @@ def read_dtm(dtmfile, min_date=datetime.datetime.utcfromtimestamp(0), max_date=d
             current_date = datetime.datetime.strptime(l[:19], '%Y %m %d %H %M %S')
             current_date = current_date.replace(tzinfo=utc_tz)
             if current_date < previous_date:
-                logging.warning('*** Records going back in time !')
+                logging.warning('*** Records going back in time after %s !' % previous_date)
             if (min_date <= current_date <= max_date):
                 d.append(datetime.datetime.strptime(l[:19], '%Y %m %d %H %M %S'))
                 C.append([float(l[20:33]), float(l[34:47]), float(l[48:61]), float(l[62:75])])

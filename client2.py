@@ -1,10 +1,12 @@
+__author__ = 'kaufmanno'
+
 import sys
 import os.path
 import socket
 import select
 import time
 import logging
-import insertjobstatus as ijs
+import reportjobstatus as rjs
 
 try:
     from settings import LocalHost, LocalPort, EOL
@@ -13,7 +15,7 @@ except:
     LocalPort = None
     EOL = b'\r'
 
-version = '2.22'
+version = '2.23'
 cl = 0  # current command line index
 cmdlines = []  # command lines
 eod = False  # end of download
@@ -40,7 +42,6 @@ db_logging = True  # if True logs status in the download_database automatically 
 conn = None
 job_id = None
 timestamp = ''
-data_stream = 'Unknown'
 logging_level = logging.DEBUG
 logging.Formatter.converter = time.gmtime
 log_format = '%(asctime)-15s %(levelname)s:%(message)s'
@@ -133,7 +134,7 @@ if __name__ == '__main__':
     # connect to the status logging database
     if db_logging:
         timestamp = "'"+time.strftime('%Y/%m/%d %H:%M:%S', time.gmtime())+"'"
-        conn = ijs.connect_to_logDB()
+        conn = rjs.connect_to_logDB()
 
     # set the logging environment up
     logging_level = logging.DEBUG
@@ -189,7 +190,10 @@ if __name__ == '__main__':
         status = 2
         db_logging = False
     else:
-        status, job_id = ijs.insert_job(conn, timestamp, data_stream)
+        rjs_status, job_id = rjs.insert_job(conn, timestamp, status_dict[status])
+        if not(rjs_status):
+            logging.error('Unable to insert current job to database for status logging !')
+            status = 2
 
     # Socket connection
     if isinstance(LocalHost, str) & isinstance(LocalPort, int):
@@ -202,9 +206,9 @@ if __name__ == '__main__':
             status = 3
             if db_logging:
                 timestamp = "'"+time.strftime('%Y/%m/%d %H:%M:%S', time.gmtime())+"'"
-                if not ijs.update_job_status(conn, job_id, timestamp, status_dict[status]):
+                if not rjs.update_job_status(conn, job_id, timestamp, status_dict[status]):
                     logging.warning('unable to log status to database')
-                ijs.close_connection_to_logDB(conn)
+                rjs.close_connection_to_logDB(conn)
             sys.exit(status)
         logging.info('Socket connected')
         time.sleep(1)
@@ -337,10 +341,10 @@ if __name__ == '__main__':
         Sock.close()
         if db_logging:
             timestamp = "'"+time.strftime('%Y/%m/%d %H:%M:%S', time.gmtime())+"'"
-            if not ijs.update_job_status(conn, job_id, timestamp, status_dict[status]):
+            if not rjs.update_job_status(conn, job_id, timestamp, status_dict[status]):
                 status = 2
                 logging.warning('unable to log status to database')
-            ijs.close_connection_to_logDB(conn)
+            rjs.close_connection_to_logDB(conn)
         sys.exit(status)
     else:
         Sock.close()

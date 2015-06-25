@@ -1,10 +1,14 @@
-__author__ = 'kaufmanno'
-
 import sys
 import os.path
 import socket
 import select
 import time
+import logging
+try:
+    import insertstreamstatus as iss
+except:
+    from draft import insertstreamstatus as iss
+
 try:
     from settings import LocalHost, LocalPort, EOL
 except:
@@ -12,6 +16,7 @@ except:
     LocalPort = None
     EOL = b'\r'
 
+version = '2.22'
 cl = 0  # current command line index
 cmdlines = []  # command lines
 eod = False  # end of download
@@ -23,7 +28,7 @@ command_list = [b'#HE', b'#E0', b'#E1', b'#E2', b'#SD', b'#SR', b'#SI', b'#SS', 
 for i in range(0, 256):
     command_list.append(bytearray(('-%03d' % i).encode('ascii')))
 response_list = [b'HELP COMMAND :', b'!E0', b'!E1', b'!E2', b'!SD', b'!SR', b'!SI', b'!SS', b'!ZR', b'!ZF', b'\xfd',
-                 b'!RI', b'!XS', b'\xfd', b'!RM', b'!RL', b'!RV', b'!XN', b'!WB', b'!RW']
+                 b'!RI', b'!XS', b'\xfd', b'!RM', b'*', b'!RV', b'\xfd', b'!WB', b'!RW']
 for i in range(0, 256):
     response_list.append(b'!HI')
 recvdata = b''
@@ -34,7 +39,18 @@ outfile = 'out.bin'
 cmdfile = ''  # script argument to specify command file
 basepath = os.path.dirname(__file__)
 verbose = False
-version = '2.13'
+db_logging = True  # if True logs status in the download_database automatically set to false in interactive sessions
+conn = None
+job_id = None
+timestamp = ''
+data_stream = 'Unknown'
+logging_level = logging.DEBUG
+logging.Formatter.converter = time.gmtime
+log_format = '%(asctime)-15s %(levelname)s:%(message)s'
+logging.basicConfig(format=log_format, datefmt='%Y/%m/%d %H:%M:%S UTC', level=logging_level,
+                    handlers=[logging.FileHandler(os.path.join(basepath, 'logs/client2.log')), logging.StreamHandler()])
+status = -1  # -1 : unknown; 0 : OK; 1 : Warning(s); 2 : Errors 3: no connection
+status_dict = {-1: 'Unknown', 0: 'OK', 1: 'Warning', 2: 'Error', 3: 'No connection'}
 
 
 def send_command(acmd):
@@ -43,13 +59,10 @@ def send_command(acmd):
     :param acmd: binary
     :return
     """
-    global data, recvdata, cl
+    global data, recvdata, cl, status
     data = b''
     k = 0
-    #print UTC date and time
-    # strftime converts tuple returned by gmtime method to a string
-    print(time.strftime('____________\nUTC time : %Y %m %d %H:%M', time.gmtime()) +
-          '\nSending command %s ...' % acmd.decode('utf-8'))
+    logging.info('Sending command %s ...' % acmd.decode('utf-8'))
     if acmd[0:1] == b'-':
         acmd_root = acmd[0:4]
     else:
@@ -60,7 +73,7 @@ def send_command(acmd):
             Sock.send(acmd + EOL)
             response = response_list[command_list.index(acmd_root)]
             if verbose:
-                print('Expected response: ' + repr(response))
+                logging.info('Expected response: ' + repr(response))
             while k < kmax:
                 starttime = time.time()
                 while time.time() < starttime + 100 * timeout:
@@ -71,30 +84,35 @@ def send_command(acmd):
                         if response in data:
                             data = data[data.find(response):]
                             if verbose:
-                                print('Response to command %s received' % acmd_root.decode('utf-8'))
+                                logging.info('Response to command %s received' % acmd_root.decode('utf-8'))
                             return
                         elif b'!ERROR : Unknown Command' in data:
-                            print('Repeating command...')
+                            logging.warning('Repeating command...')
+                            if status < 2:
+                                status = 1
                             send_command(acmd)
                             return
 
                 k += 1
             if k == kmax:
-                print('Das is not responding')
-                print(data)
+                logging.error('Das is not responding')
+                status = 2
+                logging.debug(data)
                 cmdlines.append('exit')
                 cl = len(cmdlines)-1
         else:
-            print('Error : unable to send command !')
+            logging.error('Error : unable to send command !')
+            status = 2
             cmdlines.append('exit')
             cl = len(cmdlines)-1
     else:
-        print('Unknown command: %s', acmd.decode('utf-8'))
+        logging.warning('Unknown command: %s', acmd.decode('utf-8'))
+        status = 1
 
 
 def flush():
     """ remove pending data in socket stream """
-    print('flushing...')
+    logging.info('flushing...')
     send_command(b'#XS')
     send_command(b'#E0')
 
@@ -105,76 +123,101 @@ def failed_download(msg):
         :param msg: string
 
     """
-    global eod, cl
+    global eod, cl, status
 
-    print('Error: incorrect ending of downloaded data...')
-    print(msg)
+    logging.error('Error: incorrect ending of downloaded data...')
+    logging.debug(msg)
+    status = 2
     eod = True
     send_command(b'#XS')
 
 if __name__ == '__main__':
     cmd = []
-    # print UTC date and time
-    # strftime converts tuple returned by gmtime method to a string
-    print(time.strftime('____________\nUTC time : %Y %m %d %H:%M', time.gmtime()) + '\nclient2.py version ' + version
-          + '\nParsing arguments...')
-    # check if python script arguments
+    # connect to the status logging database
+    if db_logging:
+        timestamp = "'"+time.strftime('%Y/%m/%d %H:%M:%S', time.gmtime())+"'"
+        conn = iss.connect_to_logDB()
+
+    # set the logging environment up
+    logging_level = logging.DEBUG
+    logging.Formatter.converter = time.gmtime
+    log_format = '%(asctime)-15s %(levelname)s:%(message)s'
+    logging.basicConfig(format=log_format, datefmt='%Y/%m/%d %H:%M:%S UTC', level=logging_level,
+                        handlers=[logging.StreamHandler(sys.stdout)])
+    logging.info('_____ Started _____')
+    logging.info('client2.py version ' + version)
+
+    logging.info('Parsing arguments...')
+    # check if python script has the name of a command file as argument
     # sys.argv[0] is python script name
-    interactive = True # interactive session by default (unless a command file is passed as argument
+    interactive = True  # interactive session by default (unless a command file is passed as argument
     i = 1
     if len(sys.argv) > 1:
         if len(sys.argv) % 2 == 1:
             while i < len(sys.argv)-1:
                 if sys.argv[i] == 'host':
                     LocalHost = str(sys.argv[i+1])
-                    print('   Host : ' + LocalHost)
+                    logging.info('   Host : ' + LocalHost)
                 elif sys.argv[i] == 'port':
                     LocalPort = int(sys.argv[i+1])
-                    print('   Port : ' + str(LocalPort))
+                    logging.info('   Port : ' + str(LocalPort))
                     #LocalPort = int(LocalPort)
                 elif sys.argv[i] == 'cmdfile':
                     cmdfile = str(sys.argv[i+1])
-                    print('   Command file : ' + cmdfile)
+                    logging.info('   Command file : ' + cmdfile)
                     # open method create a new file
                     cf = open(cmdfile, 'rt')
+                    logging.info('Executing command file %s.' % cmdfile)
+                    data_stream = os.path.basename(cmdfile).split('.')[0]
                     # readlines returns a list of lines
                     cmdlines = cf.readlines()
                     cf.close()
                     cmd = cmdlines[cl].strip('\n')
                     interactive = False
                 else:
-                    print('   Unknown argument : ' + sys.argv[i])
+                    logging.info('   Unknown argument : ' + sys.argv[i])
                 i += 2
         else:
-            print(time.strftime('____________\nUTC time : %Y %m %d %H:%M', time.gmtime()) +
-                  '\nParsing failed : arguments should be given by pairs [key value], ignoring arguments...')
+            logging.info('Parsing failed : arguments should be given by pairs [key value], ignoring arguments...')
     else:
-        print(time.strftime('____________\nUTC time : %Y %m %d %H:%M', time.gmtime()) +
-              '\nNo argument found...')
+        logging.info('No argument found...')
         verbose = True
+        db_logging = False
+        # show a prompt
+        cmd = input('Type command (type #HE for help or exit to quit).\n> ')
 
-    # print UTC date and time
-    # strftime converts tuple returned by gmtime method to a string
-    print(time.strftime('____________\nUTC time : %Y %m %d %H:%M', time.gmtime()) + '\nTrying to connect...')
+    # create a job in logging database
+    if db_logging and (conn is None):
+        logging.error('Unable to connect to database for status logging !')
+        status = 2
+        db_logging = False
+    else:
+        status, job_id = iss.insert_job(conn, timestamp, data_stream)
 
     # Socket connection
     if isinstance(LocalHost, str) & isinstance(LocalPort, int):
+        logging.info('Trying to connect...')
         try:
             Sock.connect((LocalHost, LocalPort))
+            status = 0
         except socket.error as err:
-            print('connection failed : %s ' % err)
-            sys.exit(3)
-        print('Socket connected')
+            logging.error('Connection failed : %s ' % err)
+            status = 3
+            if db_logging:
+                timestamp = "'"+time.strftime('%Y/%m/%d %H:%M:%S', time.gmtime())+"'"
+                if not iss.update_job_status(conn, job_id, timestamp, status_dict[status]):
+                    logging.warning('unable to log status to database')
+                iss.close_connection_to_logDB(conn)
+            sys.exit(status)
+        logging.info('Socket connected')
         time.sleep(1)
     else:
-        print(time.strftime('____________\nUTC time : %Y %m %d %H:%M', time.gmtime())
-              + '\nInvalid connection parameters...')
+        logging.info('Invalid connection parameters...')
         print('Ending at ' + time.strftime('UTC time : %Y %m %d %H:%M', time.gmtime()) + '\n____________')
         sys.exit(3)
 
     if interactive:
-        print(time.strftime('____________\nUTC time : %Y %m %d %H:%M', time.gmtime())
-              + '\nStarting interactive session...')
+        logging.info('Starting interactive session...')
         # show a prompt
         cmd = input('Type command (type #HE for help or exit to quit).\n> ')
 
@@ -204,7 +247,7 @@ if __name__ == '__main__':
                         data += recvdata
                         if b'\xfd' in data:
                             data = data[data.find(b'\xfd'):]
-                            print('*** Downloading data ... ***')
+                            logging.info('*** Downloading data ... ***')
                             # check if there is a command file as parameter
                             if cmdfile != '':
                                 if cl < len(cmdlines)+2:
@@ -218,11 +261,12 @@ if __name__ == '__main__':
                                     cl += 1
                                     dl_expectedduration = int(cmdlines[cl])
                                 else:
-                                    print('Incorrect arguments in command file !')
+                                    logging.error('Incorrect arguments in command file !')
+                                    status = 2
                                     cl = len(cmdlines)
                                     cmdlines.append('exit')
                                     break
-                            print('Saving results in %s' % outfile)
+                            logging.info('Saving results in %s' % outfile)
                             try:
                                 f = open(outfile, 'wb')
                                 k = 0  # use to calculate file size
@@ -255,19 +299,20 @@ if __name__ == '__main__':
                                 if time.time() >= dl_timeout:
                                     failed_download('Download takes too much time, job canceled')
                                 else:
-                                    print('*** Download complete! ***')
+                                    logging.info('*** Download complete! ***')
                                 f.close()
                                 datanewline = False
                             except IOError:
-                                print('Error: unable to open file %s ! - Exiting command file %s ...' % (outfile,
-                                                                                                         cmdfile))
+                                logging.error('Unable to open file %s ! - Exiting command file %s ...'
+                                              % (outfile, cmdfile))
+                                status = 2
                                 cl = len(cmdlines)
                                 cmdlines.append('exit')
                         elif recvdata.decode('ascii') == '\n':
                             datanewline = True
                         elif recvdata.decode('ascii') == '\r':
                             if datanewline:
-                                print(data.decode('utf-8'))
+                                logging.info(data.decode('utf-8'))
                                 data = bytearray()
                             datanewline = False
                         else:
@@ -289,5 +334,16 @@ if __name__ == '__main__':
                 cmd = 'exit'
 
     if cmdfile != '':
-        print('Ending at ' + time.strftime('UTC time : %Y %m %d %H:%M', time.gmtime()) + '\n____________')
+        logging.info('______ Ended ______\n\n')
+        if status == -1:
+            status = 0
+        Sock.close()
+        if db_logging:
+            timestamp = "'"+time.strftime('%Y/%m/%d %H:%M:%S', time.gmtime())+"'"
+            if not iss.update_job_status(conn, job_id, timestamp, status_dict[status]):
+                status = 2
+                logging.warning('unable to log status to database')
+            iss.close_connection_to_logDB(conn)
+        sys.exit(status)
+    else:
         Sock.close()

@@ -19,19 +19,45 @@ def connect_to_logDB():
         return conn
 
 
-def insert_stream_status(conn, timestamp, stream_name, cmd_status):
+def insert_job(conn, timestamp, stream_name):
+    status = False
+    job_id = None
+    cur = conn.cursor()
+    try:
+        sql = "INSERT INTO downloads(start_time, ref_stream, ref_status) VALUES (%s," \
+              "(SELECT id FROM streams WHERE name = %s),(SELECT code FROM status WHERE description = %s));"  # Note: no quotes
+        data = (timestamp, stream_name, 'Unknown')
+        cur.execute(sql, data)
+        conn.commit()
+        logging.info('New job inserted in ' + LogDB)
+        # job_id = cur.fetchone()[0]
+        cur.execute('SELECT LASTVAL()')
+        job_id = cur.fetchone()['lastval']
+        cur.close()
+        status = True
+    except pg.DatabaseError as e:
+        logging.error('Error while inserting job status into downloads table : \n%s' % e)
+        conn.rollback()
+        cur.close()
+        status = False
+    finally:
+        return status, job_id
+
+
+def update_job_status(conn, job_id, timestamp, cmd_status):
     status = False
     cur = conn.cursor()
     try:
-        SQL = "INSERT INTO download_status(timestamp, stream, status) VALUES (%s,%s,%s);" # Note: no quotes
-        data = (timestamp, stream_name, cmd_status)
-        cur.execute(SQL, data)
+        sql = "UPDATE downloads SET end_time = %s, ref_status = " \
+              "(SELECT code FROM status WHERE description = %s) WHERE id = %s"  # Note: no quotes
+        data = (timestamp, cmd_status, job_id)
+        cur.execute(sql, data)
         conn.commit()
         logging.info('Status logged to ' + LogDB)
         cur.close()
         status = True
     except pg.DatabaseError as e:
-        logging.error('Unable to insert status into download_status table : \n%s' % e)
+        logging.error('Error while updating job status into download_status table : \n%s' % e)
         conn.rollback()
         cur.close()
         status = False

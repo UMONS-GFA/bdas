@@ -1,6 +1,8 @@
 settings.py
-
+.idea
+.gitignore
 *.py[cod]
+logs
 
 # C extensions
 *.so

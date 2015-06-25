@@ -1,7 +1,10 @@
 __author__ = 'kaufmanno'
+"""
+A tool to report status of jobs (i.e. cron jobs) to a PostgreSQL database
+
+ """
 
 import psycopg2 as pg
-#import time
 import logging
 
 from settings import LogDB, UserLogDB, URLLogDBHost, URLLogDBPort, UserLogPwd

@@ -13,7 +13,7 @@ def main():
     logging.info('_____ Started _____')
     conn = rjs.connect_to_logDB()
     logging.info('_____ Connected _____')
-    command = input('Command :')
+    command = input('Command (=job set):')  # example FullDownloadDAST001
     status = 'Unknown'
     cur_time = time.gmtime()
     timestamp = "'"+time.strftime('%Y/%m/%d %H:%M:%S', cur_time)+"'"

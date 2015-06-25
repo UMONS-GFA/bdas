@@ -1,3 +1,4 @@
+__author__ = 'kaufmanno'
 """
 A binary to txt parser
 This program let you choose a binary file and propose to parse and save it as a readable text file.

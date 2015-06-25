@@ -1,4 +1,4 @@
-__author__ = 'su530201'
+__author__ = 'kaufmanno'
 # plotting a dtm file to png
 
 

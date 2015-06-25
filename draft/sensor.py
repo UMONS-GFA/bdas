@@ -1,4 +1,4 @@
-__author__ = 'Olivier Kaufmann'
+__author__ = 'kaufmanno'
 #import time
 #import datetime
 

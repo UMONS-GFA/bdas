@@ -1,4 +1,4 @@
-__author__ = 'oli'
+__author__ = 'kaufmanno'
 
 import numpy as np
 import matplotlib.pyplot as plt

@@ -1,3 +1,4 @@
+__author__ = 'bastinc'
 """
 Parsing a bin file to dtm
 """

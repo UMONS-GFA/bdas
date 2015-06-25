@@ -4,10 +4,7 @@ import socket
 import select
 import time
 import logging
-try:
-    import insertstreamstatus as iss
-except:
-    from draft import insertstreamstatus as iss
+import insertjobstatus as ijs
 
 try:
     from settings import LocalHost, LocalPort, EOL
@@ -136,7 +133,7 @@ if __name__ == '__main__':
     # connect to the status logging database
     if db_logging:
         timestamp = "'"+time.strftime('%Y/%m/%d %H:%M:%S', time.gmtime())+"'"
-        conn = iss.connect_to_logDB()
+        conn = ijs.connect_to_logDB()
 
     # set the logging environment up
     logging_level = logging.DEBUG
@@ -192,7 +189,7 @@ if __name__ == '__main__':
         status = 2
         db_logging = False
     else:
-        status, job_id = iss.insert_job(conn, timestamp, data_stream)
+        status, job_id = ijs.insert_job(conn, timestamp, data_stream)
 
     # Socket connection
     if isinstance(LocalHost, str) & isinstance(LocalPort, int):
@@ -205,9 +202,9 @@ if __name__ == '__main__':
             status = 3
             if db_logging:
                 timestamp = "'"+time.strftime('%Y/%m/%d %H:%M:%S', time.gmtime())+"'"
-                if not iss.update_job_status(conn, job_id, timestamp, status_dict[status]):
+                if not ijs.update_job_status(conn, job_id, timestamp, status_dict[status]):
                     logging.warning('unable to log status to database')
-                iss.close_connection_to_logDB(conn)
+                ijs.close_connection_to_logDB(conn)
             sys.exit(status)
         logging.info('Socket connected')
         time.sleep(1)
@@ -340,10 +337,10 @@ if __name__ == '__main__':
         Sock.close()
         if db_logging:
             timestamp = "'"+time.strftime('%Y/%m/%d %H:%M:%S', time.gmtime())+"'"
-            if not iss.update_job_status(conn, job_id, timestamp, status_dict[status]):
+            if not ijs.update_job_status(conn, job_id, timestamp, status_dict[status]):
                 status = 2
                 logging.warning('unable to log status to database')
-            iss.close_connection_to_logDB(conn)
+            ijs.close_connection_to_logDB(conn)
         sys.exit(status)
     else:
         Sock.close()

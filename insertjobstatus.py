@@ -19,14 +19,14 @@ def connect_to_logDB():
         return conn
 
 
-def insert_job(conn, timestamp, stream_name):
+def insert_job(conn, timestamp, job_name):
     status = False
     job_id = None
     cur = conn.cursor()
     try:
-        sql = "INSERT INTO downloads(start_time, ref_stream, ref_status) VALUES (%s," \
+        sql = "INSERT INTO downloads(start_time, ref_command, ref_status) VALUES (%s," \
               "(SELECT id FROM commands WHERE name = %s),(SELECT code FROM status WHERE description = %s));"  # Note: no quotes
-        data = (timestamp, stream_name, 'Unknown')
+        data = (timestamp, job_name, 'Unknown')
         cur.execute(sql, data)
         conn.commit()
         logging.info('New job inserted in ' + LogDB)

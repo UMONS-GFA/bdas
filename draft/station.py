@@ -1,4 +1,4 @@
-__author__ = 'su530201'
+__author__ = 'kaufmanno'
 from osgeo import ogr  # requires ogr
 
 DEBUG = True

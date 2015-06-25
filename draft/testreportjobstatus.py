@@ -1,9 +1,8 @@
-__author__ = 'su530201'
+__author__ = 'kaufmanno'
 
 import logging
 import time
-from draft import insertstreamstatus as iss
-
+import reportjobstatus as rjs
 
 def main():
     logging_level = logging.DEBUG
@@ -12,15 +11,21 @@ def main():
     logging.basicConfig(format=log_format, datefmt='%Y/%m/%d %H:%M:%S', level=logging_level,
                         handlers=[logging.FileHandler('testinsertstreamstatus.log'), logging.StreamHandler()])
     logging.info('_____ Started _____')
-    conn = iss.connect_to_logDB()
+    conn = rjs.connect_to_logDB()
     logging.info('_____ Connected _____')
-    status = input('Enter status :')
+    command = input('Command (=job set):')  # example FullDownloadDAST001
+    status = 'Unknown'
+    cur_time = time.gmtime()
+    timestamp = "'"+time.strftime('%Y/%m/%d %H:%M:%S', cur_time)+"'"
+    rjs_status, job_id = rjs.insert_job(conn, timestamp, command, status)
+    print(job_id)
+
     while len(status) > 0:
         cur_time = time.gmtime()
         timestamp = "'"+time.strftime('%Y/%m/%d %H:%M:%S', cur_time)+"'"
-        iss.insert_stream_status(conn, timestamp, 'R014', status)
+        rjs.update_job_status(conn, job_id, timestamp, status)
         status = input('Enter status :')
-    iss.close_connection_to_logDB(conn)
+    rjs.close_connection_to_logDB(conn)
     logging.info('_____ Ended _____')
 
 if __name__ == '__main__':

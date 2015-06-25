@@ -1,11 +1,13 @@
+__author__ = 'kaufmanno'
 """
 A DAS binary file to text file parser
-This program let you choose one or more binary file(s) and propose to parse and save it (them) as readable text file.
+This program lets you choose one or more binary file(s) and propose to parse and save it (them) as readable text file.
 
  """
 import os
-import parsedasbin
 from tkinter import filedialog
+
+from parsing import parsedasbin
 
 
 def parse_bin_files_to_text_files(in_filename='', out_filename='', time_step=60, k_max=330000,

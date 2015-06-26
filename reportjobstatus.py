@@ -22,14 +22,14 @@ def connect_to_logDB():
         return conn
 
 
-def insert_job(conn, timestamp, command):
+def insert_job(conn, timestamp, command, tag=''):
     status = None
     job_id = None
     cur = conn.cursor()
     try:
-        sql = "INSERT INTO jobs(start_time, ref_command, ref_status) VALUES (%s," \
+        sql = "INSERT INTO jobs(start_time, ref_command, ref_status, tag) VALUES (%s," \
               "(SELECT id FROM commands WHERE name = %s),(SELECT code FROM status WHERE description = %s)) RETURNING id;" # Note: no quotes
-        data = (timestamp, command, 'Unknown')
+        data = (timestamp, command, 'Unknown', tag)
         cur.execute(sql, data)
         job_id = cur.fetchone()[0]
         conn.commit()

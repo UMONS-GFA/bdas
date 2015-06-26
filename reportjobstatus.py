@@ -23,19 +23,17 @@ def connect_to_logDB():
 
 
 def insert_job(conn, timestamp, job_name):
-    status = False
+    status = None
     job_id = None
     cur = conn.cursor()
     try:
         sql = "INSERT INTO downloads(start_time, ref_command, ref_status) VALUES (%s," \
-              "(SELECT id FROM commands WHERE name = %s),(SELECT code FROM status WHERE description = %s));"  # Note: no quotes
+              "(SELECT id FROM commands WHERE name = %s),(SELECT code FROM status WHERE description = %s)) RETURNING id;" # Note: no quotes
         data = (timestamp, job_name, 'Unknown')
         cur.execute(sql, data)
+        job_id = cur.fetchone()[0]
         conn.commit()
         logging.info('New job inserted in ' + LogDB)
-        job_id = cur.fetchone()[0]
-        #cur.execute('SELECT LASTVAL()')
-        #job_id = cur.fetchone()['lastval']
         cur.close()
         status = True
     except pg.DatabaseError as e:

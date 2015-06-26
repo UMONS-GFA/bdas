@@ -33,9 +33,9 @@ def insert_job(conn, timestamp, job_name):
         cur.execute(sql, data)
         conn.commit()
         logging.info('New job inserted in ' + LogDB)
-        # job_id = cur.fetchone()[0]
-        cur.execute('SELECT LASTVAL()')
-        job_id = cur.fetchone()['lastval']
+        job_id = cur.fetchone()[0]
+        #cur.execute('SELECT LASTVAL()')
+        #job_id = cur.fetchone()['lastval']
         cur.close()
         status = True
     except pg.DatabaseError as e:

@@ -1,8 +1,10 @@
+
 __author__ = 'kaufmanno'
 
 import logging
-import time
 import reportjobstatus as rjs
+import time
+import sys
 
 def main():
     logging_level = logging.DEBUG
@@ -11,14 +13,17 @@ def main():
     logging.basicConfig(format=log_format, datefmt='%Y/%m/%d %H:%M:%S', level=logging_level,
                         handlers=[logging.FileHandler('testinsertstreamstatus.log'), logging.StreamHandler()])
     logging.info('_____ Started _____')
-    conn = rjs.connect_to_logDB()
-    logging.info('_____ Connected _____')
+    try :
+        conn = rjs.connect_to_logDB()
+        logging.info('_____ Connected _____')
+    except:
+        sys.exit(1)
     command = input('Command (=job set):')  # example FullDownloadDAST001
     status = 'Unknown'
     cur_time = time.gmtime()
     timestamp = "'"+time.strftime('%Y/%m/%d %H:%M:%S', cur_time)+"'"
-    rjs_status, job_id = rjs.insert_job(conn, timestamp, command, status)
-    print(job_id)
+    rjs_status, job_id = rjs.insert_job(conn, timestamp, command)
+    print(rjs_status, job_id)
 
     while len(status) > 0:
         cur_time = time.gmtime()

@@ -22,14 +22,14 @@ def connect_to_logDB():
         return conn
 
 
-def insert_job(conn, timestamp, job_name):
+def insert_job(conn, timestamp, command):
     status = None
     job_id = None
     cur = conn.cursor()
     try:
-        sql = "INSERT INTO downloads(start_time, ref_command, ref_status) VALUES (%s," \
+        sql = "INSERT INTO jobs(start_time, ref_command, ref_status) VALUES (%s," \
               "(SELECT id FROM commands WHERE name = %s),(SELECT code FROM status WHERE description = %s)) RETURNING id;" # Note: no quotes
-        data = (timestamp, job_name, 'Unknown')
+        data = (timestamp, command, 'Unknown')
         cur.execute(sql, data)
         job_id = cur.fetchone()[0]
         conn.commit()
@@ -37,7 +37,7 @@ def insert_job(conn, timestamp, job_name):
         cur.close()
         status = True
     except pg.DatabaseError as e:
-        logging.error('Error while inserting job status into downloads table : \n%s' % e)
+        logging.error('Error while inserting job status into jobs table : \n%s' % e)
         conn.rollback()
         cur.close()
         status = False
@@ -45,20 +45,20 @@ def insert_job(conn, timestamp, job_name):
         return status, job_id
 
 
-def update_job_status(conn, job_id, timestamp, cmd_status):
+def update_job_status(conn, job_id, timestamp, job_status):
     status = False
     cur = conn.cursor()
     try:
-        sql = "UPDATE downloads SET end_time = %s, ref_status = " \
+        sql = "UPDATE jobs SET end_time = %s, ref_status = " \
               "(SELECT code FROM status WHERE description = %s) WHERE id = %s"  # Note: no quotes
-        data = (timestamp, cmd_status, job_id)
+        data = (timestamp, job_status, job_id)
         cur.execute(sql, data)
         conn.commit()
         logging.info('Status logged to ' + LogDB)
         cur.close()
         status = True
     except pg.DatabaseError as e:
-        logging.error('Error while updating job status into download_status table : \n%s' % e)
+        logging.error('Error while updating job status into jobs table : \n%s' % e)
         conn.rollback()
         cur.close()
         status = False

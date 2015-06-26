@@ -47,6 +47,7 @@ logging.Formatter.converter = time.gmtime
 log_format = '%(asctime)-15s %(levelname)s:%(message)s'
 logging.basicConfig(format=log_format, datefmt='%Y/%m/%d %H:%M:%S UTC', level=logging_level,
                     handlers=[logging.FileHandler(os.path.join(basepath, 'logs/client2.log')), logging.StreamHandler()])
+command = ''
 status = -1  # -1 : unknown; 0 : OK; 1 : Warning(s); 2 : Errors 3: no connection
 status_dict = {-1: 'Unknown', 0: 'OK', 1: 'Warning', 2: 'Error', 3: 'No connection'}
 
@@ -166,7 +167,7 @@ if __name__ == '__main__':
                     # open method create a new file
                     cf = open(cmdfile, 'rt')
                     logging.info('Executing command file %s.' % cmdfile)
-                    data_stream = os.path.basename(cmdfile).split('.')[0]
+                    command = os.path.basename(cmdfile).split('.')[0]
                     # readlines returns a list of lines
                     cmdlines = cf.readlines()
                     cf.close()
@@ -190,7 +191,7 @@ if __name__ == '__main__':
         status = 2
         db_logging = False
     else:
-        rjs_status, job_id = rjs.insert_job(conn, timestamp, status_dict[status])
+        rjs_status, job_id = rjs.insert_job(conn, timestamp, command)
         if not(rjs_status):
             logging.error('Unable to insert current job to database for status logging !')
             status = 2

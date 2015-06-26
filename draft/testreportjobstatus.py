@@ -1,10 +1,14 @@
-
+"""
+Example of usage of report job status function (connect, insert, update, close)
+"""
 __author__ = 'kaufmanno'
+
 
 import logging
 import reportjobstatus as rjs
 import time
 import sys
+
 
 def main():
     logging_level = logging.DEBUG
@@ -13,7 +17,7 @@ def main():
     logging.basicConfig(format=log_format, datefmt='%Y/%m/%d %H:%M:%S UTC', level=logging_level,
                         handlers=[logging.FileHandler('testinsertstreamstatus.log'), logging.StreamHandler()])
     logging.info('_____ Started _____')
-    try :
+    try:
         conn = rjs.connect_to_logDB()
         logging.info('_____ Connected _____')
     except:
@@ -35,5 +39,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-

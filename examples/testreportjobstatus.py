@@ -11,6 +11,9 @@ import sys
 
 
 def main():
+    tags = []
+    tag = None
+
     logging_level = logging.DEBUG
     logging.Formatter.converter = time.gmtime
     log_format = '%(asctime)-15s %(levelname)s:%(message)s'
@@ -34,6 +37,16 @@ def main():
         cur_time = time.gmtime()
         timestamp = "'"+time.strftime('%Y/%m/%d %H:%M:%S', cur_time)+"'"
         rjs.update_job_status(conn, job_id, timestamp, status)
+        while tag != '':
+            tag = input('Tag to add :')
+            tags.append(tag)
+        for t in tags:
+            print(conn, job_id, t)
+            print(t is not None, t != '')
+            rjs.add_tag(conn, job_id, t)
+        tag = None
+        tags = []
+
     rjs.close_connection_to_logDB(conn)
     logging.info('_____ Ended _____')
 

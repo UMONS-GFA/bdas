@@ -16,33 +16,66 @@ def connect_to_logDB():
         conn = pg.connect(database=LogDB, user=UserLogDB, host=URLLogDBHost, port=URLLogDBPort, password=UserLogPwd)
         logging.info('Connected to ' + LogDB + ' on ' + URLLogDBHost + ':' + URLLogDBPort)
     except pg.DatabaseError as e:
-        logging.error(UserLogDB + ' cannot connect to the database ' + LogDB + ' on ' + URLLogDBHost + ':'
+        logging.error('*** ' + UserLogDB + ' cannot connect to the database ' + LogDB + ' on ' + URLLogDBHost + ':'
                       + URLLogDBPort + ': \n%s ' % e)
     finally:
         return conn
 
 
-def insert_job(conn, timestamp, command, tag=''):
+def insert_job(conn, timestamp, command, tags=()):
     status = None
     job_id = None
     cur = conn.cursor()
     try:
-        sql = "INSERT INTO jobs(start_time, ref_command, ref_status, tag) VALUES (%s," \
+        sql = "INSERT INTO jobs(start_time, ref_command, ref_status) VALUES (%s," \
               "(SELECT id FROM commands WHERE name = %s),(SELECT code FROM status WHERE description = %s)) RETURNING id;" # Note: no quotes
-        data = (timestamp, command, 'Unknown', tag)
+        data = (timestamp, command, 'Unknown')
         cur.execute(sql, data)
         job_id = cur.fetchone()[0]
+        status = True
+        for tag in tags:
+            logging.debug('Adding tag ' + tag)
+            tag_status = add_tag(conn, job_id, tag)
+            logging.debug('Tag status' + tag_status)
+            status = status and tag_status
         conn.commit()
         logging.info('New job inserted in ' + LogDB)
         cur.close()
-        status = True
+
     except pg.DatabaseError as e:
-        logging.error('Error while inserting job status into jobs table : \n%s' % e)
+        logging.error('*** Error while inserting job status into jobs table : \n%s' % e)
         conn.rollback()
         cur.close()
         status = False
     finally:
         return status, job_id
+
+
+def add_tag(conn, job_id, tag_val=''):
+    status = False
+    cur = conn.cursor()
+    tag, value = tag_val.split(':')
+    logging.debug('tag : ' + tag + ' value : ' + value)
+    if (tag is not None) and (tag != ''):
+        try:
+            sql = "INSERT INTO tags(job_id, tag, value) VALUES (%s,%s,%s)"
+            data = (job_id, tag, value)
+            cur.execute(sql, data)
+            conn.commit()
+            logging.info(tag + ' tag added with value ' + value + ' to job ' + job_id + ' in ' + LogDB)
+            cur.close()
+            status = True
+        except pg.DatabaseError as e:
+            logging.error('*** Error while adding tag ' + tag + ':' + value + ' to job ' + job_id + ' : \n%s' % e)
+            conn.rollback()
+            cur.close()
+            status = False
+        finally:
+            logging.debug('### TEST ###')
+            return status
+    else:
+        logging.warning('*** Invalid tag, tag was not added.')
+        return
 
 
 def update_job_status(conn, job_id, timestamp, job_status):
@@ -58,7 +91,7 @@ def update_job_status(conn, job_id, timestamp, job_status):
         cur.close()
         status = True
     except pg.DatabaseError as e:
-        logging.error('Error while updating job status into jobs table : \n%s' % e)
+        logging.error('*** Error while updating job status into jobs table : \n%s' % e)
         conn.rollback()
         cur.close()
         status = False
@@ -72,7 +105,7 @@ def close_connection_to_logDB(conn):
         conn.close()
         status = True
     except pg.DatabaseError as e:
-        logging.error('Unable to close connection to ' + LogDB + ' :\n%s' % e)
+        logging.error('*** Unable to close connection to ' + LogDB + ' :\n%s' % e)
         status = False
     finally:
         return status

@@ -7,7 +7,7 @@ import os
 import sys
 from time import gmtime
 
-from dateutil import tz
+#from dateutil import tz
 
 from parsing.bin2dtm import bin_to_dtm
 from parsing.dtm2png import read_dtm, plot_dtm
@@ -18,7 +18,8 @@ bin_path = './'
 dtm_path = './'
 png_path = './'
 mask = '*'
-utc_tz = tz.gettz('UTC')
+#utc_tz = tz.gettz('UTC')
+utc_tz = datetime.timezone.utc
 bin_filename = ''
 dtm_filename = ''
 png_filename = ''
@@ -54,8 +55,8 @@ if len(sys.argv) > 1:
             elif sys.argv[i] == 'maxdate':
                 max_date = datetime.datetime.strptime(str(sys.argv[i+1]), '%d/%m/%Y %H:%M:%S')
                 max_date = max_date.replace(tzinfo=utc_tz)
-            elif sys.argv[i] == 'lastrec':
-                last_rec = int(str(sys.argv[i+1]))  # backwards time in seconds from the ending of dataset to start
+            #elif sys.argv[i] == 'lastrec':
+            #    last_rec = int(str(sys.argv[i+1]))  # backwards time in seconds from the ending of dataset to start
             else:
                 logging.warning('*** Unknown argument : ' + sys.argv[i])
                 pass

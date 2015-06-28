@@ -36,7 +36,7 @@ def insert_job(conn, timestamp, command, tags=()):
         for tag in tags:
             logging.debug('Adding tag ' + tag)
             tag_status = add_tag(conn, job_id, tag)
-            logging.debug('Tag status' + tag_status)
+            logging.debug('Tag status' + str(tag_status))
             status = status and tag_status
         conn.commit()
         logging.info('New job inserted in ' + LogDB)
@@ -71,7 +71,6 @@ def add_tag(conn, job_id, tag_val=''):
             cur.close()
             status = False
         finally:
-            logging.debug('### TEST ###')
             return status
     else:
         logging.warning('*** Invalid tag, tag was not added.')

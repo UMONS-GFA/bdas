@@ -195,7 +195,6 @@ if __name__ == '__main__':
         status = 2
         db_logging = False
     else:
-        logging.debug(tags)
         rjs_status, job_id = rjs.insert_job(conn, timestamp, command, tags)
         logging.info('job id :' + str(job_id))
         if not rjs_status:

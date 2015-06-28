@@ -1,11 +1,11 @@
+from parsing import parsebintotxt as pdb
+
 __author__ = 'bastinc'
 """
 Parsing a bin file to dtm
 """
 import time
 import logging
-
-from examples import parsebintotxt as pdb
 
 
 def bin_to_dtm(bin_file, dtm_file, t_step=60):

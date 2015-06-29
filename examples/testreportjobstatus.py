@@ -30,7 +30,6 @@ def main():
     cur_time = time.gmtime()
     timestamp = "'"+time.strftime('%Y/%m/%d %H:%M:%S', cur_time)+"'"
     rjs_status, job_id = rjs.insert_job(conn, timestamp, command)
-    print(rjs_status, job_id)
 
     while len(status) > 0:
         status = input('Enter status :')
@@ -41,8 +40,6 @@ def main():
             tag = input('Tag to add :')
             tags.append(tag)
         for t in tags:
-            print(conn, job_id, t)
-            print(t is not None, t != '')
             rjs.add_tag(conn, job_id, t)
         tag = None
         tags = []

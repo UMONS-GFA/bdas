@@ -32,15 +32,16 @@ def insert_job(conn, timestamp, command, tags=()):
         data = (timestamp, command, 'Unknown')
         cur.execute(sql, data)
         job_id = cur.fetchone()[0]
+        conn.commit()
+        logging.info('New job inserted in ' + LogDB)
+        cur.close()
         status = True
         for tag in tags:
             logging.debug('Adding tag ' + tag)
             tag_status = add_tag(conn, job_id, tag)
             logging.debug('Tag status' + str(tag_status))
-            status = status and tag_status
-        conn.commit()
-        logging.info('New job inserted in ' + LogDB)
-        cur.close()
+            #status = status and tag_status
+
 
     except pg.DatabaseError as e:
         logging.error('*** Error while inserting job status into jobs table : \n%s' % e)
@@ -54,27 +55,31 @@ def insert_job(conn, timestamp, command, tags=()):
 def add_tag(conn, job_id, tag_val=''):
     status = False
     cur = conn.cursor()
-    tag, value = tag_val.split(':')
-    logging.debug('tag : ' + tag + ' value : ' + value)
-    if (tag is not None) and (tag != ''):
-        try:
-            sql = "INSERT INTO tags(job_id, tag, value) VALUES (%s,%s,%s)"
-            data = (job_id, tag, value)
-            cur.execute(sql, data)
-            conn.commit()
-            logging.info(tag + ' tag added with value ' + value + ' to job ' + job_id + ' in ' + LogDB)
-            cur.close()
-            status = True
-        except pg.DatabaseError as e:
-            logging.error('*** Error while adding tag ' + tag + ':' + value + ' to job ' + job_id + ' : \n%s' % e)
-            conn.rollback()
-            cur.close()
-            status = False
-        finally:
+    if tag_val != '':
+        tag, value = tag_val.split(':')
+        logging.debug('tag : ' + tag + ' value : ' + value)
+        if (tag is not None) and (tag != ''):
+            try:
+                sql = "INSERT INTO tags(job_id, tag, value) VALUES (%s,%s,%s)"
+                data = (job_id, tag, value)
+                cur.execute(sql, data)
+                conn.commit()
+                logging.info(tag + ' tag added with value ' + value + ' to job ' + job_id + ' in ' + LogDB)
+                cur.close()
+                status = True
+            except pg.DatabaseError as e:
+                logging.error('*** Error while adding tag ' + tag + ':' + value + ' to job ' + job_id + ' : \n%s' % e)
+                conn.rollback()
+                cur.close()
+                status = False
+            finally:
+                return status
+        else:
+            logging.warning('*** Invalid tag, tag was not added.')
             return status
     else:
-        logging.warning('*** Invalid tag, tag was not added.')
-        return
+        logging.warning('*** Tag is empty.')
+        return status
 
 
 def update_job_status(conn, job_id, timestamp, job_status):

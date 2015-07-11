@@ -15,7 +15,7 @@ except:
     LocalPort = None
     EOL = b'\r'
 
-version = '2.23'
+version = '2.24'
 cl = 0  # current command line index
 cmdlines = []  # command lines
 eod = False  # end of download
@@ -44,9 +44,11 @@ job_id = None
 timestamp = ''
 logging_level = logging.DEBUG
 logging.Formatter.converter = time.gmtime
-log_format = '%(asctime)-15s %(levelname)s:%(message)s'
+log_format = '%(asctime)-15s | %(process)d | %(levelname)s:%(message)s'
 logging.basicConfig(format=log_format, datefmt='%Y/%m/%d %H:%M:%S UTC', level=logging_level,
                     handlers=[logging.FileHandler(os.path.join(basepath, 'logs/client2.log')), logging.StreamHandler()])
+command = ''
+tags = []
 status = -1  # -1 : unknown; 0 : OK; 1 : Warning(s); 2 : Errors 3: no connection
 status_dict = {-1: 'Unknown', 0: 'OK', 1: 'Warning', 2: 'Error', 3: 'No connection'}
 
@@ -85,7 +87,7 @@ def send_command(acmd):
                                 logging.info('Response to command %s received' % acmd_root.decode('utf-8'))
                             return
                         elif b'!ERROR : Unknown Command' in data:
-                            logging.warning('Repeating command...')
+                            logging.warning('*** Repeating command...')
                             if status < 2:
                                 status = 1
                             send_command(acmd)
@@ -93,18 +95,18 @@ def send_command(acmd):
 
                 k += 1
             if k == kmax:
-                logging.error('Das is not responding')
+                logging.error('*** Das is not responding')
                 status = 2
                 logging.debug(data)
                 cmdlines.append('exit')
                 cl = len(cmdlines)-1
         else:
-            logging.error('Error : unable to send command !')
+            logging.error('*** Unable to send command !')
             status = 2
             cmdlines.append('exit')
             cl = len(cmdlines)-1
     else:
-        logging.warning('Unknown command: %s', acmd.decode('utf-8'))
+        logging.warning('*** Unknown command: %s', acmd.decode('utf-8'))
         status = 1
 
 
@@ -123,7 +125,7 @@ def failed_download(msg):
     """
     global eod, cl, status
 
-    logging.error('Error: incorrect ending of downloaded data...')
+    logging.error('*** Incorrect ending of downloaded data...')
     logging.debug(msg)
     status = 2
     eod = True
@@ -137,11 +139,11 @@ if __name__ == '__main__':
         conn = rjs.connect_to_logDB()
 
     # set the logging environment up
-    logging_level = logging.DEBUG
-    logging.Formatter.converter = time.gmtime
-    log_format = '%(asctime)-15s %(levelname)s:%(message)s'
-    logging.basicConfig(format=log_format, datefmt='%Y/%m/%d %H:%M:%S UTC', level=logging_level,
-                        handlers=[logging.StreamHandler(sys.stdout)])
+    #logging_level = logging.DEBUG
+    #logging.Formatter.converter = time.gmtime
+    #log_format = '%(asctime)-15s %(levelname)s:%(message)s'
+    #logging.basicConfig(format=log_format, datefmt='%Y/%m/%d %H:%M:%S UTC', level=logging_level,
+    #                    handlers=[logging.StreamHandler(sys.stdout)])
     logging.info('_____ Started _____')
     logging.info('client2.py version ' + version)
 
@@ -166,12 +168,15 @@ if __name__ == '__main__':
                     # open method create a new file
                     cf = open(cmdfile, 'rt')
                     logging.info('Executing command file %s.' % cmdfile)
-                    data_stream = os.path.basename(cmdfile).split('.')[0]
+                    command = os.path.basename(cmdfile).split('.')[0]
                     # readlines returns a list of lines
                     cmdlines = cf.readlines()
                     cf.close()
                     cmd = cmdlines[cl].strip('\n')
                     interactive = False
+                elif sys.argv[i] == 'tag':
+                    tags.append(str(sys.argv[i+1]))
+                    logging.info('Tag %s.' % tags[-1])
                 else:
                     logging.info('   Unknown argument : ' + sys.argv[i])
                 i += 2
@@ -186,13 +191,14 @@ if __name__ == '__main__':
 
     # create a job in logging database
     if db_logging and (conn is None):
-        logging.error('Unable to connect to database for status logging !')
+        logging.error('*** Unable to connect to database for status logging !')
         status = 2
         db_logging = False
     else:
-        rjs_status, job_id = rjs.insert_job(conn, timestamp, status_dict[status])
-        if not(rjs_status):
-            logging.error('Unable to insert current job to database for status logging !')
+        rjs_status, job_id = rjs.insert_job(conn, timestamp, command, tags)
+        logging.info('job id :' + str(job_id))
+        if not rjs_status:
+            logging.error('*** Unable to insert current job to database for status logging !')
             status = 2
 
     # Socket connection
@@ -202,12 +208,12 @@ if __name__ == '__main__':
             Sock.connect((LocalHost, LocalPort))
             status = 0
         except socket.error as err:
-            logging.error('Connection failed : %s ' % err)
+            logging.error('*** Connection failed : %s ' % err)
             status = 3
             if db_logging:
                 timestamp = "'"+time.strftime('%Y/%m/%d %H:%M:%S', time.gmtime())+"'"
                 if not rjs.update_job_status(conn, job_id, timestamp, status_dict[status]):
-                    logging.warning('unable to log status to database')
+                    logging.warning('*** Unable to log status to database')
                 rjs.close_connection_to_logDB(conn)
             sys.exit(status)
         logging.info('Socket connected')
@@ -262,7 +268,7 @@ if __name__ == '__main__':
                                     cl += 1
                                     dl_expectedduration = int(cmdlines[cl])
                                 else:
-                                    logging.error('Incorrect arguments in command file !')
+                                    logging.error('*** Incorrect arguments in command file !')
                                     status = 2
                                     cl = len(cmdlines)
                                     cmdlines.append('exit')
@@ -304,7 +310,7 @@ if __name__ == '__main__':
                                 f.close()
                                 datanewline = False
                             except IOError:
-                                logging.error('Unable to open file %s ! - Exiting command file %s ...'
+                                logging.error('*** Unable to open file %s ! - Exiting command file %s ...'
                                               % (outfile, cmdfile))
                                 status = 2
                                 cl = len(cmdlines)
@@ -343,7 +349,7 @@ if __name__ == '__main__':
             timestamp = "'"+time.strftime('%Y/%m/%d %H:%M:%S', time.gmtime())+"'"
             if not rjs.update_job_status(conn, job_id, timestamp, status_dict[status]):
                 status = 2
-                logging.warning('unable to log status to database')
+                logging.warning('*** Unable to log status to database')
             rjs.close_connection_to_logDB(conn)
         sys.exit(status)
     else:

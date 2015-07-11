@@ -1,9 +1,10 @@
-__author__ = 'kaufmanno'
 """
 A binary to txt parser
 This program let you choose a binary file and propose to parse and save it as a readable text file.
 
 """
+__author__ = 'kaufmanno'
+
 import datetime
 import logging
 import math
@@ -258,7 +259,7 @@ def parse_bin_to_text(in_stream, out_stream, time_step=60, k_max=330000, k_tot=0
                         out_stream.writelines(s + '\n')
                     if (k > k_max) and check_length_flag:
                         if verbose_flag:
-                            logging.warning('Too much rows...')
+                            logging.warning('*** Too much rows...')
                         eot = True
                     secs_since_epoch += time_step
                     k += 1

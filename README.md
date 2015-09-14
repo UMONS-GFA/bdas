@@ -63,6 +63,32 @@ and add the line
 ##### Launch socat  
 ``$ socat TCP4-LISTEN:10001 /dev/PORTNAME,b9600,raw,echo=0 & > /home/USERNAME/log``
 
+##### Optionnal: launch socat at startup
+
+Create process file in /etc/init.d/
+
+``# nano /etc/init.d/usb-mounting.sh``  
+
+    #!/bin/bash
+    # /etc/init.d/usb_mounting.sh
+    case "$1" in
+    start)
+       socat tcp-l:10001,reuseaddr,fork file:/dev/PORTNAME,nonblock,raw,echo=0 &
+       socat tcp-l:10002,reuseaddr,fork file:/dev/PORTNAME,nonblock,raw,echo=0 &
+    ;;
+    stop)
+         echo "Stopping socat"
+    ;;
+    *)
+        # echo "Usage: /etc/init.d/usb-mounting.sh {start|stop}"
+        # exit 1
+    ;;
+    esac
+    exit 0
+    
+Install init script  
+``update-rc.d usb-mounting.sh defaults``
+
 
 ### Settings configuration (in settings.py):
 ```

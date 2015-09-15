@@ -18,11 +18,16 @@ CMOS memory AMD AM29F032B
 
 #### NanoDAS + female RS232 
 
+![Female RS232 plug](https://github.com/UMONS-GFA/bdas/blob/master/doc/female-rs232-plug.JPG)
+
 RS232 plug pinout  
 Pin 2 : Rx (Red)   ->  Rx du Das  
 Pin 3 : Tx (Brown) ->  Tx du Das  
 Pin 5: GND (Yellow)  
 Pin 7: RTS (Blue)  
+
+![Connection to DAS](https://github.com/UMONS-GFA/bdas/blob/master/doc/nanoDAS-rs232-connection.JPG)
+
 
 
 #### DAS command list

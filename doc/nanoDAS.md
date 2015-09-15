@@ -16,6 +16,15 @@ CMOS memory AMD AM29F032B
 1 DB-9 female-female cable  
 1 case with a DB-15 female port   
 
+#### NanoDAS + female RS232 
+
+RS232 plug pinout  
+Pin 2 : Rx (Red)   ->  Rx du Das  
+Pin 3 : Tx (Brown) ->  Tx du Das  
+Pin 5: GND (Yellow)  
+Pin 7: RTS (Blue)  
+
+
 #### DAS command list
 
 *Note : Every data sequence send by a nanoDAS is followed by \n\r (LFCR in this case)  

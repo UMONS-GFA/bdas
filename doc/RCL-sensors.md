@@ -22,6 +22,6 @@ x : non responding
 
 ### RCL EDAS network
 
-EDAS 1 : Brainboxes —— R010 —— R013
-EDAS 2 : Laptop with remserial  —— R012 —— R001 —— R007 —— R002 —— R009 
+EDAS 1 : Brainboxes —— R010 —— R013  
+EDAS 2 : Laptop with remserial  —— R012 —— R001 —— R007 —— R002 —— R009  
 

@@ -1,3 +1,5 @@
+# Which cable to use on a RS-422 or RS-485 network?
+
 Plenum rated cable is fire resistant and less toxic when burning than non-plenum rated cable. 
 
 The RS-422 specification recommends 24AWG twisted pair cable with a shunt capacitance of 16 pF per foot and 100 ohm characteristic impedance. While the RS-485 specification does not specify cabling, these recommendations should be used for RS485 systems as well.

@@ -1,6 +1,8 @@
 # Timeline
 
 ## 2015
+* September
+  * 2015-09-28 - replaced the PC at the end of edas edas1 (nanoDAS R012, nanoDAS R009, nanoDAS R001, nanoDAS R002 and nanoDAS R007) by a raspberry pi running socat. Check passed. (OK).
 * May
   * 2015-05-07 - leveled R013 pluviometer and modified outflow tube and conductivity probe (OK)
   * 2015-05-05 

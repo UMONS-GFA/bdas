@@ -28,6 +28,17 @@ Pin 7: RTS (Blue)
 
 ![Connection to DAS](https://github.com/UMONS-GFA/bdas/blob/master/doc/nanoDAS-rs232-connection.JPG)
 
+#### NanoDAS + male RS232 
+
+Male RS232 plug
+
+RS232 plug pinout  
+Pin 2 : Rx (Brown)   ->  Rx du Das  
+Pin 3 : Tx (Red) ->  Tx du Das  
+Pin 5: GND (Yellow)  
+Pin 7: RTS (Blue)  
+
+Connection to DAS
 
 
 #### DAS command list

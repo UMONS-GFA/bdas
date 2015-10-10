@@ -6,6 +6,7 @@ import socket
 import select
 import time
 import logging
+import json
 import reportjobstatus as rjs
 
 try:
@@ -15,12 +16,12 @@ except:
     LocalPort = None
     EOL = b'\r'
 
-version = '2.24'
+version = '2.26'
 cl = 0  # current command line index
-cmdlines = []  # command lines
+cmd_lines = []  # command lines
 eod = False  # end of download
-datanewline = False  # new line of data
-dl_expectedduration = 5400  # full µDAS download
+data_newline = False  # new line of data
+dl_expected_duration = 5400  # full µDAS download
 Sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 command_list = [b'#HE', b'#E0', b'#E1', b'#E2', b'#SD', b'#SR', b'#SI', b'#SS', b'#ZR', b'#ZF', b'#XB', b'#RI', b'#XS',
                 b'#XP', b'#RM', b'#RL', b'#RV', b'#XN', b'#WB', b'#RW']
@@ -32,6 +33,8 @@ for i in range(0, 256):
     response_list.append(b'!HI')
 recvdata = b''
 data = b''
+das_params = {'Station': None, 'NetId': None, 'Integration': None, 'Channels': [], 'Used_Mem': None, 'Total_Mem': None,
+              'Previous_Connection': None}
 kmax = 10
 timeout = 0.2
 outfile = 'out.bin'
@@ -87,24 +90,26 @@ def send_command(acmd):
                                 logging.info('Response to command %s received' % acmd_root.decode('utf-8'))
                             return
                         elif b'!ERROR : Unknown Command' in data:
-                            logging.warning('*** Repeating command...')
+                            logging.warning('*** Unknown command! : repeating command...')
                             if status < 2:
                                 status = 1
                             send_command(acmd)
                             return
-
+                    else:
+                        Sock.send(acmd + EOL)
+                        logging.warning('*** No response! : repeating command...')
                 k += 1
             if k == kmax:
                 logging.error('*** Das is not responding')
                 status = 2
                 logging.debug(data)
-                cmdlines.append('exit')
-                cl = len(cmdlines)-1
+                cmd_lines.append('exit')
+                cl = len(cmd_lines)-1
         else:
             logging.error('*** Unable to send command !')
             status = 2
-            cmdlines.append('exit')
-            cl = len(cmdlines)-1
+            cmd_lines.append('exit')
+            cl = len(cmd_lines)-1
     else:
         logging.warning('*** Unknown command: %s', acmd.decode('utf-8'))
         status = 1
@@ -170,9 +175,9 @@ if __name__ == '__main__':
                     logging.info('Executing command file %s.' % cmdfile)
                     command = os.path.basename(cmdfile).split('.')[0]
                     # readlines returns a list of lines
-                    cmdlines = cf.readlines()
+                    cmd_lines = cf.readlines()
                     cf.close()
-                    cmd = cmdlines[cl].strip('\n')
+                    cmd = cmd_lines[cl].strip('\n')
                     interactive = False
                 elif sys.argv[i] == 'tag':
                     tags.append(str(sys.argv[i+1]))
@@ -257,21 +262,21 @@ if __name__ == '__main__':
                             logging.info('*** Downloading data ... ***')
                             # check if there is a command file as parameter
                             if cmdfile != '':
-                                if cl < len(cmdlines)+2:
+                                if cl < len(cmd_lines)+2:
                                     # create output file name
                                     cl += 1
                                     outfile = os.path.abspath(os.path.join(basepath, '..', 'DownloadDAS',
-                                                                           cmdlines[cl].strip('\n') +
+                                                                           cmd_lines[cl].strip('\n') +
                                                                            time.strftime('_%Y%m%d_%H%M',
                                                                                          time.gmtime())+'.bin'))
                                     # read expected download duration
                                     cl += 1
-                                    dl_expectedduration = int(cmdlines[cl])
+                                    dl_expected_duration = int(cmd_lines[cl])
                                 else:
                                     logging.error('*** Incorrect arguments in command file !')
                                     status = 2
-                                    cl = len(cmdlines)
-                                    cmdlines.append('exit')
+                                    cl = len(cmd_lines)
+                                    cmd_lines.append('exit')
                                     break
                             logging.info('Saving results in %s' % outfile)
                             try:
@@ -280,7 +285,7 @@ if __name__ == '__main__':
                                 nxfe = 0  # number of terminating \xfe
                                 eod = False  # end of download
                                 starttime = time.time()
-                                dl_timeout = starttime + dl_expectedduration
+                                dl_timeout = starttime + dl_expected_duration
                                 while not eod and time.time() < dl_timeout:
                                     # show the size of the downloaded file in Kb
                                     if k/256-round(k/256) == 0 and cmdfile == '':
@@ -308,25 +313,57 @@ if __name__ == '__main__':
                                 else:
                                     logging.info('*** Download complete! ***')
                                 f.close()
-                                datanewline = False
+                                data_newline = False
+                                # save a .jsn file with the parameters of the DAS
+                                try:
+                                    f = open(outfile+'.jsn', 'wt')
+                                    json.dump(das_params, f)
+                                    f.close()
+                                    logging.info('DAS parameters saved to %s...' % outfile+'.jsn')
+                                except:
+                                    logging.warning('*** Unable to save DAS parameters to %s...' % outfile+'.jsn')
+                                    status = max(status, 1)
+
                             except IOError:
                                 logging.error('*** Unable to open file %s ! - Exiting command file %s ...'
                                               % (outfile, cmdfile))
                                 status = 2
-                                cl = len(cmdlines)
-                                cmdlines.append('exit')
+                                cl = len(cmd_lines)
+                                cmd_lines.append('exit')
                         elif recvdata.decode('ascii') == '\n':
-                            datanewline = True
+                            data_newline = True
                         elif recvdata.decode('ascii') == '\r':
-                            if datanewline:
+                            if data_newline:
                                 logging.info(data.decode('utf-8'))
+                                logging.debug(cmd)  # TODO : remove this line
+                                if cmd == b'#RI':
+                                    logging.debug('parsing !RI')
+                                    # creates a dictionary of DAS parameters (to be saved as a json structure in a .jsn
+                                    # file along with the bin file)
+                                    s = data.decode('utf-8')
+                                    s = s[:-2].replace(':', ' ').split(' ')
+                                    das_params['Station'] = s[2]
+                                    das_params['NetId'] = s[4]
+                                    das_params['Integration'] = s[6]
+                                    logging.debug('parsing !RI...')
+                                    i = 7
+                                    channels = []
+                                    while s[i][0] == 'I':
+                                        channels.append(s[i+1])
+                                        i += 2
+                                    das_params['Channels'] = tuple(channels)
+                                    das_params['Used_Mem'] = s[i]
+                                    das_params['Total_Mem'] = s[i+1]
+                                    das_params['Previous_Connection'] = s[i+2]
+                                    logging.info(repr(das_params))
                                 data = bytearray()
-                            datanewline = False
+                            data_newline = False
                         else:
-                            datanewline = False
+                            data_newline = False
                 else:
                     break
             except:
+                logging.debug('### Exception in infinite loop !')
                 pass
         data = bytearray()
         if cmdfile == '':
@@ -335,8 +372,8 @@ if __name__ == '__main__':
             cl += 1
             if verbose:
                 print('Next command...')
-            if cl < len(cmdlines):
-                cmd = cmdlines[cl].strip('\n')
+            if cl < len(cmd_lines):
+                cmd = cmd_lines[cl].strip('\n')
             else:
                 cmd = 'exit'
 

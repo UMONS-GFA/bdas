@@ -20,11 +20,11 @@
 
 Example :
 ```
-FD FD FD FD FD FD FD FD FD FD FD FD FD FD FD FD
+FD FD FD FD FD FD FD FD FD FD FD FD 
 FF FF 07 DE 05 15 00 00 00 00 00 00
-..... MEASURE 1................................
-..... MEASURE 2................................
-FE FE FE FE FE FE FE FE FE FE FE FE FE FE FE FE
+..... MEASURE 1....................
+..... MEASURE 2....................
+FE FE FE FE FE FE FE FE FE FE FE FE
 ```
 
 

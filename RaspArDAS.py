@@ -7,6 +7,7 @@ import queue
 from threading import Thread
 # import PyCRC
 
+version = 0.1
 DEBUG = True
 master_device = '/dev/ttyUSB0'
 slave_device = '/dev/ttyACM0'

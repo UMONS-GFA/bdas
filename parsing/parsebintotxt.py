@@ -36,6 +36,7 @@ def parse_bin_files_to_text_files(in_filename='', out_filename='', time_step=60,
     outfile = open(out_filename, 'wt')
 
     k_tot = round((os.stat(in_filename).st_size - 40)/12, 0)
+    logging.info('expected data rows : %s', str(k_tot))
     infile = open(in_filename, 'rb')
     status = parsedasbin.parse_bin_to_text(infile, outfile, time_step, 0, k_tot, date_as_secs_since_epoch,
                                            verbose_flag, sep, dtm_format, site, netid, data, bpos, date_format, jumper)
@@ -44,4 +45,4 @@ def parse_bin_files_to_text_files(in_filename='', out_filename='', time_step=60,
     return status
 
 if __name__ == '__main__':
-    parse_bin_files_to_text_files()
+    parse_bin_files_to_text_files('/home/su530201/PycharmProjects/DownloadDAS/T002Full_20150915_1022.bin', '/home/su530201/temp', verbose_flag=True)

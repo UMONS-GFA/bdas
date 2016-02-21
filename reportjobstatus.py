@@ -7,7 +7,7 @@ A tool to report status of jobs (i.e. cron jobs) to a PostgreSQL database
 import psycopg2 as pg
 import logging
 
-from settings import LogDB, UserLogDB, URLLogDBHost, URLLogDBPort, UserLogPwd
+from bdas.settings import LogDB, UserLogDB, URLLogDBHost, URLLogDBPort, UserLogPwd
 
 
 def connect_to_logDB():

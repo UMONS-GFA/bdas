@@ -1,14 +1,20 @@
 __author__ = 'kaufmanno'
 
 import numpy as np
+from scipy.interpolate import pchip_interpolate, interp1d
 import matplotlib.pyplot as plt
 
 
-draw_graphs = False  # True  #
-load_calibration =  True # True
+draw_graphs = True
+#draw_graphs = False
+load_calibration = True
 save_calibration = False
 calibration_file = 'calibration.txt'
-fixed_flow = True
+single_flow = True  # a varying flow otherwise a series of flows
+# if not single_flow :
+min_flow = 1.0  # l/h
+max_flow = 10.0  # l/h
+flow_step = 0.1  # l/h
 
 
 def schmitt_trigger(ts, low, high, threshold):
@@ -49,15 +55,16 @@ def comb_to_linapprox(comb):
             i += 1
         else:
             sawtooth[start_tooth:stop_tooth+1] = sawtooth[start_tooth:start_tooth+1]*np.ones(stop_tooth - start_tooth + 1) + np.linspace(0.0, 1.0, stop_tooth - start_tooth + 1)
-            slope[start_tooth:stop_tooth+1] = 1.0/(stop_tooth - start_tooth + 1)
+            slope[start_tooth:stop_tooth+1] = 1.0/(stop_tooth - start_tooth)
             start_tooth = i
             i += 1
 
     return sawtooth, slope
 
+
 def get_inflow(t, inflow_mean, inflow_variation, inflow_var_period, inflow_var_phase, inflow_random, random=False):
     if random:
-        inflow = inflow_mean + inflow_variation*np.sin(2*np.pi*t/inflow_var_period+inflow_var_phase) + np.random.normal(0.0, inflow_random, 1)
+        inflow = inflow_mean + inflow_variation*np.sin(2*np.pi*t/inflow_var_period+inflow_var_phase) + np.random.normal(0.0, inflow_random, 1)[0]
     else:
         inflow = inflow_mean + inflow_variation*np.sin(2*np.pi*t/inflow_var_period+inflow_var_phase)
     return inflow
@@ -66,7 +73,11 @@ def get_inflow(t, inflow_mean, inflow_variation, inflow_var_period, inflow_var_p
 if __name__ == '__main__':
     inflow = []
     estimated_inflow = []
-    for tk_inflow_mean in np.arange(2.5, 3.0, 0.5):
+    if single_flow:
+        flow_range = [min_flow]
+    else:
+        flow_range = np.arange(min_flow, max_flow, flow_step)
+    for tk_inflow_mean in flow_range:
         # General constants
         g = 9810  # [mm/s²]
         eps0 = 8.85E-12  # void electric permittivity
@@ -104,11 +115,11 @@ if __name__ == '__main__':
 
         # Tank starting state
         tk_water_level = 4.05  # level of water in tank above the hole [mm]
-        if fixed_flow:
+        if single_flow:
             tk_inflow_mean = 4.0  # mean volumetric inflow [l/h]
-            tk_inflow_variation = 2.0  # amplitude of the inflow variation [l/h]
-            tk_inflow_var_period = 1800.0  # period of the inflow variation [s]
-            tk_inflow_random = 0.010  # amplitude of random component on inflow [l/h]
+            tk_inflow_variation = 3.0  # amplitude of the inflow variation [l/h]
+            tk_inflow_var_period = 8100.0  # period of the inflow variation [s]
+            tk_inflow_random = 0.01  # amplitude of random component on inflow [l/h]
             tk_inflow_var_phase = 0.0  # phase of the inflow variation [rad]
         else:
             tk_inflow_variation = 0.0  # amplitude of the inflow variation [l/h]
@@ -130,7 +141,7 @@ if __name__ == '__main__':
 
         # Initialisation
         time = time_start
-        tk_inflow = get_inflow(time, tk_inflow_mean, tk_inflow_variation, tk_inflow_var_period, tk_inflow_var_phase, tk_inflow_random, fixed_flow)
+        tk_inflow = get_inflow(time, tk_inflow_mean, tk_inflow_variation, tk_inflow_var_period, tk_inflow_var_phase, tk_inflow_random, single_flow)
         t = [time]
         tk_h = [tk_water_level]
         tk_o = [tk_outflow]
@@ -143,10 +154,10 @@ if __name__ == '__main__':
         ss_frequency = 1/(0.693*2*ss_resistance*ss_capacity)
         ss_counter = [ss_frequency*time_step]
 
-        # Theoretical siphoning time
+        # Theoretical siphoning time [h]
         ts0 = 0.54*(sg_tube_area/100.0)*sg_siphon_length**(4/7)*sg_siphon_height**(3/7)/sg_siphon_diameter**(19/7)
         print('siphoning time without inflow : %4.1f s' % ts0)
-        # Theoretical siphoning rate
+        # Theoretical siphoning rate [l/h]
         sr = sg_tube_area*sg_siphon_height*3.6/1000/ts0
         print('siphoning rate : %4.2f l/h' % sr)
         # Theoretical siphoning time with inflow
@@ -171,7 +182,7 @@ if __name__ == '__main__':
             elif tk_water_level < 0.0:
                 tk_water_level = 0.0
             tk_outflow = (2*g*tk_water_level)**(1/2)*tk_hole_area*3.6/1000  # [l/h]
-            tk_inflow = get_inflow(time, tk_inflow_mean, tk_inflow_variation, tk_inflow_var_period, tk_inflow_var_phase, tk_inflow_random, fixed_flow)
+            tk_inflow = get_inflow(time, tk_inflow_mean, tk_inflow_variation, tk_inflow_var_period, tk_inflow_var_phase, tk_inflow_random, single_flow)
             tk_h.append(tk_water_level)
             tk_o.append(tk_outflow)
             tk_i.append(tk_inflow)
@@ -265,36 +276,41 @@ if __name__ == '__main__':
         inflow.append(tk_inflow_mean)
         estimated_inflow.append(2*(das_volume[1349]-das_volume[449]))
 
-    err_fig = plt.figure('errors')
     flow_error = []
     for i in range(0, len(inflow)):
         flow_error.append(100*(inflow[i] - estimated_inflow[i])/estimated_inflow[i])
-    axes = err_fig.add_subplot(2, 1, 1)
-    axes.plot(estimated_inflow, inflow, '-b')
-    axes.set_xlabel('estimated inflow [l/h]')
-    axes.set_ylabel('real inflow [l/h]')
-    plt.xlim(0.0, 15.0)
-    plt.ylim(0.0, 15.0)
-    plt.grid(b=True, which='major', color='k', linestyle='-')
-    axes2 = err_fig.add_subplot(2, 1, 2, sharex=axes)
-    axes2.plot(estimated_inflow, flow_error, '-r')
-    axes2.set_xlabel('estimated inflow [l/h]')
-    axes2.set_ylabel('relative error [%]')
-    plt.xlim(0.0, 15.0)
-    plt.ylim(0.0, 50.0)
-    plt.grid(b=True, which='major', color='k', linestyle='-')
-    plt.show()
+
+    if not single_flow:
+        err_fig = plt.figure('errors')
+        flow_error = []
+        for i in range(0, len(inflow)):
+            flow_error.append(100*(inflow[i] - estimated_inflow[i])/estimated_inflow[i])
+        axes = err_fig.add_subplot(2, 1, 1)
+        axes.plot(estimated_inflow, inflow, '-b')
+        axes.set_xlabel('estimated inflow [l/h]')
+        axes.set_ylabel('real inflow [l/h]')
+        plt.xlim(0.0, 15.0)
+        plt.ylim(0.0, 15.0)
+        plt.grid(b=True, which='major', color='k', linestyle='-')
+        axes2 = err_fig.add_subplot(2, 1, 2, sharex=axes)
+        axes2.plot(estimated_inflow, flow_error, '-r')
+        axes2.set_xlabel('estimated inflow [l/h]')
+        axes2.set_ylabel('relative error [%]')
+        plt.xlim(0.0, 15.0)
+        plt.ylim(0.0, 50.0)
+        plt.grid(b=True, which='major', color='k', linestyle='-')
+        plt.show()
 
     calibration = []
     for i in range(len(flow_error)):
-        calibration.append(str('\t'.join(list(map(str,[estimated_inflow[i],flow_error[i],'\n'])))))
+        calibration.append(str('\t'.join(list(map(str,[estimated_inflow[i],flow_error[i], '\n'])))))
     if save_calibration:
         with open(calibration_file,'w+') as cal_file:
             cal_file.writelines(calibration)
 
     if load_calibration:
         with open(calibration_file,'r') as cal_file:
-            rows=[list(map(float,L.strip().split('\t'))) for L in cal_file]
+            rows = [list(map(float, L.strip().split('\t'))) for L in cal_file]
 
         cal_estimated_inflow, cal_flow_error = [], []
         for i in range(len(rows)):
@@ -303,25 +319,84 @@ if __name__ == '__main__':
 
         cal_inflow, cal_error = [], []
         for i in range(len(cal_estimated_inflow)-1):
-            tmp_inflow=np.linspace(cal_estimated_inflow[i],cal_estimated_inflow[i+1],10)
-            tmp_error=np.linspace(cal_flow_error[i],cal_flow_error[i+1],10)
+            tmp_inflow = np.linspace(cal_estimated_inflow[i], cal_estimated_inflow[i+1], 10)
+            tmp_error = np.linspace(cal_flow_error[i], cal_flow_error[i+1], 10)
             for j in range(len(tmp_error)):
                 cal_inflow.append(tmp_inflow[j])
                 cal_error.append(tmp_error[j])
         corr_flow = []
+
         for i in range(len(das_flow)):
-            stop = 0
             for j in range(len(cal_error)):
-                if round(das_flow[i],1) == round(cal_inflow[j],1) and stop == 0:
+                if round(das_flow[i], 1) == round(cal_inflow[j], 1):
                     corr = cal_error[j]
-                    stop ==1
+                    break
+                else:
+                    corr = 0.0
             corr_flow.append(das_flow[i]*(1.0 + corr/100))
-        corr_fig = plt.figure('Corrections')
-        das_ax1 = corr_fig.add_subplot(1, 1, 1)
-        das_ax1.plot(t, tk_i, '-g', label='simulated inflow')
-        das_ax1.plot(das_t, das_flow, '-b',label='retrieved inflow')
-        das_ax1.plot(das_t, corr_flow, '-r',label='corrected retrieved inflow')
+
+        # corr_fig = plt.figure('Corrections')
+        # das_ax1 = corr_fig.add_subplot(1, 1, 1)
+        # das_ax1.plot(t, tk_i, '-g', label='simulated inflow')
+        # das_ax1.plot(das_t, das_flow, '-b',label='retrieved inflow')
+        # das_ax1.plot(das_t, corr_flow, '-r',label='corrected retrieved inflow')
+        # das_ax1.set_xlabel('time [s]')
+        # das_ax1.set_ylabel('Flow [l/h]')
+        # plt.legend()
+        # plt.show()
+
+        # alternative flow computation
+        centered_times = []
+        centered_flow = []
+        siphoning_time = [das_t[i] for i in range(len(das_t)) if das_siphoning[i] == 1]
+        for i in range(len(siphoning_time)-1):
+            centered_times.append((siphoning_time[i+1]+siphoning_time[i])/2)
+            centered_flow.append(sg_tube_area*sg_siphon_height*3.6/1000/(siphoning_time[i+1]-siphoning_time[i]))  # [l/h]
+        corr_centered_flow = []
+        for i in range(len(centered_flow)):
+            for j in range(len(cal_error)):
+                if round(centered_flow[i], 1) == round(cal_inflow[j], 1):
+                    corr = cal_error[j]
+                    break
+                else:
+                    corr = 0.0
+            corr_centered_flow.append(centered_flow[i]*(1.0 + corr/100))
+        interpolate_corr_flow = interp1d(centered_times, corr_centered_flow,kind='cubic')
+        interpolate_flow = interp1d(centered_times, centered_flow,kind='cubic')
+        das_t_interpolation = np.array(das_t)[(np.array(das_t) > centered_times[0]) & (np.array(das_t)<centered_times[-1])]
+        interpolated_flow = interpolate_flow(das_t_interpolation)
+        interpolated_corr_flow = interpolate_corr_flow(das_t_interpolation)
+
+        pchip_interpolated_flow = pchip_interpolate(centered_times, corr_centered_flow,das_t_interpolation)
+        import matplotlib
+        matplotlib.rcParams.update({'font.size':15})
+        corr_fig = plt.figure('Poster')
+        # Siphon
+        tk_ax3 = corr_fig.add_subplot(3, 1, 1)
+        tk_ax3.plot(t, sg_h, '-b')
+        tk_ax3.set_ylabel('level in \nsiphon gauge [mm]')
+        tk_ax3.set_axis_bgcolor('0.95')
+        tk_ax3.grid(True)
+        # DAS frequencies
+        das_ax2 = corr_fig.add_subplot(3, 1, 2, sharex=tk_ax3)
+        das_ax2.plot(das_t, das_frequencies, '-r')
+        das_ax2.set_ylabel('DAS Frequencies [Hz]')
+        das_ax2.set_axis_bgcolor('0.95')
+        das_ax2.grid(True)
+        # Retrieved flows
+        das_ax1 = corr_fig.add_subplot(3, 1, 3, sharex=tk_ax3)
+        das_ax1.plot(t, tk_i, '-', color='grey', linewidth=3, label='simulated inflow')
+        #das_ax1.plot(das_t, das_flow, '-b',label='retrieved inflow')
+        #das_ax1.plot(das_t, corr_flow, '-r',label='corrected retrieved inflow')
+        das_ax1.plot(das_t_interpolation, interpolated_flow, '-r', linewidth=2, label='retrieved inflow')
+        das_ax1.plot(das_t_interpolation, interpolated_corr_flow, '-k', linewidth=2, label='corrected retrieved inflow')
+        #das_ax1.plot(das_t_interpolation, pchip_interpolated_flow, '-b', label='piecwise cubic interpolated retrieved inflow')
+        #das_ax1.plot(centered_times,centered_flow,'ok')
         das_ax1.set_xlabel('time [s]')
         das_ax1.set_ylabel('Flow [l/h]')
-        plt.legend()
+        das_ax1.set_axis_bgcolor('0.95')
+        das_ax1.grid(True)
+        das_ax1.legend(loc='lower right', fontsize=15)
+        tk_ax3.set_xlim((0, 36000))
         plt.show()
+        corr_fig.savefig('/home/su530201/Images/Poster_GB2016.png', dpi=(600), bbox_inches='tight')

@@ -1,5 +1,3 @@
-__author__ = 'kaufmanno'
-
 import sys
 import os.path
 import socket
@@ -15,6 +13,8 @@ except:
     LocalHost = None
     LocalPort = None
     EOL = b'\r'
+
+__author__ = 'kaufmanno'
 
 version = '2.26'
 cl = 0  # current command line index
@@ -144,11 +144,11 @@ if __name__ == '__main__':
         conn = rjs.connect_to_logDB()
 
     # set the logging environment up
-    #logging_level = logging.DEBUG
-    #logging.Formatter.converter = time.gmtime
-    #log_format = '%(asctime)-15s %(levelname)s:%(message)s'
-    #logging.basicConfig(format=log_format, datefmt='%Y/%m/%d %H:%M:%S UTC', level=logging_level,
-    #                    handlers=[logging.StreamHandler(sys.stdout)])
+    # logging_level = logging.DEBUG
+    # logging.Formatter.converter = time.gmtime
+    # log_format = '%(asctime)-15s %(levelname)s:%(message)s'
+    # logging.basicConfig(format=log_format, datefmt='%Y/%m/%d %H:%M:%S UTC', level=logging_level,
+    #                     handlers=[logging.StreamHandler(sys.stdout)])
     logging.info('_____ Started _____')
     logging.info('client2.py version ' + version)
 
@@ -166,7 +166,7 @@ if __name__ == '__main__':
                 elif sys.argv[i] == 'port':
                     LocalPort = int(sys.argv[i+1])
                     logging.info('   Port : ' + str(LocalPort))
-                    #LocalPort = int(LocalPort)
+                    # LocalPort = int(LocalPort)
                 elif sys.argv[i] == 'cmdfile':
                     cmdfile = str(sys.argv[i+1])
                     logging.info('   Command file : ' + cmdfile)
@@ -211,7 +211,7 @@ if __name__ == '__main__':
         logging.info('Trying to connect...')
         try:
             Sock.connect((LocalHost, LocalPort))
-            status = 0
+            #status = 0
         except socket.error as err:
             logging.error('*** Connection failed : %s ' % err)
             status = 3
@@ -297,7 +297,7 @@ if __name__ == '__main__':
                                             eod = True
                                     else:
                                         if data != b'' and nxfe >= 3:
-                                            failed_download('Incorrect ending sequence.')
+                                           failed_download('Incorrect ending sequence.')
                                         elif data != b'':
                                             nxfe = 0
                                     if not eod:
@@ -307,7 +307,7 @@ if __name__ == '__main__':
                                             k += 1
                                         else:
                                             data = b''
-                                            #print('Waiting for data...', end='\n')
+                                            # print('Waiting for data...', end='\n')
                                 if time.time() >= dl_timeout:
                                     failed_download('Download takes too much time, job canceled')
                                 else:

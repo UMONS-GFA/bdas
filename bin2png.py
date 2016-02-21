@@ -9,6 +9,7 @@ from dateutil import tz
 from parsing.bin2dtm import bin_to_dtm
 from parsing.dtm2png import read_dtm, plot_dtm
 
+__author__ = 'kaufmanno'
 
 def main():
     status = 0

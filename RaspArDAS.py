@@ -67,7 +67,7 @@ def talk_slave():
     """
     while not stop:
         try:
-            msg = master_queue.get(timeout=0.5)
+            msg = master_queue.get(timeout=0.25)
             if DEBUG:
                 logging.debug('Saying to Slave : ' + msg)
             slave_io.write(msg)
@@ -109,7 +109,7 @@ def talk_master():
     """
     while not stop:
         try:
-            msg = slave_queue.get(timeout=0.5)
+            msg = slave_queue.get(timeout=0.25)
             if DEBUG:
                 logging.debug('Saying to Master :' + msg)
             master_io.write(msg)
@@ -128,7 +128,7 @@ def write_disk():
     """
     while not stop:
         try:
-            msg = data_queue.get(timeout=0.5)
+            msg = data_queue.get(timeout=0.25)
             if len(msg) > 0:
                 if DEBUG:
                     logging.debug('Writing to disk :' + msg)
@@ -141,13 +141,13 @@ def write_disk():
 
 if __name__ == '__main__':
     try:
-        slave = serial.Serial(slave_device, baudrate=9600, timeout=0.5)
+        slave = serial.Serial(slave_device, baudrate=9600, timeout=0.25)
         slave_io = io.TextIOWrapper(io.BufferedRWPair(slave, slave), newline='\r\n')
     except:
         logging.error('*** Cannot open serial connexion with slave!')
         status &= False
     try:
-        master = serial.Serial(master_device, baudrate=57600, timeout=0.5)
+        master = serial.Serial(master_device, baudrate=57600, timeout=0.25)
         master_io = io.TextIOWrapper(io.BufferedRWPair(master, master), newline='\r')
     except:
         logging.error('*** Cannot open serial connexion with master!')

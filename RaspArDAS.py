@@ -4,16 +4,21 @@ import serial
 import time
 import logging
 import queue
-from threading import Thread
+from threading import Thread, Lock
 # import PyCRC
 
-version = 0.1
-DEBUG = True
+version = 0.12
+DEBUG = False
 master_device = '/dev/ttyUSB0'
 slave_device = '/dev/ttyACM0'
-data_file = '/home/su530201/raw.bin'
+now = time.strftime('%Y%m%d%H%M%S', time.gmtime())
+print(now)
+data_file = 'raw' + now + '.dat'
 status = True
 base_path = os.path.dirname(__file__)
+if not os.path.isdir('logs'):
+    os.mkdir('logs')
+chunk_size = 8192
 logging_level = logging.DEBUG
 logging.Formatter.converter = time.gmtime
 log_format = '%(asctime)-15s | %(process)d | %(levelname)s:%(message)s'
@@ -25,7 +30,24 @@ master_queue = queue.Queue()  # what comes from Master (e.g. cron task running c
 data_queue = queue.Queue()  # what should be written on disk
 quiet = True
 peer_download = False  # TODO: find a way to set peer_download to True if another RaspArDAS is downloading at startup
+downloading = False
 stop = False
+
+# def read_bytes_from_stream(stream, chunksize=8192):
+#     """ This is a generator that yields bytes
+#      from a file-like object (stream), reading it
+#      in chunks
+#
+#     :param chunksize:
+#     :return:
+#     """
+#     while True:
+#         chunk = stream.read(chunksize)
+#         if chunk:
+#             for b in chunk:
+#                 yield b
+#         else:
+#             break
 
 
 def listen_slave():
@@ -35,23 +57,32 @@ def listen_slave():
     infinite loop, and only exit when
     the main thread ends.
     """
+    global DEBUG, stop, downloading, slave_io, data_queue
+
     while not stop:
         # Read incoming data from slave (ArDAS)
         try:
-            msg = slave_io.readline()
+            byte = b''
+            msg = b''
+            while byte != b'\r':
+                byte += slave_io.read()
+                msg += byte
             if len(msg) > 0:
                 # Sort data to store on SD from data to repeat to master
                 if DEBUG:
-                    logging.debug('Slave says : ' + msg)
-                if msg[0] == '*':
+                    logging.debug('Slave says : ' + msg.decode('ascii'))
+                if msg[0] == b'*':
                     # TODO: reformat data and check crc
                     logging.debug('Storing : ' + msg)
                     # Send data to data_queue
                     data_queue.put(msg)
+                    if not downloading:
+                        slave_queue.put(msg)
                 else:
                     # Repeat data to the master (if not in quiet mode)
                     # TODO: Implement a function in ardasX.ino to set/return status (quiet, peer_download...)
-                    slave_queue.put(msg)
+                    if not downloading:
+                        slave_queue.put(msg)
         except queue.Full:
             pass
         except serial.SerialTimeoutException:
@@ -66,11 +97,13 @@ def talk_slave():
     infinite loop, and only exit when
     the main thread ends.
     """
+    global DEBUG, stop, slave_io, master_queue
+
     while not stop:
         try:
             msg = master_queue.get(timeout=0.25)
             if DEBUG:
-                logging.debug('Saying to Slave : ' + msg)
+                logging.debug('Saying to Slave : ' + msg.decode('ascii'))
             slave_io.write(msg)
             slave_io.flush()
         except queue.Empty:
@@ -87,13 +120,29 @@ def listen_master():
     infinite loop, and only exit when
     the main thread ends.
     """
+    global DEBUG, stop, master_io, master_queue
+
     while not stop:
         try:
-            msg = master_io.readline()
+            byte = b''
+            msg = b''
+            while byte != b'\r':
+                byte = master_io.read()
+                msg += byte
             if len(msg) > 0:
                 if DEBUG:
                     logging.debug('Master says : ' + msg)
-                master_queue.put(msg)
+                if msg[:-1] == b'#XB':
+                    logging.info('Download request')
+                    full_download()
+                elif msg[:-1] == b'#XP':
+                    logging.info('Partial download request')
+                elif msg[:-1] == b'#XS':
+                    logging.info('Aborting download request')
+                elif msg[:-1] == b'#ZF':
+                    logging.info('Reset request')
+                else:
+                    master_queue.put(msg)
         except queue.Full:
             logging.error('Master queue is full!')
         except serial.SerialTimeoutException:
@@ -108,13 +157,16 @@ def talk_master():
     infinite loop, and only exit when
     the main thread ends.
     """
+    global DEBUG, stop, downloading, master_io, slave_queue
+
     while not stop:
         try:
-            msg = slave_queue.get(timeout=0.25)
-            if DEBUG:
-                logging.debug('Saying to Master :' + msg)
-            master_io.write(msg)
-            master_io.flush()
+            if not downloading:
+                msg = slave_queue.get(timeout=0.25)
+                if DEBUG:
+                    logging.debug('Saying to Master :' + msg.decode('ascii'))
+                master_io.write(msg)
+                master_io.flush()
         except queue.Empty:
             pass
     logging.info('Closing talk_master thread...')
@@ -127,41 +179,77 @@ def write_disk():
     infinite loop, and only exit when
     the main thread ends.
     """
+    global DEBUG, stop, sd_file, data_queue, sd_file_lock
+
+    offset = sd_file.ftell()
     while not stop:
         try:
             msg = data_queue.get(timeout=0.25)
             if len(msg) > 0:
                 if DEBUG:
-                    logging.debug('Writing to disk :' + msg)
-                sd_file.writelines(msg)
+                    logging.debug('Writing to disk :' + msg.decode('ascii'))
+                sd_file_lock.acquire()
+                sd_file.fseek(offset)
+                sd_file.write(msg)
+                sd_file.flush()
+                offset = sd_file.ftell()
+                sd_file_lock.release()
         except queue.Empty:
             pass
     sd_file.flush()
     logging.info('Closing write_disk thread...')
 
 
+def full_download():
+    """This is a full_download function.
+    """
+    global downloading, data_file, master_io, chunksize
+
+    downloading = True
+    master_io.flush()
+    offset = 0
+    chunk = b''
+    try:
+        while True:
+            sd_file_lock.acquire()
+            sd_file.seek(offset)
+            chunk = sd_file.read(chunk_size)
+            offset = sd_file.ftell()
+            sd_file_lock.release()
+            if not chunk:
+                break
+            else:
+                master_io.write(chunk)
+                master_io.flush()
+    except IOError as e:
+
+        logging.info('Download complete :' + str(e))
+
+
 if __name__ == '__main__':
     try:
         slave = serial.Serial(slave_device, baudrate=9600, timeout=0.25)
-        slave_io = io.TextIOWrapper(io.BufferedRWPair(slave, slave), newline='\r\n')
+        slave_io = io.BufferedRandom(slave, buffer_size=128)
     except:
         logging.error('*** Cannot open serial connexion with slave!')
         status &= False
     try:
         master = serial.Serial(master_device, baudrate=57600, timeout=0.25)
-        master_io = io.TextIOWrapper(io.BufferedRWPair(master, master), newline='\r')
+        master_io = io.BufferedRandom(master, buffer_size=128)
     except:
         logging.error('*** Cannot open serial connexion with master!')
         status &= False
     try:
-        sd_file = file = open(data_file, "wt")
+        sd_file = open(data_file, "ab+")
     except:
         logging.error('*** Cannot open file !')
         status &= False
+
     if status:
         try:
             # listen for a short time (e.g. 1 second) to check if another slave is talking to the master
-            # TODO : Should the master broadcast a message every second when it is listening to a download from a RaspArDAS to inhibit all others?
+            # TODO : Should the master broadcast a message every second when it is listening to a download from
+            # a RaspArDAS to inhibit all others?
             # master_queue.put(b'#E0\r')
             disk_writer = Thread(target=write_disk)
             disk_writer.setDaemon(True)
@@ -178,6 +266,7 @@ if __name__ == '__main__':
             slave_listener = Thread(target=listen_slave)
             slave_listener.setDaemon(True)
             slave_listener.start()
+            sd_file_lock = Lock()
             while not stop:
                 # show a prompt
                 cmd = input('Type exit to quit.\n> ')

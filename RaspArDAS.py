@@ -7,8 +7,8 @@ import queue
 from threading import Thread, Lock
 # import PyCRC
 
-version = 0.12
-DEBUG = False
+version = 0.13
+DEBUG = True
 master_device = '/dev/ttyUSB0'
 slave_device = '/dev/ttyACM0'
 now = time.strftime('%Y%m%d%H%M%S', time.gmtime())
@@ -18,7 +18,7 @@ status = True
 base_path = os.path.dirname(__file__)
 if not os.path.isdir('logs'):
     os.mkdir('logs')
-chunk_size = 8192
+chunk_size = 4096
 logging_level = logging.DEBUG
 logging.Formatter.converter = time.gmtime
 log_format = '%(asctime)-15s | %(process)d | %(levelname)s:%(message)s'
@@ -65,7 +65,7 @@ def listen_slave():
             byte = b''
             msg = b''
             while byte != b'\r':
-                byte += slave_io.read()
+                byte = slave_io.read(1)
                 msg += byte
             if len(msg) > 0:
                 # Sort data to store on SD from data to repeat to master
@@ -127,11 +127,11 @@ def listen_master():
             byte = b''
             msg = b''
             while byte != b'\r':
-                byte = master_io.read()
+                byte = master_io.read(1)
                 msg += byte
             if len(msg) > 0:
                 if DEBUG:
-                    logging.debug('Master says : ' + msg)
+                    logging.debug('Master says : ' + msg.decode('ascii'))
                 if msg[:-1] == b'#XB':
                     logging.info('Download request')
                     full_download()
@@ -179,9 +179,9 @@ def write_disk():
     infinite loop, and only exit when
     the main thread ends.
     """
-    global DEBUG, stop, sd_file, data_queue, sd_file_lock
+    global DEBUG, stop, sd_file_io, data_queue, sd_file_lock
 
-    offset = sd_file.ftell()
+    offset = sd_file_io.tell()
     while not stop:
         try:
             msg = data_queue.get(timeout=0.25)
@@ -189,10 +189,10 @@ def write_disk():
                 if DEBUG:
                     logging.debug('Writing to disk :' + msg.decode('ascii'))
                 sd_file_lock.acquire()
-                sd_file.fseek(offset)
-                sd_file.write(msg)
-                sd_file.flush()
-                offset = sd_file.ftell()
+                sd_file_io.fseek(offset)
+                sd_file_io.write(msg)
+                sd_file_io.flush()
+                offset = sd_file_io.tell()
                 sd_file_lock.release()
         except queue.Empty:
             pass
@@ -212,9 +212,9 @@ def full_download():
     try:
         while True:
             sd_file_lock.acquire()
-            sd_file.seek(offset)
+            sd_file_io.seek(offset)
             chunk = sd_file.read(chunk_size)
-            offset = sd_file.ftell()
+            offset = sd_file_io.tell()
             sd_file_lock.release()
             if not chunk:
                 break
@@ -222,27 +222,28 @@ def full_download():
                 master_io.write(chunk)
                 master_io.flush()
     except IOError as e:
-
-        logging.info('Download complete :' + str(e))
+        logging.error('Download error :' + str(e))
+    logging.info('Download complete.')
 
 
 if __name__ == '__main__':
     try:
         slave = serial.Serial(slave_device, baudrate=9600, timeout=0.25)
-        slave_io = io.BufferedRandom(slave, buffer_size=128)
-    except:
-        logging.error('*** Cannot open serial connexion with slave!')
+        slave_io = io.BufferedRWPair(slave, slave, buffer_size=128)
+    except IOError as e:
+        logging.error('*** Cannot open serial connexion with slave! : ' + str(e))
         status &= False
     try:
         master = serial.Serial(master_device, baudrate=57600, timeout=0.25)
-        master_io = io.BufferedRandom(master, buffer_size=128)
-    except:
-        logging.error('*** Cannot open serial connexion with master!')
+        master_io = io.BufferedRWPair(master, master, buffer_size=128)
+    except IOError as e:
+        logging.error('*** Cannot open serial connexion with master!' + str(e))
         status &= False
     try:
         sd_file = open(data_file, "ab+")
-    except:
-        logging.error('*** Cannot open file !')
+        sd_file_io = io.BufferedRandom(sd_file, buffer_size=256)
+    except IOError as e:
+        logging.error('*** Cannot open file ! : ' + str(e))
         status &= False
 
     if status:

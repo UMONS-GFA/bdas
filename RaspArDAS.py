@@ -7,7 +7,7 @@ import queue
 from threading import Thread, Lock
 # import PyCRC
 
-version = 0.14
+version = 0.15
 DEBUG = False
 master_device = '/dev/ttyUSB0'
 slave_device = '/dev/ttyACM0'
@@ -141,6 +141,8 @@ def listen_master():
                     logging.info('Aborting download request')
                 elif msg[:-1] == b'#ZF':
                     logging.info('Reset request')
+                elif msg[:-1] == b'#KL':
+                    stop = True
                 else:
                     master_queue.put(msg)
         except queue.Full:
@@ -229,14 +231,14 @@ def full_download():
 if __name__ == '__main__':
     print('RaspArDAS version' + str(version) + '.')
     try:
-        slave = serial.Serial(slave_device, baudrate=57600, timeout=0.25)
+        slave = serial.Serial(slave_device, baudrate=57600, timeout=0.1)
         slave_io = io.BufferedRWPair(slave, slave, buffer_size=128)
         logging.info('saving data to ' + data_file)
     except IOError as e:
         logging.error('*** Cannot open serial connexion with slave! : ' + str(e))
         status &= False
     try:
-        master = serial.Serial(master_device, baudrate=57600, timeout=0.25)
+        master = serial.Serial(master_device, baudrate=57600, timeout=0.1)
         master_io = io.BufferedRWPair(master, master, buffer_size=128)
     except IOError as e:
         logging.error('*** Cannot open serial connexion with master!' + str(e))
@@ -272,11 +274,12 @@ if __name__ == '__main__':
             sd_file_lock = Lock()
             while not stop:
                 # show a prompt
-                cmd = input('Type exit to quit.\n> ')
-                if cmd == 'exit':
-                    stop = True
-                else:
-                    print('Unknown command.\n> ')
+                #cmd = input('Type exit to quit.\n> ')
+                #if cmd == 'exit':
+                #    stop = True
+                #else:
+                #    print('Unknown command.\n> ')
+                pass
             logging.info('Exiting : Waiting for threads to end...')
             slave_listener.join()
             master_talker.join()

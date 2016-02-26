@@ -229,7 +229,7 @@ def full_download():
     downloading = False
 
 if __name__ == '__main__':
-    print('RaspArDAS version' + str(version) + '.')
+    logging.info('RaspArDAS version' + str(version) + '.')
     try:
         slave = serial.Serial(slave_device, baudrate=57600, timeout=0.1)
         slave_io = io.BufferedRWPair(slave, slave, buffer_size=128)

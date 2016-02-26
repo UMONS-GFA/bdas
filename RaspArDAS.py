@@ -225,7 +225,7 @@ def full_download():
         logging.error('Download error :' + str(e))
     logging.info('Download complete.')
     downloading = False
-
+Fals
 
 if __name__ == '__main__':
     try:
@@ -270,6 +270,7 @@ if __name__ == '__main__':
             slave_listener.setDaemon(True)
             slave_listener.start()
             sd_file_lock = Lock()
+            print('RaspArDAS version' + str(version) + '.')
             while not stop:
                 # show a prompt
                 cmd = input('Type exit to quit.\n> ')

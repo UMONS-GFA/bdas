@@ -225,9 +225,9 @@ def full_download():
         logging.error('Download error :' + str(e))
     logging.info('Download complete.')
     downloading = False
-Fals
 
 if __name__ == '__main__':
+    print('RaspArDAS version' + str(version) + '.')
     try:
         slave = serial.Serial(slave_device, baudrate=57600, timeout=0.25)
         slave_io = io.BufferedRWPair(slave, slave, buffer_size=128)
@@ -270,7 +270,6 @@ if __name__ == '__main__':
             slave_listener.setDaemon(True)
             slave_listener.start()
             sd_file_lock = Lock()
-            print('RaspArDAS version' + str(version) + '.')
             while not stop:
                 # show a prompt
                 cmd = input('Type exit to quit.\n> ')

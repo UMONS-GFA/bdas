@@ -7,13 +7,11 @@ import queue
 from threading import Thread, Lock
 # import PyCRC
 
-version = 0.13
-DEBUG = True
+version = 0.14
+DEBUG = False
 master_device = '/dev/ttyUSB0'
 slave_device = '/dev/ttyACM0'
-now = time.strftime('%Y%m%d%H%M%S', time.gmtime())
-print(now)
-data_file = 'raw' + now + '.dat'
+data_file = 'raw.dat'
 status = True
 base_path = os.path.dirname(__file__)
 if not os.path.isdir('logs'):
@@ -64,25 +62,27 @@ def listen_slave():
         try:
             byte = b''
             msg = b''
-            while byte != b'\r':
+            while byte != b'\r' and byte != b'$':
                 byte = slave_io.read(1)
                 msg += byte
-            if len(msg) > 0:
+            if byte == b'$':
+                # TODO: reformat data and check crc
+                record = b''
+                byte = b''
+                while byte != b'\r':
+                    byte = slave_io.read(1)
+
+                    record += byte
+                if DEBUG:
+                    logging.debug('Storing : ' + record.decode('ascii'))
+                # Send data to data_queue
+                data_queue.put(record)
+            elif len(msg) > 0:
                 # Sort data to store on SD from data to repeat to master
                 if DEBUG:
                     logging.debug('Slave says : ' + msg.decode('ascii'))
-                if msg[0] == b'*':
-                    # TODO: reformat data and check crc
-                    logging.debug('Storing : ' + msg)
-                    # Send data to data_queue
-                    data_queue.put(msg)
-                    if not downloading:
-                        slave_queue.put(msg)
-                else:
-                    # Repeat data to the master (if not in quiet mode)
-                    # TODO: Implement a function in ardasX.ino to set/return status (quiet, peer_download...)
-                    if not downloading:
-                        slave_queue.put(msg)
+                if not downloading:
+                    slave_queue.put(msg)
         except queue.Full:
             pass
         except serial.SerialTimeoutException:
@@ -189,21 +189,21 @@ def write_disk():
                 if DEBUG:
                     logging.debug('Writing to disk :' + msg.decode('ascii'))
                 sd_file_lock.acquire()
-                sd_file_io.fseek(offset)
+                sd_file_io.seek(offset)
                 sd_file_io.write(msg)
                 sd_file_io.flush()
                 offset = sd_file_io.tell()
                 sd_file_lock.release()
         except queue.Empty:
             pass
-    sd_file.flush()
+    sd_file_io.flush()
     logging.info('Closing write_disk thread...')
 
 
 def full_download():
     """This is a full_download function.
     """
-    global downloading, data_file, master_io, chunksize
+    global downloading, data_file, master, master_io, chunksize
 
     downloading = True
     master_io.flush()
@@ -213,7 +213,7 @@ def full_download():
         while True:
             sd_file_lock.acquire()
             sd_file_io.seek(offset)
-            chunk = sd_file.read(chunk_size)
+            chunk = sd_file_io.read(chunk_size)
             offset = sd_file_io.tell()
             sd_file_lock.release()
             if not chunk:
@@ -224,12 +224,14 @@ def full_download():
     except IOError as e:
         logging.error('Download error :' + str(e))
     logging.info('Download complete.')
+    downloading = False
 
 
 if __name__ == '__main__':
     try:
-        slave = serial.Serial(slave_device, baudrate=9600, timeout=0.25)
+        slave = serial.Serial(slave_device, baudrate=57600, timeout=0.25)
         slave_io = io.BufferedRWPair(slave, slave, buffer_size=128)
+        logging.info('saving data to ' + data_file)
     except IOError as e:
         logging.error('*** Cannot open serial connexion with slave! : ' + str(e))
         status &= False
@@ -240,8 +242,8 @@ if __name__ == '__main__':
         logging.error('*** Cannot open serial connexion with master!' + str(e))
         status &= False
     try:
-        sd_file = open(data_file, "ab+")
-        sd_file_io = io.BufferedRandom(sd_file, buffer_size=256)
+        sd_file_io = open(data_file, "ab+")
+        #sd_file_io = io.BufferedRandom(sd_file, buffer_size=1)
     except IOError as e:
         logging.error('*** Cannot open file ! : ' + str(e))
         status &= False
@@ -286,7 +288,7 @@ if __name__ == '__main__':
             logging.info('Exiting : closing file and communication ports...')
             slave.close()
             master.close()
-            sd_file.close()
+            sd_file_io.close()
             logging.info('Exiting RaspArDAS')
     else:
         logging.info('Exiting RaspArDAS')
@@ -299,6 +301,6 @@ if __name__ == '__main__':
         except:
             pass
         try:
-            sd_file.close()
+            sd_file_io.close()
         except:
             pass

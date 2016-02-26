@@ -6,8 +6,6 @@ import glob
 import pandas as pd
 import sys
 import matplotlib.pyplot as plt
-sys.path.append("c:/Python Scripts/uert")
-from pygrav import read_pluvio_tsf
 
 def read_dtm(file):                     #TODO: remove datum and channels when pandas dataframes are supported in other scripts
     with open(file,'r') as myfile:

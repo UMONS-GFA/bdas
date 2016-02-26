@@ -1,5 +1,5 @@
 __author__ = 'Arno'
-import read_dtm
+import bdas.draft.read_dtm as read_dtm
 import numpy as np
 import glob
 import pandas as pd

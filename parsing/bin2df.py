@@ -1,5 +1,5 @@
 import pandas as pd
-from parsing import parsebintotxt as pdb
+from bdas.parsing import parsebintotxt as pdb
 import datetime
 import time
 import logging
@@ -33,8 +33,8 @@ def bin_to_df(bin_file):
     status = []
     logging.info('processing ' + bin_file + '.jsn')
     try:
-        with open(bin_file+'.jsn') as bin_file:
-            metadata = json.load(bin_file)
+        with open(bin_file+'.jsn') as jsn_file:
+            metadata = json.load(jsn_file)
     except:
         logging.error('*** .jsn file is missing!')
         exit(1)

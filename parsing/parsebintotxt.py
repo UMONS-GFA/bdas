@@ -7,7 +7,7 @@ This program lets you parse one or more binary file(s) and save it (them) as rea
 import os
 import sys
 import logging
-from parsing import parsedasbin
+from . import parsedasbin
 
 
 def parse_bin_files_to_text_files(in_filename='', out_filename='', time_step=60, k_max=330000,

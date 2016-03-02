@@ -7,7 +7,7 @@ import queue
 from threading import Thread, Lock
 # import PyCRC
 
-version = 0.15
+version = 0.16
 DEBUG = False
 master_device = '/dev/ttyUSB0'
 slave_device = '/dev/ttyACM0'

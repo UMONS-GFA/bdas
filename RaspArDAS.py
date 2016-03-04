@@ -7,8 +7,8 @@ import queue
 from threading import Thread, Lock
 # import PyCRC
 
-version = 0.16
-DEBUG = False
+version = 0.17
+DEBUG = True
 master_device = '/dev/ttyUSB0'
 slave_device = '/dev/ttyACM0'
 data_file = 'raw.dat'
@@ -31,22 +31,6 @@ peer_download = False  # TODO: find a way to set peer_download to True if anothe
 downloading = False
 stop = False
 
-# def read_bytes_from_stream(stream, chunksize=8192):
-#     """ This is a generator that yields bytes
-#      from a file-like object (stream), reading it
-#      in chunks
-#
-#     :param chunksize:
-#     :return:
-#     """
-#     while True:
-#         chunk = stream.read(chunksize)
-#         if chunk:
-#             for b in chunk:
-#                 yield b
-#         else:
-#             break
-
 
 def listen_slave():
     """This is a listener thread function.
@@ -65,24 +49,26 @@ def listen_slave():
             while byte != b'\r' and byte != b'$':
                 byte = slave_io.read(1)
                 msg += byte
+            if DEBUG:
+                logging.debug('Message :' + msg.decode('ascii'))
             if byte == b'$':
                 # TODO: reformat data and check crc
                 record = b''
                 byte = b''
                 while byte != b'\r':
                     byte = slave_io.read(1)
-
                     record += byte
                 if DEBUG:
                     logging.debug('Storing : ' + record.decode('ascii'))
                 # Send data to data_queue
                 data_queue.put(record)
-            elif len(msg) > 0:
-                # Sort data to store on SD from data to repeat to master
-                if DEBUG:
-                    logging.debug('Slave says : ' + msg.decode('ascii'))
-                if not downloading:
-                    slave_queue.put(msg)
+            else:
+                if len(msg) > 0:
+                    # Sort data to store on SD from data to repeat to master
+                    if DEBUG:
+                        logging.debug('Slave says : ' + msg.decode('ascii'))
+                    if not downloading:
+                        slave_queue.put(msg)
         except queue.Full:
             pass
         except serial.SerialTimeoutException:
@@ -228,6 +214,7 @@ def full_download():
     logging.info('Download complete.')
     downloading = False
 
+
 if __name__ == '__main__':
     logging.info('RaspArDAS version' + str(version) + '.')
     try:
@@ -245,7 +232,7 @@ if __name__ == '__main__':
         status &= False
     try:
         sd_file_io = open(data_file, "ab+")
-        #sd_file_io = io.BufferedRandom(sd_file, buffer_size=1)
+        # sd_file_io = io.BufferedRandom(sd_file, buffer_size=1)
     except IOError as e:
         logging.error('*** Cannot open file ! : ' + str(e))
         status &= False
@@ -274,10 +261,10 @@ if __name__ == '__main__':
             sd_file_lock = Lock()
             while not stop:
                 # show a prompt
-                #cmd = input('Type exit to quit.\n> ')
-                #if cmd == 'exit':
+                # cmd = input('Type exit to quit.\n> ')
+                # if cmd == 'exit':
                 #    stop = True
-                #else:
+                # else:
                 #    print('Unknown command.\n> ')
                 pass
             logging.info('Exiting : Waiting for threads to end...')

@@ -2,7 +2,7 @@
 
 ## 2016 
 * Mars
-  * 2016-03-03 - Install Updated Val d'Enfer Pluviometer as R014. Ardas shield(on ACM0) of Raspberry Pi(AMA0) on RS485 converter. Works with Ardas v1.0 and Bdas v0.5.
+  * 2016-03-03 - Installed Updated Val d'Enfer Pluviometer as R014. Ardas shield(on ACM0) of Raspberry Pi(AMA0) on RS485 converter. Works with Ardas v1.0 and Bdas v0.5. Moved R013 Pluviometer to the bottom of stairs. (OK, AW, CB, CB)
   
 ## 2015
 * September

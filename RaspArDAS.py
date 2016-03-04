@@ -9,7 +9,7 @@ from threading import Thread, Lock
 
 version = 0.16
 DEBUG = False
-master_device = '/dev/ttyUSB0'
+master_device = '/dev/ttyAMA0'
 slave_device = '/dev/ttyACM0'
 data_file = 'raw.dat'
 status = True
@@ -238,7 +238,7 @@ if __name__ == '__main__':
         logging.error('*** Cannot open serial connexion with slave! : ' + str(e))
         status &= False
     try:
-        master = serial.Serial(master_device, baudrate=57600, timeout=0.1)
+        master = serial.Serial(master_device, baudrate=9600, timeout=0.1)
         master_io = io.BufferedRWPair(master, master, buffer_size=128)
     except IOError as e:
         logging.error('*** Cannot open serial connexion with master!' + str(e))

@@ -8,7 +8,7 @@ from threading import Thread, Lock
 # import PyCRC
 
 version = 0.17
-DEBUG = True
+DEBUG = False
 master_device = '/dev/ttyUSB0'
 slave_device = '/dev/ttyACM0'
 data_file = 'raw.dat'
@@ -214,7 +214,6 @@ def full_download():
     logging.info('Download complete.')
     downloading = False
 
-
 if __name__ == '__main__':
     logging.info('RaspArDAS version' + str(version) + '.')
     try:
@@ -225,7 +224,7 @@ if __name__ == '__main__':
         logging.error('*** Cannot open serial connexion with slave! : ' + str(e))
         status &= False
     try:
-        master = serial.Serial(master_device, baudrate=57600, timeout=0.1)
+        master = serial.Serial(master_device, baudrate=9600, timeout=0.1)
         master_io = io.BufferedRWPair(master, master, buffer_size=128)
     except IOError as e:
         logging.error('*** Cannot open serial connexion with master!' + str(e))

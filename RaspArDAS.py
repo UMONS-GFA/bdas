@@ -1,27 +1,35 @@
-import os
+from os import path, mkdir, statvfs
 import io
 import serial
 import time
+import datetime
 import logging
+import binascii
 import queue
+import gzip
+from struct import unpack_from
 from threading import Thread, Lock
-# import PyCRC
+#import PyCRC
 
-version = 0.17
+version = 0.21
 DEBUG = False
 master_device = '/dev/ttyUSB0'
 slave_device = '/dev/ttyACM0'
-data_file = 'raw.dat'
+data_file = 'raw.dat.gz'
+n_channels = 4
 status = True
-base_path = os.path.dirname(__file__)
-if not os.path.isdir('logs'):
-    os.mkdir('logs')
+base_path = path.dirname(__file__)
+if not path.isdir('logs'):
+    mkdir('logs')
 chunk_size = 4096
-logging_level = logging.DEBUG
+if DEBUG:
+    logging_level = logging.DEBUG
+else:
+    logging_level = logging.INFO
 logging.Formatter.converter = time.gmtime
 log_format = '%(asctime)-15s | %(process)d | %(levelname)s:%(message)s'
 logging.basicConfig(format=log_format, datefmt='%Y/%m/%d %H:%M:%S UTC', level=logging_level,
-                    handlers=[logging.FileHandler(os.path.join(base_path, 'logs/RaspArDAS.log')),
+                    handlers=[logging.FileHandler(path.join(base_path, 'logs/RaspArDAS.log')),
                               logging.StreamHandler()])
 slave_queue = queue.Queue()  # what comes from ArDAS
 master_queue = queue.Queue()  # what comes from Master (e.g. cron task running client2.py)
@@ -31,6 +39,20 @@ peer_download = False  # TODO: find a way to set peer_download to True if anothe
 downloading = False
 stop = False
 
+def unpack_record(self, message):
+        """ unpacks a record received from the ArDAS and checks the CRC """
+
+        # # Unpack the received message into struct
+        # (messageID, acknowledgeID, module, commandType,
+        #  data, recvChecksum) = unpack('<LLBBLL', message)
+        #
+        # # Calculate the checksum of the recv message minus the last 4
+        # # bytes that contain the sent checksum
+        # calcChecksum = crc32(message[:-4])
+        # if recvChecksum == calcChecksum:
+        #     print "Checksum checks out"
+        pass
+
 
 def listen_slave():
     """This is a listener thread function.
@@ -39,7 +61,7 @@ def listen_slave():
     infinite loop, and only exit when
     the main thread ends.
     """
-    global DEBUG, stop, downloading, slave_io, data_queue
+    global stop, downloading, slave_io, data_queue, n_channels
 
     while not stop:
         # Read incoming data from slave (ArDAS)
@@ -49,31 +71,56 @@ def listen_slave():
             while byte != b'\r' and byte != b'$':
                 byte = slave_io.read(1)
                 msg += byte
-            if DEBUG:
-                logging.debug('Message :' + msg.decode('ascii'))
             if byte == b'$':
-                # TODO: reformat data and check crc
-                record = b''
-                byte = b''
-                while byte != b'\r':
-                    byte = slave_io.read(1)
-                    record += byte
-                if DEBUG:
-                    logging.debug('Storing : ' + record.decode('ascii'))
-                # Send data to data_queue
-                data_queue.put(record)
+                record = byte
+                record += slave_io.read(32)
+                crc = slave_io.read(4)
+                record_crc = int.from_bytes(crc, 'big')
+                msg_crc = binascii.crc32(record)
+                #logging.debug('record : {0:X}'.format(record))
+                logging.debug('record : %s' %str(record))
+                #logging.debug('{0:X}'.format(record_crc))
+                logging.debug('record_crc : %d' %record_crc)
+                #logging.debug('msg_crc : {0:X}'.format(crc))
+                logging.debug('msg_crc : %d' %msg_crc)
+                if msg_crc == record_crc:
+                    crc_check = True
+                else:
+                    crc_check = False
+                if crc_check:
+                    instr = []
+                    freq = []
+                    station = int.from_bytes(record[1:3], 'big')
+                    integration_period = int.from_bytes(record[3:5], 'big')
+                    record_date = datetime.datetime.utcfromtimestamp(int.from_bytes(record[5:9], 'big'))
+                    for i in range(n_channels):
+                        instr.append(int.from_bytes(record[9+2*i:11+2*i], 'big'))
+                        freq.append(unpack_from('>f', record[17+4*i:21+4*i])[0])
+                    decoded_record = '%04d ' % station + record_date.strftime('%Y %m %d %H %M %S') \
+                                     + ' %04d' % integration_period
+                    for i in range(n_channels):
+                        decoded_record += ' %04d %11.4f' %(instr[i], freq[i])
+                    decoded_record += '\n'
+                    logging.debug('Storing : ' + decoded_record)
+                    # Send data to data_queue
+                    data_queue.put(decoded_record.encode('ascii'))
+                else:
+                    logging.warning('*** Bad crc : corrupted data is not stored !')
+
             else:
                 if len(msg) > 0:
                     # Sort data to store on SD from data to repeat to master
-                    if DEBUG:
+                    try:
                         logging.debug('Slave says : ' + msg.decode('ascii'))
+                    except:
+                        logging.warning('*** listen_slave thread - Unable to decode slave message...')
                     if not downloading:
                         slave_queue.put(msg)
         except queue.Full:
-            pass
+            logging.warning('*** Data or slave queue is full!')
         except serial.SerialTimeoutException:
             pass
-    logging.info('Closing listen_slave thread...')
+    logging.debug('Closing listen_slave thread...')
 
 
 def talk_slave():
@@ -83,20 +130,23 @@ def talk_slave():
     infinite loop, and only exit when
     the main thread ends.
     """
-    global DEBUG, stop, slave_io, master_queue
+    global stop, slave_io, master_queue
 
     while not stop:
         try:
             msg = master_queue.get(timeout=0.25)
-            if DEBUG:
-                logging.debug('Saying to Slave : ' + msg.decode('ascii'))
+            try:
+                logging.debug('Saying to slave : ' + msg.decode('ascii'))
+            except:
+                logging.warning('*** talk_slave thread - Unable to decode master message...')
             slave_io.write(msg)
             slave_io.flush()
         except queue.Empty:
             pass
         except serial.SerialTimeoutException:
             logging.error('Could not talk to slave...')
-    logging.info('Closing talk_slave thread...')
+
+    logging.debug('Closing talk_slave thread...')
 
 
 def listen_master():
@@ -106,7 +156,7 @@ def listen_master():
     infinite loop, and only exit when
     the main thread ends.
     """
-    global DEBUG, stop, master_io, master_queue
+    global stop, master_io, master_queue
 
     while not stop:
         try:
@@ -116,8 +166,10 @@ def listen_master():
                 byte = master_io.read(1)
                 msg += byte
             if len(msg) > 0:
-                if DEBUG:
+                try:
                     logging.debug('Master says : ' + msg.decode('ascii'))
+                except:
+                    logging.warning('*** listen_master thread - Unable to decode master message...')
                 if msg[:-1] == b'#XB':
                     logging.info('Download request')
                     full_download()
@@ -135,7 +187,7 @@ def listen_master():
             logging.error('Master queue is full!')
         except serial.SerialTimeoutException:
             pass
-    logging.info('Closing listen_master thread...')
+    logging.debug('Closing listen_master thread...')
 
 
 def talk_master():
@@ -145,19 +197,21 @@ def talk_master():
     infinite loop, and only exit when
     the main thread ends.
     """
-    global DEBUG, stop, downloading, master_io, slave_queue
+    global stop, downloading, master_io, slave_queue
 
     while not stop:
         try:
             if not downloading:
                 msg = slave_queue.get(timeout=0.25)
-                if DEBUG:
-                    logging.debug('Saying to Master :' + msg.decode('ascii'))
+                try:
+                    logging.debug('Saying to master :' + msg.decode('ascii'))
+                except:
+                    logging.warning('*** talk_master thread - Unable to decode slave message...')
                 master_io.write(msg)
                 master_io.flush()
         except queue.Empty:
             pass
-    logging.info('Closing talk_master thread...')
+    logging.debug('Closing talk_master thread...')
 
 
 def write_disk():
@@ -167,15 +221,14 @@ def write_disk():
     infinite loop, and only exit when
     the main thread ends.
     """
-    global DEBUG, stop, sd_file_io, data_queue, sd_file_lock
+    global stop, sd_file_io, data_queue, sd_file_lock
 
     offset = sd_file_io.tell()
     while not stop:
         try:
             msg = data_queue.get(timeout=0.25)
             if len(msg) > 0:
-                if DEBUG:
-                    logging.debug('Writing to disk :' + msg.decode('ascii'))
+                logging.debug('Writing to disk :' + msg.decode('ascii'))
                 sd_file_lock.acquire()
                 sd_file_io.seek(offset)
                 sd_file_io.write(msg)
@@ -185,18 +238,17 @@ def write_disk():
         except queue.Empty:
             pass
     sd_file_io.flush()
-    logging.info('Closing write_disk thread...')
+    logging.debug('Closing write_disk thread...')
 
 
 def full_download():
     """This is a full_download function.
     """
-    global downloading, data_file, master, master_io, chunksize
+    global downloading, data_file, master, master_io, chunk_size, sd_file_lock
 
     downloading = True
     master_io.flush()
     offset = 0
-    chunk = b''
     try:
         while True:
             sd_file_lock.acquire()
@@ -209,29 +261,81 @@ def full_download():
             else:
                 master_io.write(chunk)
                 master_io.flush()
-    except IOError as e:
-        logging.error('Download error :' + str(e))
+    except IOError as error:
+        logging.error('Download error :' + str(error))
     logging.info('Download complete.')
     downloading = False
 
+
+def save_file():
+    """This is a save_file function.
+    """
+    global data_file, sd_file_io, sd_file_lock, master_io
+
+    master_io.flush()
+    sd_file_lock.acquire()
+    sd_file_io.close()
+
+    sd_file_io = gzip.open(data_file, "ab+")
+    sd_file_lock.release()
+    logging.info('File ' + ' saved.')
+
 if __name__ == '__main__':
-    logging.info('RaspArDAS version' + str(version) + '.')
+    logging.info('RaspArDAS version ' + str(version) + '.')
+    # if len(sys.argv) > 1:
+    #     if len(sys.argv) % 2 == 1:
+    #         while i < len(sys.argv)-1:
+    #             if sys.argv[i] == 'master':
+    #                 LocalHost = str(sys.argv[i+1])
+    #                 logging.info('   Host : ' + LocalHost)
+    #             elif sys.argv[i] == 'slave':
+    #                 LocalPort = int(sys.argv[i+1])
+    #                 logging.info('   Port : ' + str(LocalPort))
+    #                 # LocalPort = int(LocalPort)
+    #             elif sys.argv[i] == 'cmdfile':
+    #                 cmdfile = str(sys.argv[i+1])
+    #                 logging.info('   Command file : ' + cmdfile)
+    #                 # open method create a new file
+    #                 cf = open(cmdfile, 'rt')
+    #                 logging.info('Executing command file %s.' % cmdfile)
+    #                 command = os.path.basename(cmdfile).split('.')[0]
+    #                 # readlines returns a list of lines
+    #                 cmd_lines = cf.readlines()
+    #                 cf.close()
+    #                 cmd = cmd_lines[cl].strip('\n')
+    #                 interactive = False
+    #             elif sys.argv[i] == 'tag':
+    #                 tags.append(str(sys.argv[i+1]))
+    #                 logging.info('Tag %s.' % tags[-1])
+    #             else:
+    #                 logging.info('   Unknown argument : ' + sys.argv[i])
+    #             i += 2
+    #     else:
+    #         logging.info('Parsing failed : arguments should be given by pairs [key value], ignoring arguments...')
+    # else:
+    #     logging.info('No argument found... Using defaults.')
     try:
-        slave = serial.Serial(slave_device, baudrate=57600, timeout=0.1)
-        slave_io = io.BufferedRWPair(slave, slave, buffer_size=128)
+        st = statvfs('.')
+        available_space = st.f_bavail * st.f_frsize / 1024 / 1024
+        logging.info('Remaining disk space : %.1f MB' % available_space)
+    except:
+        pass
+    try:
+        slave = serial.Serial(slave_device, baudrate=57600, timeout=0.01)
+        slave_io = io.BufferedRWPair(slave, slave, buffer_size=128)  # FIX : BufferedRWPair does not attempt to synchronize accesses to its underlying raw streams. You should not pass it the same object as reader and writer; use BufferedRandom instead.
         logging.info('saving data to ' + data_file)
     except IOError as e:
         logging.error('*** Cannot open serial connexion with slave! : ' + str(e))
         status &= False
     try:
-        master = serial.Serial(master_device, baudrate=9600, timeout=0.1)
+        master = serial.Serial(master_device, baudrate=9600, timeout=0.01)
         master_io = io.BufferedRWPair(master, master, buffer_size=128)
     except IOError as e:
         logging.error('*** Cannot open serial connexion with master!' + str(e))
         status &= False
     try:
-        sd_file_io = open(data_file, "ab+")
-        # sd_file_io = io.BufferedRandom(sd_file, buffer_size=1)
+        sd_file_io = gzip.open(data_file, "ab+")
+        # sd_file_io = io.BufferedRandom(sd_file, buffer_size=128)
     except IOError as e:
         logging.error('*** Cannot open file ! : ' + str(e))
         status &= False
@@ -266,7 +370,7 @@ if __name__ == '__main__':
                 # else:
                 #    print('Unknown command.\n> ')
                 pass
-            logging.info('Exiting : Waiting for threads to end...')
+            logging.info('Exiting - Waiting for threads to end...')
             slave_listener.join()
             master_talker.join()
             master_listener.join()
@@ -274,10 +378,26 @@ if __name__ == '__main__':
             disk_writer.join()
 
         finally:
-            logging.info('Exiting : closing file and communication ports...')
-            slave.close()
-            master.close()
-            sd_file_io.close()
+            logging.info('Exiting - Closing file and communication ports...')
+            try:
+                slave
+            except:
+                pass
+            else:
+                slave.close()
+            try:
+                master
+            except:
+                pass
+            else:
+                master.close()
+            try:
+                sd_file_io
+            except:
+                pass
+            else:
+                sd_file_io.close()
+
             logging.info('Exiting RaspArDAS')
     else:
         logging.info('Exiting RaspArDAS')

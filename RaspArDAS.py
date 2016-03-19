@@ -226,7 +226,7 @@ def write_disk():
     offset = sd_file_io.tell()
     while not stop:
         try:
-            msg = data_queue.get(timeout=0.25)
+            msg = data_queue.get(timeout=0.1)
             if len(msg) > 0:
                 logging.debug('Writing to disk :' + msg.decode('ascii'))
                 sd_file_lock.acquire()
@@ -321,14 +321,14 @@ if __name__ == '__main__':
     except:
         pass
     try:
-        slave = serial.Serial(slave_device, baudrate=57600, timeout=0.01)
+        slave = serial.Serial(slave_device, baudrate=57600, timeout=0.1)
         slave_io = io.BufferedRWPair(slave, slave, buffer_size=128)  # FIX : BufferedRWPair does not attempt to synchronize accesses to its underlying raw streams. You should not pass it the same object as reader and writer; use BufferedRandom instead.
         logging.info('saving data to ' + data_file)
     except IOError as e:
         logging.error('*** Cannot open serial connexion with slave! : ' + str(e))
         status &= False
     try:
-        master = serial.Serial(master_device, baudrate=9600, timeout=0.01)
+        master = serial.Serial(master_device, baudrate=9600, timeout=0.1)
         master_io = io.BufferedRWPair(master, master, buffer_size=128)
     except IOError as e:
         logging.error('*** Cannot open serial connexion with master!' + str(e))

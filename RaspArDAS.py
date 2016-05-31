@@ -11,11 +11,12 @@ from struct import unpack_from
 from threading import Thread, Lock
 #import PyCRC
 
-version = 0.21
-DEBUG = False
+version = 0.23
+DEBUG = True
 master_device = '/dev/ttyUSB0'
 slave_device = '/dev/ttyACM0'
-data_file = 'raw.dat.gz'
+file_name = 'raw/raw'
+data_file = file_name + datetime.datetime.utcnow().strftime('_%Y%m%d_%H%M%S') +'.dat.gz'  #'raw.dat.gz'
 n_channels = 4
 status = True
 base_path = path.dirname(__file__)
@@ -28,7 +29,7 @@ else:
     logging_level = logging.INFO
 logging.Formatter.converter = time.gmtime
 log_format = '%(asctime)-15s | %(process)d | %(levelname)s:%(message)s'
-logging.basicConfig(format=log_format, datefmt='%Y/%m/%d %H:%M:%S UTC', level=logging_level,
+logging.basicConfig(format=log_format, datefmtaele='%Y/%m/%d %H:%M:%S UTC', level=logging_level,
                     handlers=[logging.FileHandler(path.join(base_path, 'logs/RaspArDAS.log')),
                               logging.StreamHandler()])
 slave_queue = queue.Queue()  # what comes from ArDAS
@@ -38,6 +39,7 @@ quiet = True
 peer_download = False  # TODO: find a way to set peer_download to True if another RaspArDAS is downloading at startup
 downloading = False
 stop = False
+
 
 def unpack_record(self, message):
         """ unpacks a record received from the ArDAS and checks the CRC """
@@ -179,6 +181,9 @@ def listen_master():
                     logging.info('Aborting download request')
                 elif msg[:-1] == b'#ZF':
                     logging.info('Reset request')
+                elif msg[:-1] == b'#CF':
+                    logging.info('Change file request')
+                    save_file()
                 elif msg[:-1] == b'#KL':
                     stop = True
                 else:
@@ -227,6 +232,7 @@ def write_disk():
     while not stop:
         try:
             msg = data_queue.get(timeout=0.1)
+            logging.debug('Data queue length : %d' % data_queue.qsize())
             if len(msg) > 0:
                 logging.debug('Writing to disk :' + msg.decode('ascii'))
                 sd_file_lock.acquire()
@@ -276,6 +282,7 @@ def save_file():
     sd_file_lock.acquire()
     sd_file_io.close()
 
+    data_file = file_name + datetime.datetime.utcnow().strftime('_%Y%m%d_%H%M%S') +'.dat.gz'
     sd_file_io = gzip.open(data_file, "ab+")
     sd_file_lock.release()
     logging.info('File ' + ' saved.')

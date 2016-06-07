@@ -87,19 +87,17 @@ def remove_bad_data(data):
             data[i]=np.nan
     return data
 
-def filter_pluvio(data,channel = 1,filter = 5000):
-    data = (data[data[channel] < np.roll(data[channel],-1)+filter])
-    data = (data[data[channel] > np.roll(data[channel],-1)-filter])
+def filter_pluvio(data,channel = 1,filter = 5000,roll = 2, check_max = None):
+    data = data[((data[channel] < np.roll(data[channel],-roll)+filter) &  (data[channel] < np.roll(data[channel],roll)+filter))]
+    data = data[((data[channel] > np.roll(data[channel],-roll)-filter) & (data[channel] > np.roll(data[channel],roll)-filter))]
+    if check_max != None:
+        data=data[data[channel] < check_max]
     return data
 
-def post_filter_pluvio(data,channel = 0,filter = 2,roll=5):
-    data = (data[data[channel] < np.roll(data[channel],-roll)+filter])
-    data = (data[data[channel] > np.roll(data[channel],-roll)-filter])
-    return data
+def find_large_emptying(data, channel = 1, filter = 100, roll=1):
 
-def find_emptying(data, channel = 1, filter = 100, filter1 = 50,filter2 = 20):
-
-    fullidx= (-data[channel] > np.roll(-data[channel],-1)+filter)
+    fullidx= data[data[channel] < np.roll(data[channel],-roll)-filter].index.tolist()
+    emptyidx= data[data[channel] > np.roll(data[channel],roll)+filter].index.tolist()
     for i in range(len(np.array(fullidx))):
 
         try:
@@ -109,6 +107,154 @@ def find_emptying(data, channel = 1, filter = 100, filter1 = 50,filter2 = 20):
                     fullidx[j] = False
                     j = j+1
         except : pass
+    for i in range(len(np.array(emptyidx))):
+
+        try:
+            if np.array(emptyidx)[i]:
+                j = i+1
+                while np.array(emptyidx)[j]:
+                    emptyidx[j] = False
+                    j = j+1
+        except : pass
+
+    # for i in range(len(np.array(emptyidx))):
+    #     try:
+    #         if np.array(emptyidx)[i]:
+    #             j = i+1
+    #             while not np.array(emptyidx)[j]:
+    #                 j = j+1
+    #             # j = j-1
+    #             idx = np.where(np.array(fullidx)[i:j])
+    #             idx = idx[0] + i
+    #             # print(i,idx,j)
+    #             # if np.array(fullidx[i:i+j]).count(True) > 1:
+    #             if len(idx)>1:
+    #                 for k in idx[1:]:
+    #                     fullidx[k]= False
+    #             if len(idx) == 0:
+    #                 emptyidx[i] = True
+    #             #
+    #             elif idx[0]- i < 8 :
+    #                  fullidx[idx[0]], emptyidx[i] =  False, False
+    #             i = j-1
+    #     except : pass
+
+    return emptyidx,fullidx
+
+def find_old_emptying(data, channel = 1, filter = 100, low = 20000, roll=1):
+    fullidx = (data[channel] < low)
+    for i in range(len(np.array(fullidx))):
+        try:
+            if np.array(fullidx)[i]:
+                j = i+1
+                while np.array(fullidx)[j]:
+                    fullidx[j] = False
+                    j = j+1
+        except : pass
+    emptyidx=[]
+    idx = np.where(fullidx)[0]
+
+    for k in range(len(idx)-1):
+        if data[channel].loc[data.index[idx[k]]:data.index[idx[k+1]]].max() > filter*20 :
+            maxi = data[channel].loc[data.index[idx[k]]:data.index[idx[k+1]]].idxmax()
+            emptyidx.append(maxi)
+        else:
+            fullidx[idx[k+1]] = False
+    fullidx = data[fullidx].index.tolist()
+    fullidx = fullidx[1:]
+    # fullidx = fullidx[fullidx==True].index.tolist()
+    # try:
+    #     if fullidx[0]<emptyidx[0]:
+    #         fullidx = fullidx[1:]
+    # except:
+    #     pass
+    # fullidx=[]
+    # for k in range(len(emptyidx)-1):
+    #     mini = data[channel].loc[emptyidx[k]:emptyidx[k+1]].idxmin()
+    #     fullidx.append(mini)
+
+    # emptyidx= (data[channel] > np.roll(data[channel],-roll)+filter)
+    # for i in range(len(np.array(emptyidx))):
+    #
+    #     try:
+    #         if np.array(emptyidx)[i]:
+    #             j = i+1
+    #             while np.array(emptyidx)[j]:
+    #                 emptyidx[j] = False
+    #                 j = j+1
+    #     except : pass
+    #
+    # fullidx=[]
+    # idx = np.where(emptyidx)[0]
+    # print(idx)
+    # for k in range(len(emptyidx)-1):
+    #     mini = data[channel].loc[emptyidx[k]:emptyidx[k+1]].idxmin()
+    #     fullidx.append(mini)
+    #
+    # for k in range(len(idx)-1):
+    #     maxi = data[channel].loc[data.index[idx[k]]:data.index[idx[k+1]]].idxmax()
+    #     emptyidx.append(maxi)
+
+
+    return emptyidx,fullidx
+def find_emptying(data, channel = 1, filter = 100, roll=1, check_bad_fullidx = False):
+
+    fullidx= (data[channel] < np.roll(data[channel],-roll)-filter)
+    # idx = np.where(fullidx)[0]
+    # for i in range(len(idx)-1):
+    #     j = idx[i]+1
+    #     while (np.array(fullidx)[j]) or (j < len(idx)):
+    #         print(j)
+    #         fullidx[j] = False
+    #         j+=1
+    #         i+=1
+    #     i+=1
+    for i in range(len(np.array(fullidx))):
+        try:
+            if np.array(fullidx)[i]:
+                j = i+1
+                while np.array(fullidx)[j]:
+                    fullidx[j] = False
+                    j = j+1
+                i=j
+        except : pass
+    if check_bad_fullidx :
+        idx = np.where(fullidx)[0]
+        for i in range(len(idx)-1):
+            try:
+                # med = data[channel].loc[data.index[idx[i]:idx[i+1]]].median()
+                # if med < (data[channel].loc[data.index[idx[i+1]]]+filter/20) :
+                    tmp = ((data[channel].loc[data.index[idx[i]:idx[i+1]]] < np.roll(data[channel].loc[data.index[idx[i]:idx[i+1]]],-200)+10) & (data[channel].loc[data.index[idx[i]:idx[i+1]]] > np.roll(data[channel].loc[data.index[idx[i]:idx[i+1]]],-200)-10))
+                    tmp_idx = np.where(tmp)[0]
+                    if tmp_idx != []:
+                        fullidx[idx[i+1]] = False
+                        #fullidx[(data[channel].loc[data.index[idx[i]+20:idx[i+1]-20]].idxmin())]=True
+                        fullidx[idx[i]+tmp_idx[0]] = True
+                    # j = idx[i]+20
+                    # fullidx[idx[i+1]] = False
+                    # #while data[channel].loc[data.index[j]] > (data[channel].loc[data.index[idx[i+1]]] + filter/20):
+                    # while data[channel].loc[data.index[j]] > (data[channel].loc[data.index[idx[i+1]-100:idx[i+1]-10]].min()):
+                    #     # print(data[channel].loc[data.index[j]],(data[channel].loc[data.index[idx[i+1]]] + filter/10))
+                    #     j = j+1
+                    #     pass
+                    # fullidx[j] = True
+            except:
+                traceback.print_exc()
+                pass
+
+
+    # for i in reversed(range(len(np.array(fullidx)))):
+    #         if np.array(fullidx)[i]:
+    #
+    #             print('ij',i,j)
+    #             j = i
+    #             print('ijb',data[channel].loc[data.index[j]],data[channel].loc[data.index[i]])
+    #             fullidx[j] = False
+    #             while (not np.array(fullidx)[j]) and  (data[channel].loc[data.index[j]] < (data[channel].loc[data.index[i]] + filter/10)) :
+    #                 fullidx[j] = False
+    #                 j = j-1
+    #             fullidx[j] = True
+    #             i=j
 
     emptyidx=[]
     idx = np.where(fullidx)[0]
@@ -116,11 +262,38 @@ def find_emptying(data, channel = 1, filter = 100, filter1 = 50,filter2 = 20):
     for k in range(len(idx)-1):
         maxi = data[channel].loc[data.index[idx[k]]:data.index[idx[k+1]]].idxmax()
         emptyidx.append(maxi)
+    if check_bad_fullidx:
+        fullidx = fullidx[fullidx==True].index.tolist()
+        fullidx = fullidx[1:]
+    else :
+        fullidx=[]
+        for k in range(len(emptyidx)-1):
+            mini = data[channel].loc[emptyidx[k]:emptyidx[k+1]].idxmin()
+            fullidx.append(mini)
 
-    fullidx=[]
-    for k in range(len(emptyidx)-1):
-        mini = data[channel].loc[emptyidx[k]:emptyidx[k+1]].idxmin()
-        fullidx.append(mini)
+    # emptyidx= (data[channel] > np.roll(data[channel],-roll)+filter)
+    # for i in range(len(np.array(emptyidx))):
+    #
+    #     try:
+    #         if np.array(emptyidx)[i]:
+    #             j = i+1
+    #             while np.array(emptyidx)[j]:
+    #                 emptyidx[j] = False
+    #                 j = j+1
+    #     except : pass
+    #
+    # fullidx=[]
+    # idx = np.where(emptyidx)[0]
+    # print(idx)
+    # for k in range(len(emptyidx)-1):
+    #     mini = data[channel].loc[emptyidx[k]:emptyidx[k+1]].idxmin()
+    #     fullidx.append(mini)
+    #
+    # for k in range(len(idx)-1):
+    #     maxi = data[channel].loc[data.index[idx[k]]:data.index[idx[k+1]]].idxmax()
+    #     emptyidx.append(maxi)
+
+
     return emptyidx,fullidx
 
 if __name__ == '__main__':

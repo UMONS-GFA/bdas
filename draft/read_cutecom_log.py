@@ -1,12 +1,14 @@
+# -*- coding: utf-8 -*-
 __author__ = 'Arno'
 
 import numpy as np
 import datetime
 import glob
 import sys
+import pandas as pd
 
 
-def read_log(file):
+def read_log(file,comment='#'):
     with open(file,'r') as myfile:
         rows=[list(map(str,L.strip().split(' '))) for L in myfile]
     datum=[]
@@ -19,7 +21,13 @@ def read_log(file):
                     channels[j].append(float(rows[i][j+6]))
                 except:
                     channels[j].append(None)
-    return datum,channels
+    # parse = lambda x: datetime.datetime.strptime(x, '%Y %m %d %H %M %S')
+    # data = pd.read_csv(file,sep= ' ',   parse_dates=[[0,1,2,3,4,5]],header=None, names=['Y','m','d','H','M','S','1','2','3','4'], comment=comment, skip_blank_lines=True ,date_parser=parse, engine="python",)
+    # data.columns= ['date',1,2,3,4]
+    # data = data.set_index('date')
+    data = pd.DataFrame(np.array(channels).T)
+    data.index = datum
+    return data
 
 def plot_dtm(datum,channels,channel_to_plot = [1,2,3,4],fmt='-',colors=['blue']):
     import matplotlib.pyplot as plt
@@ -32,15 +40,16 @@ def plot_dtm(datum,channels,channel_to_plot = [1,2,3,4],fmt='-',colors=['blue'])
     plt.show()
 
 if __name__ == '__main__':
-    directory = 'C:/Users\Arno\Documents\Compteur de gouttes\\'
-    files = glob.glob(directory+'test3_*')
+    file = '/home/arnaud/calibration/2015-02-2.log'
+    data = read_log(file,comment="!")
     #channel_to_plot = [3]
     #import matplotlib.pyplot as plt
     #f, axarr = plt.subplots(len(channel_to_plot), sharex=True)
-    for file in files:
-        datum,channels= read_log(file)
-        print(file)
-        plot_dtm(datum,channels)
+    # for file in files:
+    #     datum,channels= read_log(file)
+
+    #     print(file)
+    #     plot_dtm(datum,channels)
 
 
     #    for i in channel_to_plot:

@@ -1,10 +1,14 @@
 __author__ = 'Arno'
 import bdas.draft.read_dtm as read_dtm
+import datetime
 import numpy as np
 import glob
 import pandas as pd
-def filter_datum(data):
+def filter_datum(data,date=None,max=4):
     data = data[data.index >= data.index[0]]
+    data = data[data.index < datetime.datetime.now()]
+    if date != None:
+        data = data[data.index > date-datetime.timedelta(weeks=max)]
     return data
 
 if __name__ == '__main__':

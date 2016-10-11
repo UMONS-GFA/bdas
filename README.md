@@ -63,7 +63,21 @@ and add the line
 ##### Launch socat  
 ``$ socat TCP4-LISTEN:10001 /dev/PORTNAME,b9600,raw,echo=0 & > /home/USERNAME/log``
 
+##### Autorelauch socat 
+``socat tcp-l:10004,reuseaddr,fork file:/dev/USBR002,nonblock,raw,echo=0 &``
+
 ##### Optionnal: launch socat at startup
+
+With cron
+
+    # crontab -e
+    
+Add
+
+    socat tcp-l:10004,reuseaddr,fork file:/dev/USBT001,nonblock,raw,echo=0 &
+
+
+Or with init.d
 
 Create process file in /etc/init.d/
 

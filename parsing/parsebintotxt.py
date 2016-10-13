@@ -4,9 +4,10 @@ A DAS binary file to text file parser
 This program lets you parse one or more binary file(s) and save it (them) as readable text file.
 
  """
+import logging
 import os
 import sys
-import logging
+
 from parsing import parsedasbin
 
 

@@ -1,9 +1,10 @@
+import datetime
+import json
+import logging
+import time
+
 import pandas as pd
 from parsing import parsebintotxt as pdb
-import datetime
-import time
-import logging
-import json
 
 __author__ = 'kaufmanno'
 """

@@ -1,5 +1,7 @@
 from os import path, mkdir, statvfs
 import io
+import os
+import sys
 import serial
 import time
 import datetime
@@ -7,37 +9,40 @@ import logging
 import binascii
 import queue
 import gzip
+import socket
+
 from struct import unpack_from
 from threading import Thread, Lock
-#import PyCRC
 
-version = 0.24
-DEBUG = True
-master_connexion = 'tcp'
-LocalHost = '10.107.10.148' # '0.0.0.0'
+version = 0.26
+debug = False
+
+LocalHost = '0.0.0.0'
 LocalPort = 10001
-if master_connexion == 'serial':
-    master_device = '/dev/ttyUSB0'
-else:
-    import socket
-    master_device = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+master_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+master_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+master_connection = None
+master_online = False
 slave_device = '/dev/ttyACM0'
-file_name = 'raw/raw'
-data_file = file_name + datetime.datetime.utcnow().strftime('_%Y%m%d_%H%M%S') +'.dat.gz'  #'raw.dat.gz'
 n_channels = 4
 status = True
 base_path = path.dirname(__file__)
 if not path.isdir('logs'):
     mkdir('logs')
+if not path.isdir('raw'):
+    mkdir('raw')
+file_name = 'raw/raw'
+data_file = path.join(base_path, file_name + datetime.datetime.utcnow().strftime('_%Y%m%d_%H%M%S') + '.dat.gz')
+log_file = path.join(base_path, 'logs/RaspArDAS.log')
 chunk_size = 4096
-if DEBUG:
+if debug:
     logging_level = logging.DEBUG
 else:
     logging_level = logging.INFO
 logging.Formatter.converter = time.gmtime
 log_format = '%(asctime)-15s | %(process)d | %(levelname)s:%(message)s'
 logging.basicConfig(format=log_format, datefmt='%Y/%m/%d %H:%M:%S UTC', level=logging_level,
-                    handlers=[logging.FileHandler(path.join(base_path, 'logs/RaspArDAS.log')),
+                    handlers=[logging.FileHandler(log_file),
                               logging.StreamHandler()])
 slave_queue = queue.Queue()  # what comes from ArDAS
 master_queue = queue.Queue()  # what comes from Master (e.g. cron task running client2.py)
@@ -48,21 +53,6 @@ downloading = False
 stop = False
 
 
-def unpack_record(self, message):
-        """ unpacks a record received from the ArDAS and checks the CRC """
-
-        # # Unpack the received message into struct
-        # (messageID, acknowledgeID, module, commandType,
-        #  data, recvChecksum) = unpack('<LLBBLL', message)
-        #
-        # # Calculate the checksum of the recv message minus the last 4
-        # # bytes that contain the sent checksum
-        # calcChecksum = crc32(message[:-4])
-        # if recvChecksum == calcChecksum:
-        #     print "Checksum checks out"
-        pass
-
-
 def listen_slave():
     """This is a listener thread function.
     It processes items in the queue one after
@@ -70,7 +60,7 @@ def listen_slave():
     infinite loop, and only exit when
     the main thread ends.
     """
-    global stop, downloading, slave_io, data_queue, n_channels
+    global stop, downloading, slave_io, data_queue, n_channels, debug
 
     while not stop:
         # Read incoming data from slave (ArDAS)
@@ -86,12 +76,10 @@ def listen_slave():
                 crc = slave_io.read(4)
                 record_crc = int.from_bytes(crc, 'big')
                 msg_crc = binascii.crc32(record)
-                #logging.debug('record : {0:X}'.format(record))
-                logging.debug('record : %s' %str(record))
-                #logging.debug('{0:X}'.format(record_crc))
-                logging.debug('record_crc : %d' %record_crc)
-                #logging.debug('msg_crc : {0:X}'.format(crc))
-                logging.debug('msg_crc : %d' %msg_crc)
+                if debug:
+                    logging.debug('record : %s' % str(record))
+                    logging.debug('record_crc : %d' % record_crc)
+                    logging.debug('msg_crc : %d' % msg_crc)
                 if msg_crc == record_crc:
                     crc_check = True
                 else:
@@ -108,9 +96,10 @@ def listen_slave():
                     decoded_record = '%04d ' % station + record_date.strftime('%Y %m %d %H %M %S') \
                                      + ' %04d' % integration_period
                     for i in range(n_channels):
-                        decoded_record += ' %04d %11.4f' %(instr[i], freq[i])
+                        decoded_record += ' %04d %11.4f' % (instr[i], freq[i])
                     decoded_record += '\n'
-                    logging.debug('Storing : ' + decoded_record)
+                    if debug:
+                        logging.debug('Storing : ' + decoded_record)
                     # Send data to data_queue
                     data_queue.put(decoded_record.encode('ascii'))
                 else:
@@ -158,6 +147,32 @@ def talk_slave():
     logging.debug('Closing talk_slave thread...')
 
 
+def connect_master():
+    """This is a connection listener thread function.
+    It waits for a connection from the master.
+    This daemon threads runs into an
+    infinite loop, and only exit when
+    the main thread ends.
+    """
+    global stop, master_connection, master_socket, master_online
+
+    while not stop:
+        try:
+            if not master_online:
+                logging.info('Waiting for master...')
+                master_connection, addr = master_socket.accept()
+                logging.info('Master connected, addr: ' + str(addr))
+                master_online = True
+        except:
+            logging.error('Master connection error!')
+
+    if master_online:
+        msg = b'\n*** Ending connection ***\n\n'
+        master_connection.send(msg)
+    master_connection.close()
+    logging.debug('Closing connect_master thread...')
+
+
 def listen_master():
     """This is a listener thread function.
     It processes items in the queue one after
@@ -165,40 +180,45 @@ def listen_master():
     infinite loop, and only exit when
     the main thread ends.
     """
-    global stop, master_io, master_queue
+    global stop, master_connection, master_queue, master_online
 
     while not stop:
-        try:
-            byte = b''
-            msg = b''
-            while byte != b'\r':
-                byte = master_io.read(1)
-                msg += byte
-            if len(msg) > 0:
-                try:
-                    logging.debug('Master says : ' + msg.decode('ascii'))
-                except:
-                    logging.warning('*** listen_master thread - Unable to decode master message...')
-                if msg[:-1] == b'#XB':
-                    logging.info('Full download request')
-                    full_download()
-                elif msg[:-1] == b'#XP':
-                    logging.info('Partial download request')
-                elif msg[:-1] == b'#XS':
-                    logging.info('Aborting download request')
-                elif msg[:-1] == b'#ZF':
-                    logging.info('Reset request')
-                elif msg[:-1] == b'#CF':
-                    logging.info('Change file request')
-                    save_file()
-                elif msg[:-1] == b'#KL':
-                    stop = True
-                else:
-                    master_queue.put(msg)
-        except queue.Full:
-            logging.error('Master queue is full!')
-        except serial.SerialTimeoutException:
-            pass
+        if master_online:
+            try:
+                byte = b''
+                msg = b''
+                while byte != b'\r':
+                    byte = master_connection.recv(1)
+                    msg += byte
+                if msg[0:1] == b'\n':
+                    msg = msg[1:]
+                if len(msg) > 0:
+                    try:
+                        logging.debug('Master says : ' + msg.decode('ascii'))
+                    except:
+                        logging.warning('*** listen_master thread - Unable to decode master message...')
+                    if msg[:-1] == b'#XB':
+                        logging.info('Full download request')
+                        full_download()
+                    elif msg[:-1] == b'#XP':
+                        logging.info('Partial download request')
+                    elif msg[:-1] == b'#XS':
+                        logging.info('Aborting download request')
+                    elif msg[:-1] == b'#ZF':
+                        logging.info('Reset request')
+                    elif msg[:-1] == b'#CF':
+                        logging.info('Change file request')
+                        save_file()
+                    elif msg[:-1] == b'#KL':
+                        logging.info('Stop request')
+                        stop = True
+                    else:
+                        master_queue.put(msg)
+            except queue.Full:
+                logging.error('Master queue is full!')
+            except:
+                logging.warning('Master connection lost...')
+                master_online = False
     logging.debug('Closing listen_master thread...')
 
 
@@ -209,20 +229,25 @@ def talk_master():
     infinite loop, and only exit when
     the main thread ends.
     """
-    global stop, downloading, master_io, slave_queue
+    global stop, downloading, master_connection, slave_queue, master_online
 
     while not stop:
-        try:
-            if not downloading:
-                msg = slave_queue.get(timeout=0.25)
-                try:
-                    logging.debug('Saying to master :' + msg.decode('ascii'))
-                except:
-                    logging.warning('*** talk_master thread - Unable to decode slave message...')
-                master_io.write(msg)
-                master_io.flush()
-        except queue.Empty:
-            pass
+        if master_online:
+            try:
+                if not downloading:
+                    msg = slave_queue.get(timeout=0.25)
+                    try:
+                        logging.debug('Saying to master :' + msg.decode('ascii'))
+                        master_connection.send(msg)
+                    except:
+                        logging.warning('*** talk_master thread - Unable to decode slave message...')
+                        master_connection.send(msg)
+
+            except queue.Empty:
+                pass
+            except:
+                logging.warning('Master connection lost...')
+                master_online = False
     logging.debug('Closing talk_master thread...')
 
 
@@ -257,10 +282,10 @@ def write_disk():
 def full_download():
     """This is a full_download function.
     """
-    global downloading, data_file, master, master_io, chunk_size, sd_file_lock
+    global downloading, data_file, master, master_connection, chunk_size, sd_file_lock
 
     downloading = True
-    master_io.flush()
+    master_connection.flush()
     offset = 0
     try:
         while True:
@@ -272,8 +297,7 @@ def full_download():
             if not chunk:
                 break
             else:
-                master_io.write(chunk)
-                master_io.flush()
+                master_connection.send(chunk)
     except IOError as error:
         logging.error('Download error :' + str(error))
     logging.info('Download complete.')
@@ -283,70 +307,60 @@ def full_download():
 def save_file():
     """This is a save_file function.
     """
-    global data_file, sd_file_io, sd_file_lock, master_io
+    global base_path, data_file, sd_file_io, sd_file_lock, master_connection
 
-    master_io.flush()
     sd_file_lock.acquire()
     sd_file_io.close()
+    logging.info('File ' + data_file + ' saved.')
 
-    data_file = file_name + datetime.datetime.utcnow().strftime('_%Y%m%d_%H%M%S') +'.dat.gz'
+    data_file = path.join(base_path, file_name + datetime.datetime.utcnow().strftime('_%Y%m%d_%H%M%S') + '.dat.gz')
     sd_file_io = gzip.open(data_file, "ab+")
     sd_file_lock.release()
-    logging.info('File ' + ' saved.')
+    logging.info('New file ' + data_file + ' created.')
 
 if __name__ == '__main__':
+    logging.info('*** SESSION STARTING ***\n')
     logging.info('RaspArDAS version ' + str(version) + '.')
-    # if len(sys.argv) > 1:
-    #     if len(sys.argv) % 2 == 1:
-    #         while i < len(sys.argv)-1:
-    #             if sys.argv[i] == 'master':
-    #                 LocalHost = str(sys.argv[i+1])
-    #                 logging.info('   Host : ' + LocalHost)
-    #             elif sys.argv[i] == 'slave':
-    #                 LocalPort = int(sys.argv[i+1])
-    #                 logging.info('   Port : ' + str(LocalPort))
-    #                 # LocalPort = int(LocalPort)
-    #             elif sys.argv[i] == 'cmdfile':
-    #                 cmdfile = str(sys.argv[i+1])
-    #                 logging.info('   Command file : ' + cmdfile)
-    #                 # open method create a new file
-    #                 cf = open(cmdfile, 'rt')
-    #                 logging.info('Executing command file %s.' % cmdfile)
-    #                 command = os.path.basename(cmdfile).split('.')[0]
-    #                 # readlines returns a list of lines
-    #                 cmd_lines = cf.readlines()
-    #                 cf.close()
-    #                 cmd = cmd_lines[cl].strip('\n')
-    #                 interactive = False
-    #             elif sys.argv[i] == 'tag':
-    #                 tags.append(str(sys.argv[i+1]))
-    #                 logging.info('Tag %s.' % tags[-1])
-    #             else:
-    #                 logging.info('   Unknown argument : ' + sys.argv[i])
-    #             i += 2
-    #     else:
-    #         logging.info('Parsing failed : arguments should be given by pairs [key value], ignoring arguments...')
-    # else:
-    #     logging.info('No argument found... Using defaults.')
+    if len(sys.argv) > 1:
+        i = 1
+        if len(sys.argv) % 2 == 1:
+            while i < len(sys.argv)-1:
+                if sys.argv[i] == 'debug':
+                    if str(sys.argv[i+1]) == 'on':
+                        debug = True
+                        logging.info('   Debug mode ON')
+                    else:
+                        logging.info('   Debug mode OFF')
+                elif sys.argv[i] == 'slave':
+                    slave_device = int(sys.argv[i+1])
+                    logging.info('   Slave device : ' + slave_device)
+                else:
+                    logging.info('   Unknown argument : ' + sys.argv[i])
+                i += 2
+        else:
+            logging.info('Parsing failed : arguments should be given by pairs [key value], ignoring arguments...')
+    else:
+        logging.info('No argument found... Using defaults.')
+
     try:
         st = statvfs('.')
         available_space = st.f_bavail * st.f_frsize / 1024 / 1024
         logging.info('Remaining disk space : %.1f MB' % available_space)
     except:
         pass
+    logging.info('Saving log to ' + log_file)
     try:
         slave = serial.Serial(slave_device, baudrate=57600, timeout=0.1)
         slave_io = io.BufferedRWPair(slave, slave, buffer_size=128)  # FIX : BufferedRWPair does not attempt to synchronize accesses to its underlying raw streams. You should not pass it the same object as reader and writer; use BufferedRandom instead.
-        logging.info('saving data to ' + data_file)
+        logging.info('Saving data to ' + data_file)
     except IOError as e:
         logging.error('*** Cannot open serial connexion with slave! : ' + str(e))
         status &= False
     try:
-        if master_connexion == 'serial':
-            master = serial.Serial(master_device, baudrate=9600, timeout=0.1)
-        else:
-            master = master_device.bind((LocalHost, LocalPort))
-        master_io = io.BufferedRWPair(master_device, master_device, buffer_size=128)
+            logging.debug('Master binding on (%s, %d)...' % (LocalHost, LocalPort))
+            master_socket.bind((LocalHost, LocalPort))
+            master_socket.listen(1)
+            logging.debug('Binding done!')
     except IOError as e:
         logging.error('*** Cannot open connexion with master!' + str(e))
         status &= False
@@ -366,6 +380,9 @@ if __name__ == '__main__':
             disk_writer = Thread(target=write_disk)
             disk_writer.setDaemon(True)
             disk_writer.start()
+            master_connector = Thread(target=connect_master)
+            master_connector.setDaemon(True)
+            master_connector.start()
             master_talker = Thread(target=talk_master)
             master_talker.setDaemon(True)
             master_talker.start()
@@ -380,17 +397,12 @@ if __name__ == '__main__':
             slave_listener.start()
             sd_file_lock = Lock()
             while not stop:
-                # show a prompt
-                # cmd = input('Type exit to quit.\n> ')
-                # if cmd == 'exit':
-                #    stop = True
-                # else:
-                #    print('Unknown command.\n> ')
                 pass
             logging.info('Exiting - Waiting for threads to end...')
             slave_listener.join()
             master_talker.join()
             master_listener.join()
+            master_connector.join()
             slave_talker.join()
             disk_writer.join()
 
@@ -414,8 +426,8 @@ if __name__ == '__main__':
                 pass
             else:
                 sd_file_io.close()
-
             logging.info('Exiting RaspArDAS')
+            logging.info('*** SESSION ENDING ***\n\n')
     else:
         logging.info('Exiting RaspArDAS')
         try:

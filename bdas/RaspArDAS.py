@@ -13,7 +13,7 @@ import socket
 from struct import unpack_from
 from threading import Thread, Lock
 
-version = 0.27
+version = 0.28
 debug = False
 
 LocalHost = '0.0.0.0'
@@ -43,12 +43,16 @@ else:
     logging_level = logging.INFO
 logging.Formatter.converter = time.gmtime
 log_format = '%(asctime)-15s | %(process)d | %(levelname)s:%(message)s'
-logging.basicConfig(format=log_format, datefmt='%Y/%m/%d %H:%M:%S UTC', level=logging_level,
-                    handlers=[logging.FileHandler(log_file), logging.StreamHandler()])
+logging_to_console = False
+if logging_to_console:
+    logging.basicConfig(format=log_format, datefmt='%Y/%m/%d %H:%M:%S UTC', level=logging_level,
+                        handlers=[logging.FileHandler(log_file), logging.StreamHandler()])
+else:
+    logging.basicConfig(format=log_format, datefmt='%Y/%m/%d %H:%M:%S UTC', level=logging_level,
+                        handlers=[logging.FileHandler(log_file)])
 slave_queue = queue.Queue()  # what comes from ArDAS
 master_queue = queue.Queue()  # what comes from Master (e.g. cron task running client2.py)
 data_queue = queue.Queue()  # what should be written on disk
-quiet = True
 raw_data = False  # uses calibration
 peer_download = False  # TODO: find a way to set peer_download to True if another RaspArDAS is downloading at startup
 downloading = False

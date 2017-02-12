@@ -1,6 +1,5 @@
 from os import path, mkdir, statvfs
 import io
-import os
 import sys
 import serial
 import time
@@ -14,7 +13,7 @@ import socket
 from struct import unpack_from
 from threading import Thread, Lock
 
-version = 0.26
+version = 0.27
 debug = False
 
 LocalHost = '0.0.0.0'
@@ -24,7 +23,10 @@ master_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 master_connection = None
 master_online = False
 slave_device = '/dev/ttyACM0'
+slave = None
 n_channels = 4
+calibration = []
+calibration_file = ''
 status = True
 base_path = path.dirname(__file__)
 if not path.isdir('logs'):
@@ -48,6 +50,7 @@ slave_queue = queue.Queue()  # what comes from ArDAS
 master_queue = queue.Queue()  # what comes from Master (e.g. cron task running client2.py)
 data_queue = queue.Queue()  # what should be written on disk
 quiet = True
+raw_data = False # uses calibration
 peer_download = False  # TODO: find a way to set peer_download to True if another RaspArDAS is downloading at startup
 downloading = False
 stop = False
@@ -60,7 +63,7 @@ def listen_slave():
     infinite loop, and only exit when
     the main thread ends.
     """
-    global stop, downloading, slave_io, data_queue, n_channels, debug
+    global stop, downloading, slave_io, data_queue, n_channels, debug, slave_queue, master_queue, raw_data
 
     while not stop:
         # Read incoming data from slave (ArDAS)
@@ -95,13 +98,33 @@ def listen_slave():
                         freq.append(unpack_from('>f', record[17+4*i:21+4*i])[0])
                     decoded_record = '%04d ' % station + record_date.strftime('%Y %m %d %H %M %S') \
                                      + ' %04d' % integration_period
+
+                    if raw_data:
+                        decoded_record += ' R'
+                    else:
+                        decoded_record += ' C'
+                        val = [0.]*n_channels
                     for i in range(n_channels):
-                        decoded_record += ' %04d %11.4f' % (instr[i], freq[i])
+                        if raw_data:
+                            decoded_record += ' %04d %11.4f' % (instr[i], freq[i])
+                        else:
+                            val[i]=calibration[i]['coefs'][0] + calibration[i]['coefs'][1]*freq[i] \
+                                   + calibration[i]['coefs'][2]*freq[i]**2 + calibration[i]['coefs'][3]*freq[i]**3 \
+                                   + calibration[i]['coefs'][4]*freq[i]**4
+                            decoded_record += ' %04d %11.4f' % (instr[i], val[i])
+
                     decoded_record += '\n'
+                    if master_connection and not raw_data:
+                        cal_record = '%04d ' % station + record_date.strftime('%Y %m %d %H %M %S')
+                        for i in range(n_channels):
+                            s = '| %04d: %' + calibration[i]['format'] + ' %s '
+                            cal_record += s % (instr[i], val[i], calibration[i]['unit'])
+                        cal_record += '|\n'
+                        slave_queue.put(cal_record.encode('utf-8'))
                     if debug:
                         logging.debug('Storing : ' + decoded_record)
                     # Send data to data_queue
-                    data_queue.put(decoded_record.encode('ascii'))
+                    data_queue.put(decoded_record.encode('utf-8'))
                 else:
                     logging.warning('*** Bad crc : corrupted data is not stored !')
 
@@ -180,7 +203,7 @@ def listen_master():
     infinite loop, and only exit when
     the main thread ends.
     """
-    global stop, master_connection, master_queue, master_online
+    global stop, master_connection, master_queue, master_online, raw_data
 
     while not stop:
         if master_online:
@@ -209,6 +232,12 @@ def listen_master():
                     elif msg[:-1] == b'#CF':
                         logging.info('Change file request')
                         save_file()
+                    elif msg[:-1] == b'#RC':
+                        raw_data = not raw_data
+                        if raw_data:
+                            logging.info('Switching to raw data.')
+                        else:
+                            logging.info('Switching to calibrated data.')
                     elif msg[:-1] == b'#KL':
                         logging.info('Stop request')
                         stop = True
@@ -237,7 +266,7 @@ def talk_master():
                 if not downloading:
                     msg = slave_queue.get(timeout=0.25)
                     try:
-                        logging.debug('Saying to master :' + msg.decode('ascii'))
+                        logging.debug('Saying to master :' + msg.decode('utf-8'))
                         master_connection.send(msg)
                     except:
                         logging.warning('*** talk_master thread - Unable to decode slave message...')
@@ -282,10 +311,11 @@ def write_disk():
 def full_download():
     """This is a full_download function.
     """
-    global downloading, data_file, master, master_connection, chunk_size, sd_file_lock
+    # NOTE : This doesn't work
+    # NOTE : One solution could be to change file and send the previous one to avoid negative seeking in write mode
+    global downloading, data_file, master_connection, chunk_size, sd_file_lock
 
     downloading = True
-    master_connection.flush()
     offset = 0
     try:
         while True:
@@ -333,9 +363,12 @@ if __name__ == '__main__':
                         logging.info('   Debug mode OFF')
                 elif sys.argv[i] == 'slave':
                     slave_device = int(sys.argv[i+1])
-                    logging.info('   Slave device : ' + slave_device)
+                    logging.info('   Slave device : ' + str(slave_device))
+                elif sys.argv[i] == 'calibration':
+                    calibration_file = str(sys.argv[i+1])
+                    logging.info('Calibration file: ' + calibration_file)
                 else:
-                    logging.info('   Unknown argument : ' + sys.argv[i])
+                    logging.info('   Unknown argument : ' + str(sys.argv[i]))
                 i += 2
         else:
             logging.info('Parsing failed : arguments should be given by pairs [key value], ignoring arguments...')
@@ -351,6 +384,7 @@ if __name__ == '__main__':
     logging.info('Saving log to ' + log_file)
     try:
         slave = serial.Serial(slave_device, baudrate=57600, timeout=0.1)
+        slave.flush()
         slave_io = io.BufferedRWPair(slave, slave, buffer_size=128)  # FIX : BufferedRWPair does not attempt to synchronize accesses to its underlying raw streams. You should not pass it the same object as reader and writer; use BufferedRandom instead.
         logging.info('Saving data to ' + data_file)
     except IOError as e:
@@ -362,14 +396,42 @@ if __name__ == '__main__':
             master_socket.listen(1)
             logging.debug('Binding done!')
     except IOError as e:
-        logging.error('*** Cannot open connexion with master!' + str(e))
+        logging.error('*** Cannot open server socket!' + str(e))
         status &= False
     try:
-        sd_file_io = gzip.open(data_file, "ab+")
+        sd_file_io = gzip.open(data_file, 'ab+')
         # sd_file_io = io.BufferedRandom(sd_file, buffer_size=128)
     except IOError as e:
         logging.error('*** Cannot open file ! : ' + str(e))
         status &= False
+    if calibration_file != '':
+        try:
+            with open(calibration_file, 'r') as cal:
+                cal.readline() # header
+                for i in range(n_channels):
+                    calibration.append({})
+                    s = cal.readline().rstrip('\n').split(sep='\t')
+                    calibration[i]['sensor'] = s[0]
+                    calibration[i]['variable'] = s[1]
+                    calibration[i]['unit'] = s[2]
+                    calibration[i]['format'] = s[3]
+                    calibration[i]['coefs'] = []
+                    for j in range(5):
+                        calibration[i]['coefs'].append(float(s[4+j]))
+                    logging.info('  Sensor: %s     variable: %s     unit: %s        coefs: %s'
+                                 % (calibration[i]['sensor'], calibration[i]['variable'],
+                                    calibration[i]['unit'], str(calibration[i]['coefs'])))
+        except IOError as e:
+            logging.error('*** Cannot read calibration file ! : ' + str(e))
+            status &= False
+    else:
+        logging.info('Calibration : ')
+        for i in range(n_channels):
+            calibration.append({'sensor': '0000', 'variable': 'freq', 'unit': 'Hz', 'format': '%11.4f',
+                                'coefs': [0., 1., 0., 0., 0.]})
+            logging.info('  Sensor: %s     variable: %s     unit: %s        coefs: %s'
+                         % (calibration[i]['sensor'], calibration[i]['variable'],
+                            calibration[i]['unit'], str(calibration[i]['coefs'])))
 
     if status:
         try:
@@ -415,12 +477,6 @@ if __name__ == '__main__':
             else:
                 slave.close()
             try:
-                master
-            except:
-                pass
-            else:
-                master.close()
-            try:
                 sd_file_io
             except:
                 pass
@@ -432,10 +488,6 @@ if __name__ == '__main__':
         logging.info('Exiting RaspArDAS')
         try:
             slave.close()
-        except:
-            pass
-        try:
-            master.close()
         except:
             pass
         try:

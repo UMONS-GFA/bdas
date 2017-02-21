@@ -111,7 +111,7 @@ def listen_slave():
                         if raw_data:
                             decoded_record += ' %04d %11.4f' % (instr[i], freq[i])
                         else:
-                            val[i]=calibration[i]['coefs'][0] + calibration[i]['coefs'][1]*freq[i] \
+                            val[i] = calibration[i]['coefs'][0] + calibration[i]['coefs'][1]*freq[i] \
                                    + calibration[i]['coefs'][2]*freq[i]**2 + calibration[i]['coefs'][3]*freq[i]**3 \
                                    + calibration[i]['coefs'][4]*freq[i]**4
                             decoded_record += ' %04d %11.4f' % (instr[i], val[i])
@@ -410,7 +410,7 @@ if __name__ == '__main__':
     if calibration_file != '':
         try:
             with open(calibration_file, 'r') as cal:
-                cal.readline() # header
+                cal.readline()  # header
                 for i in range(n_channels):
                     calibration.append({})
                     s = cal.readline().rstrip('\n').split(sep='\t')

@@ -11,25 +11,18 @@ __author__ = 'kaufmanno'
 Parsing a bin file to a pandas dataframe
 """
 
-
-#def parse(x):
-#    print(x)
-#    return datetime.datetime.strptime(x, '%Y %m %d %H %M %S')
-
-
 def bin_to_df(bin_file):
     """
-    Parse a bin file to dtm
+    Parse a bin file to a pandas dataframe
     @param bin_file : bin filename (with path)
-    @param t_step : integration period
     """
     tmp_file = './temp'
-    logging_level = logging.DEBUG
-    logging.Formatter.converter = time.gmtime
-    log_format = '%(asctime)-15s %(levelname)s:%(message)s'
-    logging.basicConfig(format=log_format, datefmt='%Y/%m/%d %H:%M:%S UTC', level=logging_level,
-                        handlers=[logging.FileHandler('testparsedasbin.log'), logging.StreamHandler()])
-    logging.info('_____ Started _____')
+    # logging_level = logging.DEBUG
+    # logging.Formatter.converter = time.gmtime
+    # log_format = '%(asctime)-15s %(levelname)s:%(message)s'
+    # logging.basicConfig(format=log_format, datefmt='%Y/%m/%d %H:%M:%S UTC', level=logging_level,
+    #                     handlers=[logging.FileHandler('testparsedasbin.log'), logging.StreamHandler()])
+    # logging.info('_____ Started _____')
 
     status = None
     logging.info('processing ' + bin_file + '.jsn')
@@ -46,7 +39,7 @@ def bin_to_df(bin_file):
     parse = lambda x: datetime.datetime.strptime(x, '%Y %m %d %H %M %S')
     df = pd.read_csv(tmp_file, sep=',', comment='#', parse_dates=[0], date_parser=parse)
     df.columns = ['date', metadata['Channels'][0], metadata['Channels'][1], metadata['Channels'][2], metadata['Channels'][3]]
-    df = df.set_index('date')
+    df = df.set_index('date').tz_localize('UTC')
     with open(bin_file+'.jsn') as bin_file:
         metadata = json.load(bin_file)
     logging.info('______ Ended ______')

@@ -31,18 +31,18 @@ def bin_to_df(bin_file):
                         handlers=[logging.FileHandler('testparsedasbin.log'), logging.StreamHandler()])
     logging.info('_____ Started _____')
 
-    status = []
+    status = None
     logging.info('processing ' + bin_file + '.jsn')
     try:
-        with open(bin_file+'.jsn') as bin_file:
-            metadata = json.load(bin_file)
+        with open(bin_file+'.jsn') as bf:
+            metadata = json.load(bf)
     except:
         logging.error('*** .jsn file is missing!')
         exit(1)
     logging.info('processing ' + bin_file)
     t_step = int(metadata['Integration'])
-    status.append(pdb.parse_bin_files_to_text_files(in_filename=bin_file, out_filename=tmp_file, verbose_flag=True,
-                                                    dtm_format=True, time_step=t_step))
+    status = pdb.parse_bin_files_to_text_files(in_filename=bin_file, out_filename=tmp_file, verbose_flag=True,
+                                                    dtm_format=True, time_step=t_step)
     parse = lambda x: datetime.datetime.strptime(x, '%Y %m %d %H %M %S')
     df = pd.read_csv(tmp_file, sep=',', comment='#', parse_dates=[0], date_parser=parse)
     df.columns = ['date', metadata['Channels'][0], metadata['Channels'][1], metadata['Channels'][2], metadata['Channels'][3]]

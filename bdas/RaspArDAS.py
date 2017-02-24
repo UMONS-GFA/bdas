@@ -9,15 +9,16 @@ import binascii
 import queue
 import gzip
 import socket
+from influxdb import InfluxDBClient
+from bdas.raspardas_settings import host, port, user, password, dbname
 
 from struct import unpack_from
 from threading import Thread, Lock
+version = 0.29
+debug = True
 
-version = 0.28
-debug = False
-
-LocalHost = '0.0.0.0'
-LocalPort = 10001
+local_host = '0.0.0.0'
+local_port = 10001
 master_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 master_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 master_connection = None
@@ -54,6 +55,7 @@ slave_queue = queue.Queue()  # what comes from ArDAS
 master_queue = queue.Queue()  # what comes from Master (e.g. cron task running client2.py)
 data_queue = queue.Queue()  # what should be written on disk
 raw_data = False  # uses calibration
+influxdb_logging = True
 peer_download = False  # TODO: find a way to set peer_download to True if another RaspArDAS is downloading at startup
 downloading = False
 stop = False
@@ -66,7 +68,7 @@ def listen_slave():
     infinite loop, and only exit when
     the main thread ends.
     """
-    global stop, downloading, slave_io, data_queue, n_channels, debug, slave_queue, master_queue, raw_data
+    global stop, downloading, slave_io, data_queue, n_channels, debug, slave_queue, master_queue, raw_data, influxdb_logging
 
     while not stop:
         # Read incoming data from slave (ArDAS)
@@ -96,6 +98,7 @@ def listen_slave():
                     station = int.from_bytes(record[1:3], 'big')
                     integration_period = int.from_bytes(record[3:5], 'big')
                     record_date = datetime.datetime.utcfromtimestamp(int.from_bytes(record[5:9], 'big'))
+                    #record_date = record_date.replace(tzinfo=datetime.timezone.utc)
                     for i in range(n_channels):
                         instr.append(int.from_bytes(record[9+2*i:11+2*i], 'big'))
                         freq.append(unpack_from('>f', record[17+4*i:21+4*i])[0])
@@ -118,12 +121,21 @@ def listen_slave():
 
                     decoded_record += '\n'
                     if master_connection and not raw_data:
+                        logging.debug('DEBUG: master_connection; raw_data' )
                         cal_record = '%04d ' % station + record_date.strftime('%Y %m %d %H %M %S')
                         for i in range(n_channels):
                             s = '| %04d: %' + calibration[i]['format'] + ' %s '
                             cal_record += s % (instr[i], val[i], calibration[i]['unit'])
                         cal_record += '|\n'
                         slave_queue.put(cal_record.encode('utf-8'))
+                        if influxdb_logging:
+                            data = []
+                            for i in range(n_channels):
+                                data.append({'measurement': 'temperatures', 'tags': {'sensor': '%04d' %instr[i]},
+                                            'time': record_date.strftime('%Y-%m-%d %H:%M:%S %Z'),
+                                             'fields': {'value': val[i]}})
+                            logging.debug('Writing to InfluxDB : %s' % str(data))
+                            client.write_points(data)
                     if debug:
                         logging.debug('Storing : ' + decoded_record)
                     # Send data to data_queue
@@ -394,12 +406,12 @@ if __name__ == '__main__':
         logging.error('*** Cannot open serial connexion with slave! : ' + str(e))
         status &= False
     try:
-            logging.debug('Master binding on (%s, %d)...' % (LocalHost, LocalPort))
-            master_socket.bind((LocalHost, LocalPort))
+            logging.debug('Master binding on (%s, %d)...' % (local_host, local_port))
+            master_socket.bind((local_host, local_port))
             master_socket.listen(1)
             logging.debug('Binding done!')
     except IOError as e:
-        logging.error('*** Cannot open server socket!' + str(e))
+        logging.error('*** Cannot open server socket!' + str(e))  # TODO : What to do if RaspArDAS cannot connect to server
         status &= False
     try:
         sd_file_io = gzip.open(data_file, 'ab+')
@@ -435,6 +447,12 @@ if __name__ == '__main__':
             logging.info('  Sensor: %s     variable: %s     unit: %s        coefs: %s'
                          % (calibration[i]['sensor'], calibration[i]['variable'],
                             calibration[i]['unit'], str(calibration[i]['coefs'])))
+    if influxdb_logging:
+        try:
+            logging.info('Logging to database: %s' % dbname)
+            client = InfluxDBClient(host, port, user, password, dbname)
+        except:
+            pass
 
     if status:
         try:

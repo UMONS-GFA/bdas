@@ -7,11 +7,9 @@ import pandas as pd
 from influxdb import DataFrameClient
 from time import gmtime
 from parsing import bin2df
-from settings import host, port, user, password, dbname
+from bdas.settings import influx_host, influx_port, influx_user, influx_password
 
-bin_path = '/DownloadDAS/'
-mask = 'R013*'
-log_file = '/DownloadDAS/logs/bin_to_influx.log'
+log_file = './logs/bin_to_influx.log'
 status = 0
 utc_tz = datetime.timezone.utc
 
@@ -37,6 +35,10 @@ def bin_to_influx(bin_filename, last_date):
 
 if __name__ == "__main__":
     i = 1
+    bin_path = './'
+    mask = '*'
+
+    influx_dbname = ''
     if len(sys.argv) > 1:
         if len(sys.argv) % 2 == 1:
             while i < len(sys.argv)-1:
@@ -44,6 +46,8 @@ if __name__ == "__main__":
                     mask = str(sys.argv[i+1])
                 elif sys.argv[i] == 'binpath':
                     bin_path = str(sys.argv[i+1])
+                elif sys.argv[i] == 'dbname':
+                    influx_dbname = str(sys.argv[i+1])
                 else:
                     logging.warning('*** Unknown argument : ' + sys.argv[i])
                     pass
@@ -60,8 +64,9 @@ if __name__ == "__main__":
     logging.info('%d bin files to process...' % len(bin_filenames))
 
     if len(bin_filenames) > 0:
-        client = DataFrameClient(host, port, user, password, dbname)
+        client = DataFrameClient(influx_host, influx_port, influx_user, influx_password, influx_dbname)
         for f in bin_filenames:
+            bin2df.get_metadata(f)
             last_measurement = client.query('select last(*) from "measurement";')
             if not last_measurement:
                 ld = datetime.datetime(1970, 1, 1, 0, 0, 0).replace(tzinfo=datetime.timezone.utc)

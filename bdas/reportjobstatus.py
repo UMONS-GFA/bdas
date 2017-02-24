@@ -7,7 +7,7 @@ A tool to report status of jobs (i.e. cron jobs) to a PostgreSQL database
 import psycopg2 as pg
 import logging
 
-from bdas.bdas.settings import LogDB, UserLogDB, URLLogDBHost, URLLogDBPort, UserLogPwd
+from bdas.settings import LogDB, UserLogDB, URLLogDBHost, URLLogDBPort, UserLogPwd
 
 
 def connect_to_logDB():
@@ -41,7 +41,6 @@ def insert_job(conn, timestamp, command, tags=()):
             tag_status = add_tag(conn, job_id, tag)
             logging.debug('Tag status' + str(tag_status))
             #status = status and tag_status
-
 
     except pg.DatabaseError as e:
         logging.error('*** Error while inserting job status into jobs table : \n%s' % e)

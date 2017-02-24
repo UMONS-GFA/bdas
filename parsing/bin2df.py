@@ -7,9 +7,13 @@ import pandas as pd
 from parsing import parsebintotxt as pdb
 
 __author__ = 'kaufmanno'
-"""
-Parsing a bin file to a pandas dataframe
-"""
+
+
+def get_metadata(filename):
+    with open(filename+'.jsn') as bin_file:
+        metadata = json.load(bin_file)
+    return metadata
+
 
 def bin_to_df(bin_file):
     """
@@ -40,8 +44,7 @@ def bin_to_df(bin_file):
     df = pd.read_csv(tmp_file, sep=',', comment='#', parse_dates=[0], date_parser=parse)
     df.columns = ['date', metadata['Channels'][0], metadata['Channels'][1], metadata['Channels'][2], metadata['Channels'][3]]
     df = df.set_index('date').tz_localize('UTC')
-    with open(bin_file+'.jsn') as bin_file:
-        metadata = json.load(bin_file)
+    metadata = get_metadata(bin_file)
     logging.info('______ Ended ______')
     return df, metadata, status
 

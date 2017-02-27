@@ -10,9 +10,14 @@ __author__ = 'kaufmanno'
 
 
 def get_metadata(filename):
-    with open(filename+'.jsn') as bin_file:
-        metadata = json.load(bin_file)
-    return metadata
+    try:
+        with open(filename+'.jsn') as bin_file:
+            metadata = json.load(bin_file)
+            return metadata
+    except:
+        logging.error('*** .jsn file is missing!')
+        return None
+
 
 
 def bin_to_df(bin_file):
@@ -35,7 +40,8 @@ def bin_to_df(bin_file):
             metadata = json.load(bf)
     except:
         logging.error('*** .jsn file is missing!')
-        exit(1)
+        return None, None, 2
+
     logging.info('processing ' + bin_file)
     t_step = int(metadata['Integration'])
     status = pdb.parse_bin_files_to_text_files(in_filename=bin_file, out_filename=tmp_file, verbose_flag=True,

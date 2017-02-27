@@ -9,16 +9,15 @@ from time import gmtime
 from parsing import bin2df
 from bdas.settings import influx_host, influx_port, influx_user, influx_password
 
-log_file = './logs/bin_to_influx.log'
+bin_path = '../DownloadDAS/'
+processed_dir = '/processed/'
+mask = 'R013*'
+log_file = '../DownloadDAS/logs/bin_to_influx.log'
+influx_dbname = ''
+
 status = 0
 utc_tz = datetime.timezone.utc
 
-logging_level = logging.DEBUG
-logging.Formatter.converter = gmtime
-log_format = '%(asctime)-15s %(levelname)s:%(message)s'
-logging.basicConfig(format=log_format, datefmt='%Y/%m/%d %H:%M:%S UTC', level=logging_level,
-                    handlers=[logging.FileHandler(log_file), logging.StreamHandler()])
-logging.info('_____ Started _____')
 
 
 def bin_to_influx(bin_filename, last_date):
@@ -35,10 +34,15 @@ def bin_to_influx(bin_filename, last_date):
 
 if __name__ == "__main__":
     i = 1
-    bin_path = './'
-    mask = '*'
+    if not os.path.exists(bin_path + '/logs/'):
+        os.makedirs(bin_path + '/logs/')
+    logging_level = logging.DEBUG
+    logging.Formatter.converter = gmtime
+    log_format = '%(asctime)-15s %(levelname)s:%(message)s'
+    logging.basicConfig(format=log_format, datefmt='%Y/%m/%d %H:%M:%S UTC', level=logging_level,
+                    handlers=[logging.FileHandler(log_file), logging.StreamHandler()])
+    logging.info('_____ Started _____')
 
-    influx_dbname = ''
     if len(sys.argv) > 1:
         if len(sys.argv) % 2 == 1:
             while i < len(sys.argv)-1:
@@ -65,6 +69,9 @@ if __name__ == "__main__":
 
     if len(bin_filenames) > 0:
         client = DataFrameClient(influx_host, influx_port, influx_user, influx_password, influx_dbname)
+        if not os.path.exists(bin_path + processed_dir):
+            processed_path = bin_path + processed_dir
+            os.makedirs(processed_path)
         for f in bin_filenames:
             bin2df.get_metadata(f)
             last_measurement = client.query('select last(*) from "measurement";')
@@ -74,9 +81,10 @@ if __name__ == "__main__":
                 ld = last_measurement['measurement'].index.to_pydatetime()[0]
             status = bin_to_influx(f, ld)
             if status == 0 or status == 1:
-                os.rename(f, os.path.dirname(f) + '/processed/' + os.path.basename(f))
+                os.rename(f, os.path.dirname(f) + processed_dir + os.path.basename(f))
             else:
                 logging.warning('%s could not be processed...' % f)
+
     else:
         status = 1
         logging.warning('No files to process...')

@@ -27,7 +27,7 @@ def bin_to_influx(bin_filename, last_date):
         df2 = df[df.index > last_date]
         if df2.size > 0:
             for col in df2.columns:
-                df3 = pd.DataFrame({'date': df2[f].index, 'value': df2[col].values, 'sensor': col,
+                df3 = pd.DataFrame({'date': df2[col].index, 'value': df2[col].values, 'sensor': col,
                                     'das': metadata['NetId']})
                 df3.set_index('date', inplace=True)
                 client.write_points(df3, 'measurement', {'sensor': metadata['NetId'] + '-' + col})

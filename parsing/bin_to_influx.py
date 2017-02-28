@@ -11,7 +11,7 @@ from bdas.settings import influx_host, influx_port, influx_user, influx_password
 
 bin_path = '../DownloadDAS/'
 processed_dir = '/processed/'
-mask = 'R013*'
+mask = 'R*'
 log_file = '../DownloadDAS/logs/bin_to_influx.log'
 influx_dbname = ''
 
@@ -73,17 +73,19 @@ if __name__ == "__main__":
             processed_path = bin_path + processed_dir
             os.makedirs(processed_path)
         for f in bin_filenames:
-            bin2df.get_metadata(f)
-            last_measurement = client.query('select last(*) from "measurement";')
-            if not last_measurement:
-                ld = datetime.datetime(1970, 1, 1, 0, 0, 0).replace(tzinfo=datetime.timezone.utc)
-            else:
-                ld = last_measurement['measurement'].index.to_pydatetime()[0]
-            status = bin_to_influx(f, ld)
-            if status == 0 or status == 1:
-                os.rename(f, os.path.dirname(f) + processed_dir + os.path.basename(f))
-            else:
-                logging.warning('%s could not be processed...' % f)
+            metadata = bin2df.get_metadata(f)
+            if not metadata is None:
+                net_id = metadata['NetId']
+                last_measurement = client.query('select last(*) from "measurement" where "das"='+ net_id +';')
+                if not last_measurement:
+                    ld = datetime.datetime(1970, 1, 1, 0, 0, 0).replace(tzinfo=datetime.timezone.utc)
+                else:
+                    ld = last_measurement['measurement'].index.to_pydatetime()[0]
+                status = bin_to_influx(f, ld)
+                if status == 0 or status == 1:
+                    os.rename(f, os.path.dirname(f) + processed_dir + os.path.basename(f))
+                else:
+                    logging.warning('%s could not be processed...' % f)
 
     else:
         status = 1

@@ -16,7 +16,7 @@ except:
 
 __author__ = 'kaufmanno'
 
-version = '2.26'
+version = '2.27'
 cl = 0  # current command line index
 cmd_lines = []  # command lines
 eod = False  # end of download
@@ -40,6 +40,8 @@ timeout = 0.2
 outfile = 'out.bin'
 cmdfile = ''  # script argument to specify command file
 basepath = os.path.dirname(__file__)
+if not os.path.exists(os.path.join(basepath, 'logs')):
+    os.makedirs(os.path.join(basepath, 'logs'))
 verbose = False
 db_logging = True  # if True logs status in the download_database automatically set to false in interactive sessions
 conn = None
@@ -211,7 +213,7 @@ if __name__ == '__main__':
         logging.info('Trying to connect...')
         try:
             Sock.connect((LocalHost, LocalPort))
-            #status = 0
+            # status = 0
         except socket.error as err:
             logging.error('*** Connection failed : %s ' % err)
             status = 3
@@ -279,13 +281,17 @@ if __name__ == '__main__':
                                     cmd_lines.append('exit')
                                     break
                             logging.info('Saving results in %s' % outfile)
+                            if not os.path.exists(os.path.join(basepath, '..', 'DownloadDAS')):
+                                logging.warning('*** DownloadDAS directory does not exist!')
+                                os.makedirs(os.path.join(basepath, '..', 'DownloadDAS'))
+                                logging.info('*** Created DownloadDAS directory')
                             try:
                                 f = open(outfile, 'wb')
                                 k = 0  # use to calculate file size
                                 nxfe = 0  # number of terminating \xfe
                                 eod = False  # end of download
-                                starttime = time.time()
-                                dl_timeout = starttime + dl_expected_duration
+                                start_time = time.time()
+                                dl_timeout = start_time + dl_expected_duration
                                 while not eod and time.time() < dl_timeout:
                                     # show the size of the downloaded file in Kb
                                     if k/256-round(k/256) == 0 and cmdfile == '':
@@ -297,7 +303,7 @@ if __name__ == '__main__':
                                             eod = True
                                     else:
                                         if data != b'' and nxfe >= 3:
-                                           failed_download('Incorrect ending sequence.')
+                                            failed_download('Incorrect ending sequence.')
                                         elif data != b'':
                                             nxfe = 0
                                     if not eod:
@@ -335,9 +341,8 @@ if __name__ == '__main__':
                         elif recvdata.decode('ascii') == '\r':
                             if data_newline:
                                 logging.info(data.decode('utf-8'))
-                                logging.debug(cmd)  # TODO : remove this line
                                 if cmd == b'#RI':
-                                    logging.debug('parsing !RI')
+                                    logging.debug('parsing !RI...')
                                     # creates a dictionary of DAS parameters (to be saved as a json structure in a .jsn
                                     # file along with the bin file)
                                     s = data.decode('utf-8')
@@ -345,7 +350,6 @@ if __name__ == '__main__':
                                     das_params['Station'] = s[2]
                                     das_params['NetId'] = s[4]
                                     das_params['Integration'] = s[6]
-                                    logging.debug('parsing !RI...')
                                     i = 7
                                     channels = []
                                     while s[i][0] == 'I':

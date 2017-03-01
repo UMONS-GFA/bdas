@@ -1,7 +1,6 @@
 Bdas settings
 =============
 
-.. settings:: DATABASES
 
 ``DATABASE``
 ------------

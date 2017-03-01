@@ -86,7 +86,6 @@ if __name__ == "__main__":
                     os.rename(f, os.path.dirname(f) + processed_dir + os.path.basename(f))
                 else:
                     logging.warning('%s could not be processed...' % f)
-
     else:
         status = 1
         logging.warning('No files to process...')

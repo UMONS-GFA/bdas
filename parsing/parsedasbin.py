@@ -236,10 +236,10 @@ def parse_bin_to_text(in_stream, out_stream, time_step=60, k_max=330000, k_tot=0
                 if not logged_event:
                     cur_time = datetime.datetime.utcfromtimestamp(secs_since_epoch)
 
-                    if verbose_flag and k_tot > 0:
-                        if k/1024-round(k/1024) == 0:
-                            print(repr(round(100*k/k_tot, 1)) + ' % done', end='\r')
-                        # print(cur_time.strftime('%Y/%m/%d %H:%M:%S'), map(hex, channel[0:n_channels]))
+                    # if verbose_flag and k_tot > 0:
+                    #     if k/1024-round(k/1024) == 0:
+                    #         print(repr(round(100*k/k_tot, 1)) + ' % done', end='\r')
+                    #     # print(cur_time.strftime('%Y/%m/%d %H:%M:%S'), map(hex, channel[0:n_channels]))
                     if date_as_secs_since_epoch:
                         s = str(secs_since_epoch)
                     else:

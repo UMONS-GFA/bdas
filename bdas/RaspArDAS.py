@@ -14,7 +14,7 @@ from bdas.raspardas_settings import host, port, user, password, dbname
 
 from struct import unpack_from
 from threading import Thread, Lock
-version = 0.29
+version = 0.30
 debug = True
 
 local_host = '0.0.0.0'
@@ -452,7 +452,7 @@ if __name__ == '__main__':
             logging.info('Logging to database: %s' % dbname)
             client = InfluxDBClient(host, port, user, password, dbname)
         except:
-            pass
+            logging.error('Unable to log to database %s' % dbname)
 
     if status:
         try:

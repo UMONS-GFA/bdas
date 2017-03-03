@@ -19,7 +19,6 @@ def get_metadata(filename):
         return None
 
 
-
 def bin_to_df(bin_file):
     """
     Parse a bin file to a pandas dataframe
@@ -45,14 +44,15 @@ def bin_to_df(bin_file):
     logging.info('processing ' + bin_file)
     t_step = int(metadata['Integration'])
     status = pdb.parse_bin_files_to_text_files(in_filename=bin_file, out_filename=tmp_file, verbose_flag=True,
-                                                    dtm_format=True, time_step=t_step)
+                                               dtm_format=True, time_step=t_step)
     parse = lambda x: datetime.datetime.strptime(x, '%Y %m %d %H %M %S')
     try:
         df = pd.read_csv(tmp_file, sep=',', comment='#', parse_dates=[0], date_parser=parse)
     except:
         return None, None, 2
 
-    df.columns = ['date', metadata['Channels'][0], metadata['Channels'][1], metadata['Channels'][2], metadata['Channels'][3]]
+    df.columns = ['date', metadata['Channels'][0], metadata['Channels'][1], metadata['Channels'][2],
+                  metadata['Channels'][3]]
     df = df.set_index('date').tz_localize('UTC')
     metadata = get_metadata(bin_file)
     logging.info('______ Ended ______')

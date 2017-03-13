@@ -8,6 +8,8 @@ from parsing import parsebintotxt as pdb
 
 __author__ = 'kaufmanno'
 
+tmp_file = './temp'
+
 
 def get_metadata(filename):
     try:
@@ -19,12 +21,19 @@ def get_metadata(filename):
         return None
 
 
+def get_status(filename, metadata):
+    t_step = int(metadata['Integration'])
+    status = pdb.parse_bin_files_to_text_files(in_filename=filename, out_filename=tmp_file, verbose_flag=True,
+                                               dtm_format=True, time_step=t_step)
+    return status
+
+
 def bin_to_df(bin_file):
     """
     Parse a bin file to a pandas dataframe
     @param bin_file : bin filename (with path)
     """
-    tmp_file = './temp'
+
     # logging_level = logging.DEBUG
     # logging.Formatter.converter = time.gmtime
     # log_format = '%(asctime)-15s %(levelname)s:%(message)s'
@@ -32,31 +41,25 @@ def bin_to_df(bin_file):
     #                     handlers=[logging.FileHandler('testparsedasbin.log'), logging.StreamHandler()])
     # logging.info('_____ Started _____')
 
-    status = None
     logging.info('processing ' + bin_file + '.jsn')
-    try:
-        with open(bin_file+'.jsn') as bf:
-            metadata = json.load(bf)
-    except:
-        logging.error('*** .jsn file is missing!')
-        return None, None, 2
-
-    logging.info('processing ' + bin_file)
-    t_step = int(metadata['Integration'])
-    status = pdb.parse_bin_files_to_text_files(in_filename=bin_file, out_filename=tmp_file, verbose_flag=True,
-                                               dtm_format=True, time_step=t_step)
-    parse = lambda x: datetime.datetime.strptime(x, '%Y %m %d %H %M %S')
-    try:
-        df = pd.read_csv(tmp_file, sep=',', comment='#', parse_dates=[0], date_parser=parse)
-    except:
-        return None, None, 2
-
-    df.columns = ['date', metadata['Channels'][0], metadata['Channels'][1], metadata['Channels'][2],
-                  metadata['Channels'][3]]
-    df = df.set_index('date').tz_localize('UTC')
     metadata = get_metadata(bin_file)
-    logging.info('______ Ended ______')
-    return df, metadata, status
+    if metadata is None:
+        logging.info('No metadata !')
+        return None
+    else:
+        logging.info('processing ' + bin_file)
+
+        parse = lambda x: datetime.datetime.strptime(x, '%Y %m %d %H %M %S')
+        try:
+            df = pd.read_csv(tmp_file, sep=',', comment='#', parse_dates=[0], date_parser=parse)
+        except:
+            return None
+
+        df.columns = ['date', metadata['Channels'][0], metadata['Channels'][1], metadata['Channels'][2],
+                      metadata['Channels'][3]]
+        df = df.set_index('date').tz_localize('UTC')
+        logging.info('______ Ended ______')
+        return df
 
 if __name__ == '__main__':
     bfile = ''  # insert bin filename here

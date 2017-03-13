@@ -11,8 +11,8 @@ from bdas.settings import DATABASE, BIN_DIR, PROCESSED_DIR, LOG_DIR, LOG_FILE, M
 
 
 def bin_to_influx(bin_filename, last_date):
-    df, metadata, status = bin2df.bin_to_df(bin_filename)
-    if status == 0:
+    df = bin2df.bin_to_df(bin_filename)
+    if df:
         df2 = df[df.index > last_date]
         if df2.size > 0:
             for col in df2.columns:
@@ -20,7 +20,9 @@ def bin_to_influx(bin_filename, last_date):
                                     'das': metadata['NetId']})
                 df3.set_index('date', inplace=True)
                 client.write_points(df3, 'measurement', {'sensor': metadata['NetId'] + '-' + col})
-    return status
+        return 0
+    else:
+        return 1
 
 if __name__ == "__main__":
     i = 1
@@ -74,13 +76,12 @@ if __name__ == "__main__":
                     ld = datetime.datetime(1970, 1, 1, 0, 0, 0).replace(tzinfo=datetime.timezone.utc)
                 else:
                     ld = last_measurement['measurement'].index.to_pydatetime()[0]
-                status = bin_to_influx(f, ld)
-                if status == 0 or status == 1:
+                check = bin_to_influx(f, ld)
+                if check == 0:
                     rename(f, path.dirname(f) + PROCESSED_DIR + path.basename(f))
                 else:
                     logging.warning('%s could not be processed...' % f)
     else:
-        status = 1
         logging.warning('No files to process...')
 
     logging.info('_____ Ended _____')

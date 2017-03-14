@@ -72,8 +72,8 @@ if __name__ == "__main__":
             if metadata is not None:
                 net_id = metadata['NetId']
                 first_channel = metadata['Channels'][0]
-                last_measurement = client.query('select last(*) from "measurement" '
-                                                'where "sensor"='+ net_id +'-' + first_channel +';')
+                tag_to_search = net_id + '-' + first_channel
+                last_measurement = client.query('select last(*) from "measurement" where "sensor"= tag_to_search ;')
                 if not last_measurement:
                     ld = datetime.datetime(1970, 1, 1, 0, 0, 0).replace(tzinfo=datetime.timezone.utc)
                 else:

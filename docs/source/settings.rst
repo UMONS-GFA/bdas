@@ -20,7 +20,7 @@ InfluxDB is used. This can be configured using the following::
 
 Directory of the data which have to be treated::
 
-    BIN_PATH = '/ABSOLUTE_PATH_TO/BIN_DIR/'
+    BIN_DIR = '/ABSOLUTE_PATH_TO/BIN_DIR/'
 
 ``PROCESSED_DIR``
 -----------------
@@ -34,7 +34,7 @@ Directory where data treated are moved ::
 
 Directory where not treated data are moved ::
 
-    PROCESSED_DIR = 'unprocessed/'
+    UNPROCESSED_DIR = 'unprocessed/'
 
 ``LOG_DIR``
 -----------

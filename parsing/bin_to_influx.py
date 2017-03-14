@@ -7,7 +7,7 @@ from os import path, makedirs, rename
 from influxdb import DataFrameClient
 from time import gmtime
 from parsing import bin2df
-from bdas.settings import DATABASE, BIN_DIR, PROCESSED_DIR, LOG_DIR, LOG_FILE, MASK
+from bdas.settings import DATABASE, BIN_DIR, PROCESSED_DIR, UNPROCESSED_DIR, LOG_DIR, LOG_FILE, MASK
 
 
 def bin_to_influx(bin_filename, last_date):
@@ -25,10 +25,10 @@ def bin_to_influx(bin_filename, last_date):
 if __name__ == "__main__":
     i = 1
     status = None
-    log_path = path.join(BIN_DIR, 'logs')
+    log_path = path.join(BIN_DIR, LOG_DIR)
     if not path.exists(log_path):
         makedirs(log_path)
-    processed_path = path.join(BIN_DIR, 'processed')
+    processed_path = path.join(BIN_DIR, PROCESSED_DIR)
     if not path.exists(processed_path):
         makedirs(processed_path)
     logging_level = logging.DEBUG
@@ -82,6 +82,11 @@ if __name__ == "__main__":
                     rename(f + '.jsn', path.join(path.dirname(f), PROCESSED_DIR, path.basename(f) + '.jsn'))
                 else:
                     logging.warning('%s could not be processed...' % f)
+                    if not path.exists(path.join(BIN_DIR, UNPROCESSED_DIR)):
+                        makedirs(path.join(BIN_DIR, UNPROCESSED_DIR))
+                    rename(f, path.join(path.dirname(f), UNPROCESSED_DIR, path.basename(f)))
+                    rename(f + '.jsn', path.join(path.dirname(f), UNPROCESSED_DIR, path.basename(f) + '.jsn'))
+
     else:
         status = 1
         logging.warning('No files to process...')

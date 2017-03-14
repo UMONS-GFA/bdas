@@ -35,7 +35,7 @@ if __name__ == "__main__":
     logging.Formatter.converter = gmtime
     log_format = '%(asctime)-15s %(levelname)s:%(message)s'
     logging.basicConfig(format=log_format, datefmt='%Y/%m/%d %H:%M:%S UTC', level=logging_level,
-                        handlers=[logging.FileHandler(path.join(LOG_DIR, LOG_FILE)), logging.StreamHandler()])
+                        handlers=[logging.FileHandler(path.join(BIN_DIR, LOG_DIR, LOG_FILE)), logging.StreamHandler()])
     logging.info('_____ Started _____')
 
     if len(sys.argv) > 1:

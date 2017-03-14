@@ -13,7 +13,6 @@ tmp_file = './temp'
 
 def get_metadata(filename):
     try:
-        print(filename + '.jsn')
         with open(filename +'.jsn') as bf:
             metadata = json.load(bf)
         return metadata

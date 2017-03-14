@@ -46,7 +46,7 @@ if __name__ == "__main__":
                 elif sys.argv[i] == 'binpath':
                     BIN_DIR = str(sys.argv[i+1])
                 elif sys.argv[i] == 'dbname':
-                    influx_dbname = str(sys.argv[i+1])
+                    DATABASE['NAME'] = str(sys.argv[i+1])
                 else:
                     logging.warning('*** Unknown argument : ' + sys.argv[i])
                     pass

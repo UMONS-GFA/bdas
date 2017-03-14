@@ -71,7 +71,9 @@ if __name__ == "__main__":
             metadata = bin2df.get_metadata(f)
             if metadata is not None:
                 net_id = metadata['NetId']
-                last_measurement = client.query('select last(*) from "measurement" where "das"='+ net_id +';')
+                first_channel = metadata['Channels'][0]
+                last_measurement = client.query('select last(*) from "measurement" '
+                                                'where "sensor"='+ net_id +'-' + first_channel +';')
                 if not last_measurement:
                     ld = datetime.datetime(1970, 1, 1, 0, 0, 0).replace(tzinfo=datetime.timezone.utc)
                 else:

@@ -13,7 +13,8 @@ tmp_file = './temp'
 
 def get_metadata(filename):
     try:
-        with open(filename+'.jsn') as bf:
+        print(filename + '.jsn')
+        with open(filename +'.jsn') as bf:
             metadata = json.load(bf)
         return metadata
     except:
@@ -33,7 +34,7 @@ def bin_to_df(bin_file):
     # logging.basicConfig(format=log_format, datefmt='%Y/%m/%d %H:%M:%S UTC', level=logging_level,
     #                     handlers=[logging.FileHandler('testparsedasbin.log'), logging.StreamHandler()])
     # logging.info('_____ Started _____')
-    metadata = get_metadata(bin_file+'.jsn')
+    metadata = get_metadata(bin_file)
     if metadata is None:
         logging.info('No metadata !')
         return None, None, 2

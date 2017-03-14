@@ -65,8 +65,6 @@ if __name__ == "__main__":
     if len(bin_filenames) > 0:
         client = DataFrameClient(DATABASE['HOST'], DATABASE['PORT'], DATABASE['USER'],
                                  DATABASE['PASSWORD'], DATABASE['NAME'])
-        if not processed_path:
-            makedirs(processed_path)
         for f in bin_filenames:
             metadata = bin2df.get_metadata(f)
             if metadata is not None:
@@ -80,7 +78,8 @@ if __name__ == "__main__":
                     ld = last_measurement['measurement'].index.to_pydatetime()[0]
                 status = bin_to_influx(f, ld)
                 if status == 0 or status == 1:
-                    rename(f, path.dirname(f) + PROCESSED_DIR + path.basename(f))
+                    rename(f, path.join(path.dirname(f), PROCESSED_DIR, path.basename(f)))
+                    rename(f + '.jsn', path.join(path.dirname(f), PROCESSED_DIR, path.basename(f) + '.jsn'))
                 else:
                     logging.warning('%s could not be processed...' % f)
     else:

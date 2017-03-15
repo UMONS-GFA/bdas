@@ -30,7 +30,7 @@ Directory where data treated are moved ::
     PROCESSED_DIR = 'processed/'
 
 ``UNPROCESSED_DIR``
------------------
+-------------------
 
 Directory where not treated data are moved ::
 

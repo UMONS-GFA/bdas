@@ -1,7 +1,7 @@
 # Timeline
 ## 2017
 * March
-  * 2017-03-15 - @11:00 UTC removed reservoir and structure for fluorimeter over R014 / Tested connection to nanoDAS R002, nanoDAS R009 and nanoDAS R012; nanoDAS R002 responds after a few trial and has been downloaded / nanoDAS R012 - box opened; hints of corrosion on the nanoDAS board; Unable to commmunicate through RS232 
+  * 2017-03-15 - @11:00 UTC removed reservoir and structure for fluorimeter over R014 / Tested connection to nanoDAS R002, nanoDAS R009 and nanoDAS R012; nanoDAS R002 responds after a few trial and has been downloaded / nanoDAS R012 does not respond over telnet; box opened; hints of corrosion on the nanoDAS board; Unable to commmunicate through RS232 / nanoDAS R009 does not respond over telnet; not tested over RS232
   
 ## 2016 
 * September

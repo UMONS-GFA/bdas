@@ -4,7 +4,7 @@ import logging
 import time
 
 import pandas as pd
-from parsing import parsebintotxt as pdb
+from parsing import parse_bin_to_txt as pdb
 
 __author__ = 'kaufmanno'
 

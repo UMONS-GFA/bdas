@@ -1,4 +1,4 @@
-from parsing import parsebintotxt as pdb
+from parsing import parse_bin_to_txt as pdb
 
 __author__ = 'bastinc'
 """

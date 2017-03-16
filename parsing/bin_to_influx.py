@@ -6,12 +6,12 @@ import pandas as pd
 from os import path, makedirs, rename
 from influxdb import DataFrameClient
 from time import gmtime
-from parsing import bin2df
+from parsing import bin_to_df
 from bdas.settings import DATABASE, BIN_DIR, PROCESSED_DIR, UNPROCESSED_DIR, LOG_DIR, LOG_FILE, MASK
 
 
 def bin_to_influx(bin_filename, last_date):
-    df, metadata, status = bin2df.bin_to_df(bin_filename)
+    df, metadata, status = bin_to_df.bin_to_df(bin_filename)
     if status == 0:
         df2 = df[df.index > last_date]
         if df2.size > 0:
@@ -66,7 +66,7 @@ if __name__ == "__main__":
         client = DataFrameClient(DATABASE['HOST'], DATABASE['PORT'], DATABASE['USER'],
                                  DATABASE['PASSWORD'], DATABASE['NAME'])
         for f in bin_filenames:
-            metadata = bin2df.get_metadata(f)
+            metadata = bin_to_df.get_metadata(f)
             if metadata is not None:
                 net_id = metadata['NetId']
                 first_channel = metadata['Channels'][0]

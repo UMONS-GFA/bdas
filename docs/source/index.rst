@@ -5,7 +5,7 @@ Contents:
 
 .. toctree::
   :maxdepth: 1
+  :caption: User Documentation
     
-    Getting the data<getting_the_data.rst>
-    Bdas settings<settings.rst>
-    Parse and push to database<parse_and_push_to_db.rst>
+  getting_started
+  settings

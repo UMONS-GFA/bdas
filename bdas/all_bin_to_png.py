@@ -7,8 +7,8 @@ import os
 import sys
 from time import gmtime
 
-from parsing.bin2dtm import bin_to_dtm
-from parsing.dtm2png import read_dtm, plot_dtm
+from parsing.bin_to_dtm import bin_to_dtm
+from parsing.dtm_to_png import read_dtm, plot_dtm
 
 status = 0
 bin_path = './'

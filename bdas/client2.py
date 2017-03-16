@@ -5,7 +5,7 @@ import select
 import time
 import logging
 import json
-import bdas.reportjobstatus as rjs
+import bdas.report_jobs_status as rjs
 
 try:
     from bdas.settings import LocalHost, LocalPort, EOL

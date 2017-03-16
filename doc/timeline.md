@@ -1,7 +1,10 @@
 # Timeline
-
+## 2017
+* March
+  * 2017-03-15 - @11:00 UTC removed reservoir and structure for fluorimeter over R014 / Tested connection to nanoDAS R002, nanoDAS R009 and nanoDAS R012; nanoDAS R002 responds after a few trial and has been downloaded / nanoDAS R012 does not respond over telnet; box opened; hints of corrosion on the nanoDAS board; Unable to commmunicate through RS232 / nanoDAS R009 does not respond over telnet; not tested over RS232
+  
 ## 2016 
-* Septembre
+* September
   * 2016-09-21 - Checked Raspberry at the end of edas branch 1 (OK). Unable to ping on 200.200.200.11. Took Raspberry back to labo for check. Dead sd card.
 * Mars
   * 2016-03-03 - Installed Updated Val d'Enfer Pluviometer as R014. Ardas shield(on ACM0) of Raspberry Pi(AMA0) on RS485 converter. Works with Ardas v1.0 and Bdas v0.5. Moved R013 Pluviometer to the bottom of stairs. (OK, AW, CB, CB)
@@ -26,7 +29,7 @@
 
 ## 2014
 * December
-  * 2014-12-09 - Updated Val d'Enfer Pluviometer : installed new cone, air and water temperature sensors | @09:10 UTC - intervention begins / @10:50 UTC - new cone installed / @11:30 UTC - connexions of temperature sensor 0001 (air) and sensor 0002 (water) / @15:50 UTC - air temp measured with Testo probe at probe 0001 level above ground : 7.0°c / 16:00 UTC - serial download of nanoDAS R001    
+  * 2014-12-09 - Updated Val d'Enfer Pluviometer : installed new cone, air and water temperature sensors / @09:10 UTC - intervention begins / @10:50 UTC - new cone installed / @11:30 UTC - connexions of temperature sensor 0001 (air) and sensor 0002 (water) / @15:50 UTC - air temp measured with Testo probe at probe 0001 level above ground : 7.0°c / 16:00 UTC - serial download of nanoDAS R001    
 * November
   * 2014-11-25 - Serial download of nanoDAS R002
   * 2014-11-16 - Updated client2.py to allow for 'sync' command / updated R013Fulldownload.cmd to synchronise DAS clock on server clock after download (OK)

@@ -2,13 +2,13 @@ import datetime
 import json
 import logging
 import time
+from os import path
 
 import pandas as pd
 from parsing import parse_bin_to_txt as pdb
+from bdas.settings import BIN_DIR, TEMP_FILE
 
 __author__ = 'kaufmanno'
-
-tmp_file = './temp'
 
 
 def get_metadata(filename):
@@ -40,6 +40,7 @@ def bin_to_df(bin_file):
     else:
         logging.info('processing ' + bin_file)
         t_step = int(metadata['Integration'])
+        tmp_file = path.join(BIN_DIR, TEMP_FILE)
         status = pdb.parse_bin_files_to_text_files(in_filename=bin_file, out_filename=tmp_file, verbose_flag=True,
                                                    dtm_format=True, time_step=t_step)
         parse = lambda x: datetime.datetime.strptime(x, '%Y %m %d %H %M %S')

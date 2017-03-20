@@ -50,6 +50,13 @@ Log file of the process::
 
     LOG_FILE = 'bin_to_influx.log'
 
+``TEMP FILE``
+-------------
+Temporary file for conversion from binary to dataframe::
+
+    TEMP_FILE = 'temp_parsing.dtm'
+
+TEMP_FILE
 ``MASK``
 --------
 

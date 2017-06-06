@@ -8,15 +8,16 @@ import json
 import bdas.report_jobs_status as rjs
 
 try:
-    from bdas.settings import LocalHost, LocalPort, EOL
+    from bdas.settings import LocalHost, LocalPort, EOL, BIN_DIR
 except:
     LocalHost = None
     LocalPort = None
+    BIN_DIR = None
     EOL = b'\r'
 
 __author__ = 'kaufmanno'
 
-version = '2.27'
+version = '2.28'
 cl = 0  # current command line index
 cmd_lines = []  # command lines
 eod = False  # end of download
@@ -42,6 +43,10 @@ cmdfile = ''  # script argument to specify command file
 basepath = os.path.dirname(__file__)
 if not os.path.exists(os.path.join(basepath, 'logs')):
     os.makedirs(os.path.join(basepath, 'logs'))
+if BIN_DIR is None:
+    BIN_DIR = os.path.join(basepath, '..', 'DownloadDAS')
+if not os.path.exists(BIN_DIR):
+    os.makedirs(BIN_DIR)
 verbose = False
 db_logging = True  # if True logs status in the download_database automatically set to false in interactive sessions
 conn = None
@@ -267,10 +272,8 @@ if __name__ == '__main__':
                                 if cl < len(cmd_lines)+2:
                                     # create output file name
                                     cl += 1
-                                    outfile = os.path.abspath(os.path.join(basepath, '..', 'DownloadDAS',
-                                                                           cmd_lines[cl].strip('\n') +
-                                                                           time.strftime('_%Y%m%d_%H%M',
-                                                                                         time.gmtime())+'.bin'))
+                                    outfile = os.path.abspath(BIN_DIR, cmd_lines[cl].strip('\n') +
+                                                              time.strftime('_%Y%m%d_%H%M', time.gmtime())+'.bin')
                                     # read expected download duration
                                     cl += 1
                                     dl_expected_duration = int(cmd_lines[cl])

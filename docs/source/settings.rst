@@ -56,7 +56,6 @@ Temporary file for conversion from binary to dataframe::
 
     TEMP_FILE = 'temp_parsing.dtm'
 
-TEMP_FILE
 ``MASK``
 --------
 

@@ -47,6 +47,7 @@ def bin_to_df(bin_file):
         try:
             df = pd.read_csv(tmp_file, sep=',', comment='#', parse_dates=[0], date_parser=parse)
         except:
+            logging.warning("Unable to read temp file ")
             return None, None, 2
         df.columns = ['date', metadata['Channels'][0], metadata['Channels'][1], metadata['Channels'][2],
                       metadata['Channels'][3]]

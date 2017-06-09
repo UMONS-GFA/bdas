@@ -2,7 +2,7 @@ import datetime
 import json
 import logging
 import time
-from os import path
+from os import path, rename
 
 import pandas as pd
 from parsing import parse_bin_to_txt as pdb
@@ -40,9 +40,15 @@ def bin_to_df(bin_file):
     else:
         logging.info('processing ' + bin_file)
         t_step = int(metadata['Integration'])
-        tmp_file = path.join(BIN_DIR, TEMP_FILE)
+        # Avoid bug with DTM extension. DTM use blank space instead of comma.
+        print(path.join(BIN_DIR, TEMP_FILE))
+        tmp_file, ext = path.splitext(path.join(BIN_DIR, TEMP_FILE))
+        print(tmp_file, ext)
         status = pdb.parse_bin_files_to_text_files(in_filename=bin_file, out_filename=tmp_file, verbose_flag=True,
                                                    dtm_header=True, time_step=t_step)
+        rename(tmp_file, tmp_file + ext)
+        tmp_file = tmp_file + ext
+        print(tmp_file)
         parse = lambda x: datetime.datetime.strptime(x, '%Y %m %d %H %M %S')
         try:
             df = pd.read_csv(tmp_file, sep=',', comment='#', parse_dates=[0], date_parser=parse)

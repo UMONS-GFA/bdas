@@ -40,18 +40,14 @@ def bin_to_df(bin_file):
     else:
         logging.info('processing ' + bin_file)
         t_step = int(metadata['Integration'])
-        # Avoid bug with DTM extension. DTM use blank space instead of comma.
-        print(path.join(BIN_DIR, TEMP_FILE))
-        tmp_file, ext = path.splitext(path.join(BIN_DIR, TEMP_FILE))
-        print(tmp_file, ext)
+        tmp_file = path.join(BIN_DIR, TEMP_FILE)
         status = pdb.parse_bin_files_to_text_files(in_filename=bin_file, out_filename=tmp_file, verbose_flag=True,
-                                                   dtm_header=True, time_step=t_step)
-        rename(tmp_file, tmp_file + ext)
-        tmp_file = tmp_file + ext
-        print(tmp_file)
+                                                   dtm_header=True, sep=' ', time_step=t_step)
         parse = lambda x: datetime.datetime.strptime(x, '%Y %m %d %H %M %S')
         try:
-            df = pd.read_csv(tmp_file, sep=',', comment='#', parse_dates=[0], date_parser=parse)
+            #df = pd.read_csv(tmp_file, sep=',', comment='#', parse_dates=[0], date_parser=parse)
+            df = pd.read_csv(tmp_file, comment='#', sep=' ', parse_dates={'date': [0, 1, 2, 3, 4, 5]}, date_parser=parse,
+                             header=None)
         except:
             logging.warning("Unable to read temp file ")
             return None, None, 2

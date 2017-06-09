@@ -3,4 +3,4 @@
 
 Application to interact with a DAS.
 
-Current release :  [v0.6](https://github.com/UMONS-GFA/bdas/releases/tag/v0.6) (Mars 2017)
+[Latest release](https://github.com/UMONS-GFA/bdas/releases/latest/)

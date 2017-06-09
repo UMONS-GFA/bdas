@@ -26,5 +26,5 @@ def bin_to_dtm(bin_file, dtm_file, t_step=60):
 
     logging.info('processing ' + bin_file)
     status.append(pdb.parse_bin_files_to_text_files(in_filename=bin_file, out_filename=dtm_file, verbose_flag=True,
-                                                    dtm_format=True, time_step=t_step))
+                                                    dtm_header=True, time_step=t_step))
     logging.info('______ Ended ______')

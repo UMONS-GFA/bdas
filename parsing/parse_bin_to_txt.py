@@ -12,7 +12,7 @@ from parsing import parse_das_bin
 
 
 def parse_bin_files_to_text_files(in_filename='', out_filename='', time_step=60, k_max=330000,
-                                  date_as_secs_since_epoch=False, verbose_flag=False, sep=',', dtm_format=False,
+                                  date_as_secs_since_epoch=False, verbose_flag=False, sep=',', dtm_header=False,
                                   site='0000', netid='255', data='', bpos='1', date_format='%Y/%m/%d %H:%M:%S',
                                   jumper=2):
     ext = '.dtm'
@@ -30,7 +30,7 @@ def parse_bin_files_to_text_files(in_filename='', out_filename='', time_step=60,
     if ext == '.dtm':
         date_as_secs_since_epoch = False
         sep = ' '
-        dtm_format = True
+        dtm_header = True
 
     out_filename += ext
 
@@ -40,7 +40,7 @@ def parse_bin_files_to_text_files(in_filename='', out_filename='', time_step=60,
     logging.info('expected data rows : %s', str(k_tot))
     infile = open(in_filename, 'rb')
     status = parse_das_bin.parse_bin_to_text(infile, outfile, time_step, 0, k_tot, date_as_secs_since_epoch,
-                                             verbose_flag, sep, dtm_format, site, netid, data, bpos, date_format, jumper)
+                                             verbose_flag, sep, dtm_header, site, netid, data, bpos, date_format, jumper)
     infile.close()
     outfile.close()
     return status

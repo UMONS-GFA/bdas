@@ -42,7 +42,7 @@ def bin_to_df(bin_file):
         t_step = int(metadata['Integration'])
         tmp_file = path.join(BIN_DIR, TEMP_FILE)
         status = pdb.parse_bin_files_to_text_files(in_filename=bin_file, out_filename=tmp_file, verbose_flag=True,
-                                                   dtm_format=True, time_step=t_step)
+                                                   dtm_header=True, time_step=t_step)
         parse = lambda x: datetime.datetime.strptime(x, '%Y %m %d %H %M %S')
         try:
             df = pd.read_csv(tmp_file, sep=',', comment='#', parse_dates=[0], date_parser=parse)

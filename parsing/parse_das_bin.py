@@ -18,7 +18,7 @@ def round_sig_digits(x, sig_digits=2):
 
 
 def parse_bin_to_text(in_stream, out_stream, time_step=60, k_max=330000, k_tot=0, date_as_secs_since_epoch=False,
-                      verbose_flag=False, sep=',', dtm_format=False, site='0000', netid='255', data='', bpos='1',
+                      verbose_flag=False, sep=',', dtm_header=False, site='0000', netid='255', data='', bpos='1',
                       date_format='%Y/%m/%d %H:%M:%S', jumper=2):
     # in_stream : bin stream to convert
     # out_stream : text stream to create
@@ -81,7 +81,7 @@ def parse_bin_to_text(in_stream, out_stream, time_step=60, k_max=330000, k_tot=0
         logging.warning('*** Extra 0x00 after leading 0xFD!')
         status += 2
 
-    if dtm_format:
+    if dtm_header:
         ## writing header
         s = '# SITE: ' + site
         out_stream.writelines(s + '\n')
@@ -138,7 +138,7 @@ def parse_bin_to_text(in_stream, out_stream, time_step=60, k_max=330000, k_tot=0
         cur_time = datetime.datetime.utcfromtimestamp(secs_since_epoch)
         if verbose_flag:
             logging.info('Starting date:' + cur_time.strftime('%d/%m/%Y %H:%M:%S'))
-        if dtm_format:
+        if dtm_header:
             s = '# INFO: interruption ' + cur_time.strftime('%Y %m %d %H %M %S') + '\n'
             out_stream.writelines(s)
 
@@ -174,7 +174,7 @@ def parse_bin_to_text(in_stream, out_stream, time_step=60, k_max=330000, k_tot=0
                     if len(sb) < 3:
                         if verbose_flag:
                             logging.warning('*** Unexpected end of file!')
-                        if dtm_format:
+                        if dtm_header:
                             s = '# INFO: End Of File\n'
                             out_stream.writelines(s)
                         status += 4
@@ -216,7 +216,7 @@ def parse_bin_to_text(in_stream, out_stream, time_step=60, k_max=330000, k_tot=0
                         secs_since_epoch = int.from_bytes(sb[0:4], 'big')
                         if verbose_flag:
                             logging.info(event_time.strftime('%Y/%m/%d %H:%M:%S') + ' Interruption')
-                        if dtm_format:
+                        if dtm_header:
                             s = '# INFO: interruption ' + event_time.strftime('%Y %m %d %H %M %S') + '\n'
                             out_stream.writelines(s)
                         else:
@@ -243,13 +243,13 @@ def parse_bin_to_text(in_stream, out_stream, time_step=60, k_max=330000, k_tot=0
                     if date_as_secs_since_epoch:
                         s = str(secs_since_epoch)
                     else:
-                        if dtm_format:
+                        if dtm_header:
                             s = cur_time.strftime('%Y %m %d %H %M %S')
                         else:
                             s = cur_time.strftime(date_format)
                     if not eot:
                         for j in range(n_channels):
-                            if dtm_format:
+                            if dtm_header:
                                 t = format(round_sig_digits(float(channel[j])/time_step*jumper, 7), '013.4f')
                                 u = 13
                             else:
@@ -263,7 +263,7 @@ def parse_bin_to_text(in_stream, out_stream, time_step=60, k_max=330000, k_tot=0
                         eot = True
                     secs_since_epoch += time_step
                     k += 1
-            if dtm_format:
+            if dtm_header:
                 s = '# INFO: End Of File\n'
                 out_stream.writelines(s)
 

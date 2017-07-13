@@ -68,20 +68,27 @@ if __name__ == "__main__":
         for f in bin_filenames:
             metadata = bin_to_df.get_metadata(f)
             if metadata is not None:
-                net_id = metadata['NetId']
-                first_channel = metadata['Channels'][0]
-                tag_to_search = net_id + '-' + first_channel
-                last_measurement = client.query('select last(*) from "measurement" where "sensor"= tag_to_search ;')
-                if not last_measurement:
-                    ld = datetime.datetime(1970, 1, 1, 0, 0, 0).replace(tzinfo=datetime.timezone.utc)
+                if metadata['NetId'] is not None:
+                    net_id = metadata['NetId']
+                    first_channel = metadata['Channels'][0]
+                    tag_to_search = net_id + '-' + first_channel
+                    last_measurement = client.query('select last(*) from "measurement" where "sensor"= tag_to_search ;')
+                    if not last_measurement:
+                        ld = datetime.datetime(1970, 1, 1, 0, 0, 0).replace(tzinfo=datetime.timezone.utc)
+                    else:
+                        ld = last_measurement['measurement'].index.to_pydatetime()[0]
+                    status = bin_to_influx(f, ld)
+                    if status == 0 or status == 1:
+                        rename(f, path.join(path.dirname(f), PROCESSED_DIR, path.basename(f)))
+                        rename(f + '.jsn', path.join(path.dirname(f), PROCESSED_DIR, path.basename(f) + '.jsn'))
+                    else:
+                        logging.warning('%s could not be processed...' % f)
+                        if not path.exists(path.join(BIN_DIR, UNPROCESSED_DIR)):
+                            makedirs(path.join(BIN_DIR, UNPROCESSED_DIR))
+                        rename(f, path.join(path.dirname(f), UNPROCESSED_DIR, path.basename(f)))
+                        rename(f + '.jsn', path.join(path.dirname(f), UNPROCESSED_DIR, path.basename(f) + '.jsn'))
                 else:
-                    ld = last_measurement['measurement'].index.to_pydatetime()[0]
-                status = bin_to_influx(f, ld)
-                if status == 0 or status == 1:
-                    rename(f, path.join(path.dirname(f), PROCESSED_DIR, path.basename(f)))
-                    rename(f + '.jsn', path.join(path.dirname(f), PROCESSED_DIR, path.basename(f) + '.jsn'))
-                else:
-                    logging.warning('%s could not be processed...' % f)
+                    logging.warning('%s could not be processed because NetID is null' % f)
                     if not path.exists(path.join(BIN_DIR, UNPROCESSED_DIR)):
                         makedirs(path.join(BIN_DIR, UNPROCESSED_DIR))
                     rename(f, path.join(path.dirname(f), UNPROCESSED_DIR, path.basename(f)))

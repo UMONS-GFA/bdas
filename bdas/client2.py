@@ -5,6 +5,7 @@ import select
 import time
 import logging
 import json
+import re
 import bdas.report_jobs_status as rjs
 
 try:
@@ -17,7 +18,7 @@ except:
 
 __author__ = 'kaufmanno'
 
-version = '2.28'
+version = '2.29'
 cl = 0  # current command line index
 cmd_lines = []  # command lines
 eod = False  # end of download
@@ -346,23 +347,27 @@ if __name__ == '__main__':
                                 logging.info(data.decode('utf-8'))
                                 if cmd == b'#RI':
                                     logging.debug('parsing !RI...')
+                                    regex = '^!RI Station:\d{4} DasNo:\d{3} Integration:\d{4} I1:\d{4} I2:\d{4} I3:\d{4} I4:\d{4}.*'
                                     # creates a dictionary of DAS parameters (to be saved as a json structure in a .jsn
                                     # file along with the bin file)
                                     s = data.decode('utf-8')
-                                    s = s[:-2].replace(':', ' ').split(' ')
-                                    das_params['Station'] = s[2]
-                                    das_params['NetId'] = s[4]
-                                    das_params['Integration'] = s[6]
-                                    i = 7
-                                    channels = []
-                                    while s[i][0] == 'I':
-                                        channels.append(s[i+1])
-                                        i += 2
-                                    das_params['Channels'] = tuple(channels)
-                                    das_params['Used_Mem'] = s[i]
-                                    das_params['Total_Mem'] = s[i+1]
-                                    das_params['Previous_Connection'] = s[i+2]
-                                    logging.info(repr(das_params))
+                                    if re.match(regex, s) is not None:
+                                        s = s[:-2].replace(':', ' ').split(' ')
+                                        das_params['Station'] = s[2]
+                                        das_params['NetId'] = s[4]
+                                        das_params['Integration'] = s[6]
+                                        i = 7
+                                        channels = []
+                                        while s[i][0] == 'I':
+                                            channels.append(s[i+1])
+                                            i += 2
+                                        das_params['Channels'] = tuple(channels)
+                                        das_params['Used_Mem'] = s[i]
+                                        das_params['Total_Mem'] = s[i+1]
+                                        das_params['Previous_Connection'] = s[i+2]
+                                        logging.info(repr(das_params))
+                                    else:
+                                        logging.warning('*** Unable to parse RI... ***')
                                 data = bytearray()
                             data_newline = False
                         else:

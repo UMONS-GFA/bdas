@@ -18,7 +18,7 @@ except:
 
 __author__ = 'kaufmanno'
 
-version = '2.29'
+version = '2.30'
 cl = 0  # current command line index
 cmd_lines = []  # command lines
 eod = False  # end of download
@@ -269,15 +269,20 @@ if __name__ == '__main__':
                             data = data[data.find(b'\xfd'):]
                             logging.info('*** Downloading data ... ***')
                             # check if there is a command file as parameter
+                            # logging.debug('Command file: %s length %d' %(cmdfile, len(cmd_lines)))
                             if cmdfile != '':
                                 if cl < len(cmd_lines)+2:
                                     # create output file name
                                     cl += 1
-                                    outfile = os.path.abspath(BIN_DIR, cmd_lines[cl].strip('\n') +
-                                                              time.strftime('_%Y%m%d_%H%M', time.gmtime())+'.bin')
+                                    # logging.debug('*** command line %d: %s' %(cl, cmd_lines[cl]))
+                                    outfile = os.path.abspath(os.path.join(BIN_DIR, cmd_lines[cl].strip('\n') +
+                                                              time.strftime('_%Y%m%d_%H%M', time.gmtime()) + '.bin'))
+                                    # logging.debug('*** outfile: %s ***' %outfile)
                                     # read expected download duration
                                     cl += 1
+                                    # logging.debug('*** command line %d: %s' %(cl, cmd_lines[cl]))
                                     dl_expected_duration = int(cmd_lines[cl])
+                                    # logging.debug('*** Expected duration: %d ***' %dl_expected_duration)
                                 else:
                                     logging.error('*** Incorrect arguments in command file !')
                                     status = 2

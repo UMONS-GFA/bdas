@@ -1,4 +1,9 @@
 # Timeline
+
+## 2019
+* January
+  * 2019-01-22 - Rearm fuse next to DAS 12 used to power network-head / Replace DAS 012 by arDAS 012 with wifi connection(SPINWIRE network) / Dismantle R014 to replace sensors back at the lab
+  
 ## 2017
 * March
   * 2017-03-15 - @11:00 UTC removed reservoir and structure for fluorimeter over R014 / Tested connection to nanoDAS R002, nanoDAS R009 and nanoDAS R012; nanoDAS R002 responds after a few trial and has been downloaded / nanoDAS R012 does not respond over telnet; box opened; hints of corrosion on the nanoDAS board; Unable to commmunicate through RS232 / nanoDAS R009 does not respond over telnet; not tested over RS232

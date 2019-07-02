@@ -1,6 +1,10 @@
 # Timeline
 
 ## 2019
+
+* July
+  * 2019-07-01 - Replace Val d'Enfer pluviometer (R014) by Antoine's pluviometer working with solenoid valves. An arduino is
+  used to command the valves on tty port ARD002.
 * January
   * 2019-01-22 - Rearm fuse next to DAS 12 used to power network-head / Replace DAS 012 by arDAS 012 with wifi connection(SPINWIRE network) / Dismantle R014 to replace sensors back at the lab
   
